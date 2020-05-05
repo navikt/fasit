@@ -14,7 +14,7 @@
         <spring.security.version>5.1.5.RELEASE</spring.security.version>
         <flyway.version>4.2.0-NAV</flyway.version>
         <resteasy.version>3.0.19.Final</resteasy.version>
-        <ojdbc.version>12.2.0.1</ojdbc.version>
+        <ojdbc.version>19.3.0.0</ojdbc.version>
         <hibernate.version>5.4.3.Final</hibernate.version>
         <jetty.version>9.4.19.v20190610</jetty.version>
         <kafka.version>2.0.0</kafka.version>
@@ -599,27 +599,5 @@
                 </executions>
             </plugin>
         </plugins>
-
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>m2internal</id>
-            <name>NAV Maven2 Internal Repository</name>
-            <url>http://maven.adeo.no/nexus/content/repositories/m2internal</url>
-        </repository>
-        <snapshotRepository>
-            <id>m2snapshot</id>
-            <name>NAV Maven2 Snapshot Repository</name>
-            <url>http://maven.adeo.no/nexus/content/repositories/m2snapshot</url>
-            <uniqueVersion>false</uniqueVersion>
-        </snapshotRepository>
-    </distributionManagement>
-
-    <scm>
-        <connection>scm:git:ssh://git@stash.devillo.no:7999/aura/fasit.git</connection>
-        <developerConnection>scm:git:ssh://git@stash.devillo.no:7999/aura/fasit.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
-
 </project>
