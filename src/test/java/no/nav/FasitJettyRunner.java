@@ -151,7 +151,6 @@ public class FasitJettyRunner {
 
         System.setProperty("ROLE_OPERATIONS.groups", "0000-GA-env-config-TestAdmin");
         System.setProperty("ROLE_PROD_OPERATIONS.groups", "0000-GA-env-config-ProdAdmin");
-        System.setProperty("ROLE_SELFSERVICE.groups", "(DG) Moderniseringsprogrammet Deployere");
         // select encryption keys
         System.setProperty("fasit.encryptionkeys.username", "junit");
         System.setProperty("fasit.encryptionkeys.password", "password");

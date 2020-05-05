@@ -98,12 +98,7 @@ public class SecretRestServiceTest extends no.nav.aura.envconfig.rest.RestTest {
 		assertAccess(ROLE_ANONYMOUS, t, UNAUTHORIZED);
 		assertAccess(ROLE_ANONYMOUS, q, UNAUTHORIZED);
 		assertAccess(ROLE_ANONYMOUS, p, UNAUTHORIZED);
-		
-		assertAccess(ROLE_CI, u, OK);
-		assertAccess(ROLE_CI, t, UNAUTHORIZED);
-		assertAccess(ROLE_CI, q, UNAUTHORIZED);
-		assertAccess(ROLE_CI, p, UNAUTHORIZED);
-		
+
 		assertAccess(ROLE_USER, u, OK);
 		assertAccess(ROLE_USER, t, UNAUTHORIZED);
 		assertAccess(ROLE_USER, q, UNAUTHORIZED);
@@ -114,20 +109,12 @@ public class SecretRestServiceTest extends no.nav.aura.envconfig.rest.RestTest {
 		assertAccess(ROLE_OPERATIONS, q, OK);
 		assertAccess(ROLE_OPERATIONS, p, UNAUTHORIZED);
 		
-		assertAccess(ROLE_SELFSERVICE, u, OK);
-		assertAccess(ROLE_SELFSERVICE, t, OK);
-		assertAccess(ROLE_SELFSERVICE, q, OK);
-		assertAccess(ROLE_SELFSERVICE, p, UNAUTHORIZED);
-		
 		assertAccess(ROLE_PROD_OPERATIONS, u, OK);
 		assertAccess(ROLE_PROD_OPERATIONS, t, OK);
 		assertAccess(ROLE_PROD_OPERATIONS, q, OK);
 		assertAccess(ROLE_PROD_OPERATIONS, p, OK);
 		
-		assertAccess(ROLE_SELFSERVICE_PROD, u, OK);
-		assertAccess(ROLE_SELFSERVICE_PROD, t, OK);
-		assertAccess(ROLE_SELFSERVICE_PROD, q, OK);
-		assertAccess(ROLE_SELFSERVICE_PROD, p, OK);
+
 		
 	}
 
@@ -147,9 +134,6 @@ public class SecretRestServiceTest extends no.nav.aura.envconfig.rest.RestTest {
 		Map<ApplicationRole, ImmutablePair<String, String>> roles = new HashMap<>();
 		roles.put(ApplicationRole.ROLE_OPERATIONS, new ImmutablePair<>("operation", "operation"));
 		roles.put(ApplicationRole.ROLE_PROD_OPERATIONS, new ImmutablePair<>("prodadmin", "prodadmin"));
-		roles.put(ApplicationRole.ROLE_SELFSERVICE_PROD, new ImmutablePair<>("selfservice_prod", "selfservice_prod"));
-		roles.put(ApplicationRole.ROLE_SELFSERVICE, new ImmutablePair<>("selfservice", "selfservice"));
-		roles.put(ApplicationRole.ROLE_CI, new ImmutablePair<>("ci", "ci"));
 		roles.put(ApplicationRole.ROLE_USER, new ImmutablePair<>("user", "user"));
 		ImmutablePair<String, String> pair = roles.get(role);
 		if (pair == null) {

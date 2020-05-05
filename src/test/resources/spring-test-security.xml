@@ -18,13 +18,9 @@
 
 		<security:authentication-provider>
 			<security:user-service id="inMemoryUserDetails">
-				<security:user name="admin" password="{noop}admin" authorities="ROLE_CI" />
 				<security:user name="prodadmin" password="{noop}prodadmin" authorities="ROLE_USER, ROLE_OPERATIONS, ROLE_PROD_OPERATIONS" />
 				<security:user name="user" password="{noop}user" authorities="ROLE_USER" />
-				<security:user name="ci" password="{noop}ci" authorities="ROLE_CI" />
 				<security:user name="operation" password="{noop}operation" authorities="ROLE_OPERATIONS" />
-				<security:user name="selfservice" password="{noop}selfservice" authorities="ROLE_SELFSERVICE" />
-				<security:user name="selfservice_prod" password="{noop}selfservice_prod" authorities="ROLE_SELFSERVICE_PROD" />
 				<security:user name="superuser" password="{noop}superuser" authorities="ROLE_OPERATIONS, ROLE_SUPERUSER" />
 			</security:user-service>
 		</security:authentication-provider>

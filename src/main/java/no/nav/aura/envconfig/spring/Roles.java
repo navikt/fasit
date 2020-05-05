@@ -1,10 +1,7 @@
 package no.nav.aura.envconfig.spring;
 
-import static no.nav.aura.envconfig.ApplicationRole.ROLE_CI;
 import static no.nav.aura.envconfig.ApplicationRole.ROLE_OPERATIONS;
 import static no.nav.aura.envconfig.ApplicationRole.ROLE_PROD_OPERATIONS;
-import static no.nav.aura.envconfig.ApplicationRole.ROLE_SELFSERVICE;
-import static no.nav.aura.envconfig.ApplicationRole.ROLE_SELFSERVICE_PROD;
 import static no.nav.aura.envconfig.ApplicationRole.ROLE_USER;
 
 import no.nav.aura.envconfig.model.AccessControl;
@@ -31,14 +28,13 @@ public abstract class Roles {
         }
         switch (environmentClass) {
         case p:
-            return user.hasRole(ROLE_PROD_OPERATIONS, ROLE_SELFSERVICE_PROD);
+            return user.hasRole(ROLE_PROD_OPERATIONS);
         case q:
         case t:
-            return user.hasRole(ROLE_PROD_OPERATIONS, ROLE_SELFSERVICE_PROD, ROLE_OPERATIONS,
-                    ROLE_SELFSERVICE);
+            return user.hasRole(ROLE_PROD_OPERATIONS, ROLE_OPERATIONS);
         case u:
-            return user.hasRole(ROLE_USER, ROLE_CI, ROLE_PROD_OPERATIONS, ROLE_SELFSERVICE_PROD,
-                    ROLE_OPERATIONS, ROLE_SELFSERVICE);
+            return user.hasRole(ROLE_USER, ROLE_PROD_OPERATIONS,
+                    ROLE_OPERATIONS);
         default:
             throw new RuntimeException("Unknown environment class " + environmentClass);
         }
