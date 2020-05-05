@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "registerApplicationInstance",
+  "description": "schema defining valid JSON for registering application instances",
+  "type": "object",
+  "properties": {
+    "application": {
+      "description": "the name of the application that was deployed",
+      "type": "string"
+    },
+    "environment": {
+      "description": "the name of the environment the application was deployed to",
+      "type": "string"
+    },
+    "version": {
+      "description": "the version of the deployed application",
+      "type": "string"
+    },
+    "selftest": {
+      "description": "the applications selftest url",
+      "type": "string"
+    },
+    "nodes": {
+      "description": "hostnames of the node(s) the application was deployed to",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "usedResources": {
+      "description": "the resources taken in use by the application instance",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "number"},
+          "revision": {"type": "number"}
+        },
+        "required": [
+          "id",
+          "revision"
+        ]
+      }
+    },
+    "exposedResources": {
+      "description": "the resources this application instance created/exposes",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "number"},
+          "alias": {"type": "string"},
+          "type": {"type": "string"},
+          "accessAdGroups":{"type": "string"},
+          "domain": {"enum": ["devillo.no", "test.local", "oera-t.local", "preprod.local", "oera-q.local", "adeo.no", "oera.no"]},
+          "properties": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "alias",
+          "type",
+          "properties"
+        ]
+      }
+    },
+    "missingResources": {
+      "description": "the resources this application instance is missing. If the resource can start working without a redeploy (e.g. a SOAP or REST webservice behind dns/lb/servicegateway) set runtimeRsolvable to true",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "alias": {"type": "string"},
+          "type": {"type": "string"}
+        },
+        "required": [
+          "alias",
+          "type"
+        ]
+      }
+    },
+    "appConfig": {
+      "description": "the app-config, if this was used with the deployment",
+      "type": "object",
+      "properties": {
+        "format": {"enum": ["xml"]},
+        "content": {"type": "string"}
+      },
+      "required": [
+        "format",
+        "content"
+      ]
+    }
+  },
+  "required": [
+    "application",
+    "environment",
+    "version",
+    "nodes"
+  ]
+}

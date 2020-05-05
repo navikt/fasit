@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>no.nav.aura.fasit.rest.config.SpringRestTestConfig</param-value>
+	</context-param>
+
+
+	<filter>
+		<filter-name>commentBinding</filter-name>
+		<filter-class>no.nav.aura.envconfig.filter.EntityCommentBindingFilter</filter-class>
+		<init-param>
+			<param-name>userLookupImplClass</param-name>
+			<param-value>no.nav.aura.envconfig.filter.DummyUserLookup</param-value>
+		</init-param>
+	</filter>
+</web-app>

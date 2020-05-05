@@ -1,0 +1,96 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: "fasit"
+  namespace: "default"
+  labels:
+    team: "aura"
+spec:
+  image: "docker.adeo.no:5000/fasit:IMAGE_VERSION"
+  port: 8080
+  replicas:
+    min: 2
+    max: 4
+  resources: # Optional. See: http://kubernetes.io/docs/user-guide/compute-resources/
+    limits:
+      cpu: 500m # app will have its cpu usage throttled if exceeding this limit
+      memory: 3000Mi  # app will be killed if exceeding these limits
+    requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
+      cpu: 250m
+      memory: 1500Mi
+  liveness:
+    path: "/conf/isalive"
+    initialDelay: 90
+    timeout: 2
+  readiness:
+    path: "/conf/isalive"
+    initialDelay: 90
+    timeout: 2
+  ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
+    - "https://fasit.nais.adeo.no/conf/"
+    - "https://fasit.nais.adeo.no/api"
+    - "https://fasit.nais.adeo.no/rest"
+    - "https://fasit.adeo.no/conf/"
+    - "https://fasit.adeo.no/api"
+    - "https://fasit.adeo.no/rest"
+  cpuThresholdPercentage: 50
+  env:
+    - name: "LOG_OUTPUT"
+      value: "JSON"
+    - name: "ENVIRONMENT_NAME"
+      value: "p"
+    - name: "ENVIRONMENT_CLASS"
+      value: "p"
+    - name: "ENVCONFDB_URL"
+      value: "jdbc:oracle:thin:@a01dbfl030.adeo.no:1521/fasit"
+      # value: "jdbc:oracle:thin:@a01dbfl030.adeo.no:1521/fasit|jdbc:oracle:thin:@a01dbfl031.adeo.no:1522/fasit"
+    - name: "LDAP_USER_BASEDN"
+      value: "ou=NAV,ou=BusinessUnits,dc=adeo,dc=no"
+    - name: "LDAP_SERVICEUSER_BASEDN"
+      value: "ou=ServiceAccounts,dc=adeo,dc=no"
+    - name: "LDAP_DOMAIN"
+      value: "ADEO.NO"
+    - name: "LDAP_BASEDN"
+      value: "dc=adeo,dc=no"
+    - name: "LDAP_URL"
+      value: "ldaps://ldapgw.adeo.no"
+    - name: "VAULT_URL"
+      value: "https://vault.adeo.no"
+    - name: "ORACLE_V1_URL"
+      value: "https://basta.adeo.no/rest/v1/oracledb"
+    - name: "BASTA_URL"
+      value: "https://basta.adeo.no/rest"
+    - name: "DEPLOYLOG_V1_URL"
+      value: "https://vera.nais.oera.no/api/v1/deploylog"
+    - name: "ROLE_OPERATIONS_GROUPS"
+      value: "0000-GA-env-config-TestAdmin"
+    - name: "ROLE_SELFSERVICE_GROUPS"
+      value: "(DG) Moderniseringsprogrammet Deployere"
+    - name: "ROLE_PROD_OPERATIONS_GROUPS"
+      value: "0000-GA-env-config-ProdAdmin"
+    - name: "ROLE_SELFSERVICE_PROD_GROUPS"
+      value: "0000-GA-fasit-prod-selfservice"
+    - name: "ROLE_SUPERUSER_GROUPS"
+      value: "0000-ga-fasit-superuser"
+    - name: "PUBLISH_DEPLOYMENT_EVENTS_TO_KAFKA"
+      value: "true"
+    - name: "KAFKA_SERVERS"
+      value: "pkc-e0xg5.europe-north1.gcp.confluent.cloud:9092"
+    - name: "KAFKA_SASL_ENABLED"
+      value: "true"
+    - name: "KAFKA_DEPLOYMENT_EVENT_TOPIC"
+      value: "deployment-events"
+  vault:
+    enabled: true
+    sidecar: true
+    paths:
+      - kvPath: "oracle/data/prod/creds/fasit-user"
+        mountPath: "/secrets/oracle/envconfDB"
+      - kvPath: "serviceuser/data/prod/srvssolinux"
+        mountPath: "/secrets/ldap/ldap"
+      - kvPath: "serviceuser/data/prod/srvfasit"
+        mountPath: "/secrets/credential/srvfasit"
+      - kvPath: "certificate/data/prod/fasit-keystore"
+        mountPath: "/secrets/certificate/fasit-keystore"
+      - kvPath: "credential/data/prod/fasit_kafka_user"
+        mountPath: "/secrets/credential/fasit.kafka.user"

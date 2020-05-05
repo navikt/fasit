@@ -1,0 +1,17 @@
+{
+  "application": "otherApp",
+  "version": "69.0.0",
+  "environment": "env",
+  "nodes": ["hostname.adeo.no"],
+  "exposedResources":
+  [
+    {
+      "type": "WebserviceEndpoint",
+      "alias": "myfutureresource",
+      "properties": {
+        "endpointUrl": "https://ioc.com",
+        "securityToken": "saml"
+      }
+    }
+  ]
+}

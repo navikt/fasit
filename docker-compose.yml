@@ -1,0 +1,29 @@
+version: "3"
+services:
+  fasit:
+    build: "."
+    image: "fasit"
+    volumes:
+      - "${PWD}/secrets:/secrets"
+      - "~/.vault-token:/root/.vault-token"
+    ports:
+      - "8080:8080"
+    environment:
+      LDAP_DOMAIN: "TEST.LOCAL"
+      ROLE_OPERATIONS_GROUPS: "0000-ga-env_config_L, 0000-GA-WAS_LOGGER-Test, 0000-GA-env-config-testAdmin,\
+        \ 0000-GA-MOTTAK-WS, 0000-GA-Confluence"
+      ROLE_PROD_OPERATIONS_GROUPS: "0000-ga-env_config_S, 0000-GA-Confluence"
+      LDAP_URL: "ldaps://ldapgw.test.local"
+      ROLE_SUPERUSER_GROUPS: "0000-ga-fasit-superuser, 0000-ga-env_config_L"
+      LDAP_USER_BASEDN: "ou=NAV,ou=BusinessUnits,dc=test,dc=local"
+      DEPLOYLOG_V1_URL: "http://e34apsl00652.devillo.no:8443/api/v1/deploylog"
+      ENVCONFDB_URL: "jdbc:oracle:thin:@d26dbfl022.test.local:1521/FASIT_PKOPI"
+      LDAP_BASEDN: "dc=test,dc=local"
+      BASTA_URL: "https://fjas.no/rest"
+      ORACLE_V1_URL: "https://fjas.test.local/rest/v1/oracledb"
+      ROLE_SELFSERVICE_PROD_GROUPS: "TODO"
+      LDAP_SERVICEUSER_BASEDN: "ou=ServiceAccounts,dc=test,dc=local"
+      ROLE_SELFSERVICE_GROUPS: "0000-GA-STDAPPS"
+      NAV_TRUSTSTORE_PATH: "/secrets/truststore/ca.jks"
+      NAV_TRUSTSTORE_PASSWORD: "changeme"
+      PUBLISH_DEPLOYMENT_EVENTS_TO_KAFKA: "true"

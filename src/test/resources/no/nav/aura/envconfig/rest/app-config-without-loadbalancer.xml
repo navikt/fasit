@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://appconfig.aura.nav.no" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://appconfig.aura.nav.no http://maven.adeo.no/xsd/appconfig.xsd ">
+
+    <name>nonLbApp</name>
+
+    <artifacts>
+        <ear groupId="no.nav.app" artifactId="appappapp"/>
+    </artifacts>
+
+    <exposed-services>
+        <exposedSoap name="myService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim"
+                 wsdlArtifactId="nav-fim-echo-tjenestespesifikasjon" path="/minurl/something"/>
+        <exposedSoap name="yourService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim" wsdlArtifactId="yourService"
+                 path="/minurl/something" securityToken="NONE"/>
+    </exposed-services>
+
+    <resources>
+        <baseUrl alias="appBaseUrl" mapToProperty="baseUrl.app"/>
+        <credential alias="appUser" mapToProperty="credential.appUser"/>
+        <datasource alias="appDb1" jndi="java:/jndi/jdbc/appDb">
+            <pool maxPoolSize="50" minPoolSize="1"/>
+        </datasource>
+    </resources>
+
+    <selftest>
+        <path>/testme</path>
+    </selftest>
+
+</application>

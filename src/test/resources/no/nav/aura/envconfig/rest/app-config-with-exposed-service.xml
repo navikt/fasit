@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://appconfig.aura.nav.no" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://appconfig.aura.nav.no http://maven.adeo.no/xsd/appconfig.xsd ">
+
+    <name>app</name>
+
+    <artifacts>
+        <ear groupId="no.nav.app" artifactId="app" />
+    </artifacts>
+
+    <exposed-services>
+        <exposedSoap name="myService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim"
+                 wsdlArtifactId="nav-fim-echo-tjenestespesifikasjon" path="/minurl/something" description="ss"/>
+        <exposedSoap name="yourService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim" wsdlArtifactId="yourService"
+                 path="/minurl/something" securityToken="NONE" description="ss"/>
+        <exposedSoap name="theSoapService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim"
+                     wsdlArtifactId="nav-fim-echo-tjenestespesifikasjon" path="/minurl/something"/>
+        <exposedSoap name="exposeAnotherSoapService" path="/webservice/mywebservice">
+            <exportToZone>SBS</exportToZone>
+        </exposedSoap>
+        <exposedSoap name="exposeThisSoapService" path="/webservice/mywebservice66" wsdlGroupId="no.nav.tjenester.fim"
+                     wsdlArtifactId="nav-fim-brukerprofil-tjenestespesifikasjon" wsdlVersion="0.0.1-alpha001">
+            <exportToZone>SBS</exportToZone>
+        </exposedSoap>
+        <exposedRest name="myRestService" path="/myService"/>
+        <exposedEjb name="deployEJB" jndi="java:/ejb/no/nav/EJBHome" beanHomeInterface="no.nav.gsak.ejb.EjbHome"
+                    beanComponentInterface="no.nav.gsak.ejb.Ejben" description="en ejb til deg"/>
+        <exposedUrl name="aWebLink" path="linkToAnotherApp"/>
+
+    </exposed-services>
+
+
+</application>

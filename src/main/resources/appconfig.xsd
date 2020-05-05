@@ -1,0 +1,2245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://appconfig.aura.nav.no"
+           elementFormDefault="qualified"
+           targetNamespace="http://appconfig.aura.nav.no" version="1.0">
+
+    <xs:annotation>
+        <xs:documentation>Hovedelementet i konfigurasjonen. Dette skal inneholde alle de avhengigheter som trengs for at
+            applikasjonen skal kunne kjøre i ett miljø.
+        </xs:documentation>
+    </xs:annotation>
+    <xs:element name="application" type="tns:application"/>
+
+    <xs:complexType name="application">
+        <xs:all>
+            <xs:element name="name" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Unikt navn for din applikasjon</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element name="type" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Type applikasjon. Forløpig kun brukt for letterPackage for å angi at en spesiell
+                        type deployment skal skje
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" maxOccurs="1" name="selftest" type="tns:selftest">
+                <xs:annotation>
+                    <xs:documentation>Context Roots som applikasjonen tilbyr er tilgjengelig på. Typisk en context root
+                        per web-modul
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" name="resources" type="tns:resources">
+                <xs:annotation>
+                    <xs:documentation>Ressurser applikasjonen er avhengig av for å fungere. Feks databaser, køer og
+                        urler til andre applikasjoner
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element minOccurs="0" name="exposed-services" type="tns:exposed-services">
+                <xs:annotation>
+                    <xs:documentation>Tjenester og ressurser som blir tilgjengelig for andre når denne applikasjonen er
+                        deployet i ett miljø
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element minOccurs="0" name="artifacts" type="tns:artifacts">
+                <xs:annotation>
+                    <xs:documentation>Kode som applikasjonen består av. All artifakter definert her vil få den samme
+                        konfigurasjonen og deployes på samme server
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" name="logging" type="tns:logging">
+                <xs:annotation>
+                    <xs:documentation>Spesifisering av applikasjonens logger</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" name="monitoring" type="tns:monitoring">
+                <xs:annotation>
+                    <xs:documentation>Spesifisering av applikasjonens monitoreringsmuligheter</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" maxOccurs="1" name="loadBalancer" type="tns:loadBalancer">
+                <xs:annotation>
+                    <xs:documentation>Context Roots som applikasjonen tilbyr er tilgjengelig på. Typisk en context root
+                        per web-modul
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element minOccurs="0" maxOccurs="1" name="suspend" type="tns:suspend">
+                <xs:annotation>
+                    <xs:documentation>Gir applikasjonene en mulighet til å tilby en tjeneste som kalles under deploy slik at applikasjonen får mulighet til å gjøre seg klar til å bli tatt ned
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element maxOccurs="1" minOccurs="0" name="serverOptions" type="tns:serverOptions">
+                <xs:annotation>
+                    <xs:documentation>Innstillinger for server</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element maxOccurs="1" minOccurs="0" name="security" type="tns:security">
+                <xs:annotation>
+                    <xs:documentation>Sikkerhetsrelatert konfigurasjon</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element maxOccurs="1" minOccurs="0" name="abacSecurity" type="tns:abacSecurity">
+                <xs:annotation>
+                    <xs:documentation>Sikkerhetsrelatert konfigurasjon</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="logging">
+        <xs:annotation>
+            <xs:documentation>Angir om applikasjonen logger tjenestekall</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="serviceCalls" type="xs:boolean"/>
+    </xs:complexType>
+
+    <xs:complexType name="monitoring">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="selftest" type="tns:metric-selftest"/>
+            <xs:choice>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="metric" type="tns:metric"/>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="metric-selftest">
+        <xs:annotation>
+            <xs:documentation>Angir hvor ofte selftesten skal monitoreres (0=disable)</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="interval" type="xs:int" default="60"/>
+    </xs:complexType>
+
+    <xs:complexType name="metric">
+        <xs:annotation>
+            <xs:documentation>Angir sti og intervall til app-spesifikk metrikk som applikasjonen eksponerer
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="path" type="xs:string" use="required"/>
+        <xs:attribute name="interval" type="xs:int" default="60"/>
+    </xs:complexType>
+
+    <xs:complexType name="artifacts">
+        <xs:annotation>
+            <xs:documentation>The code to be deployed</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="ear" type="tns:ear">
+                <xs:annotation>
+                    <xs:documentation>ear artifact</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="batch" type="tns:batch">
+                <xs:annotation>
+                    <xs:documentation>batch artifact</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="selftest">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="path" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Selftest som returnerer en payload i JSON som leses av overvåkningsløsning og
+                        deploy-plugin
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element minOccurs="0" maxOccurs="1" name="humanReadablePath" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Selftest som returnerer en payload i html for bedre lesbarhet
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="delayInSeconds" type="xs:int" />
+    </xs:complexType>
+
+
+    <xs:complexType name="resources">
+        <xs:sequence>
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+                <xs:element name="datasource" type="tns:datasource">
+                    <xs:annotation>
+                        <xs:documentation>
+                            JNDI datasource
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="xmlDatasource"
+                            type="tns:xmlDatasource">
+                    <xs:annotation>
+                        <xs:documentation>
+                            JNDI datasource med xml driver
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="letterTemplate"
+                            type="tns:letterTemplate">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Brevpakken applikasjonen skal benytte
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="webservice" type="tns:webservice">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Endpoint url til en webservice. Alias
+                            matches mot en ressurs av typen
+                            WebserviceEndpoint i Envconfig. Verdien
+                            ender opp som en system property med navn
+                            &lt;br/&gt; dinproperty.url=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="soap" type="tns:soap">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Endpoint url til en webservice. Alias
+                            matches mot en ressurs av typen
+                            SoapService i Fasit.
+                            Forskjellen på soapservice og webservice er at Soapservice gir deg url direkte
+                            til tjenesten mens Webservice gir deg urlen til service gateway
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="ejb" type="tns:ejb">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Endpoint url til en ejb. Alias matches mot
+                            en ressurs av typen Ejb i Envconfig.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="rest" type="tns:rest">
+                    <xs:annotation>
+                        <xs:documentation>
+                            url til en rest service. Alias matches mot
+                            en ressurs av typen RestService i Envconfig.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="baseUrl" type="tns:baseUrl">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Url på formen protokoll://server:port for
+                            bruk i linker til andre tjenester. Blir
+                            eksponert som system property på server
+                            &lt;br/&gt; dinproperty.url=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="credential" type="tns:credential">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Brukernavn og passord par som blir eksponert
+                            som en systemproperty med suffix .username
+                            og .password &lt;br/&gt;&lt;br/&gt;
+                            dittpropertynavn.username=appService
+                            &lt;br/&gt; dittpropertynavn.password=secret
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="cics" type="tns:cics">
+                    <xs:annotation>
+                        <xs:documentation>
+                            JNDI ressurs for kobling mot Cics over CTG
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="applicationCertificate"
+                            type="tns:applicationCertificate">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Applikasjonssertifikat. Vil ende opp som en
+                            fil på server og noen system properties som
+                            er brukt av modig-security rammeverk.
+                            &lt;br/&gt;&lt;br/&gt;
+                            no.nav.modig.security.appcert.keystore -
+                            keystore fil &lt;br/&gt;
+                            no.nav.modig.security.appcert.password -
+                            passordfor keystore &lt;br/&gt;
+                            no.nav.modig.security.appcert.keystorealias
+                            - alias for sertifikat i keystore
+                            &lt;br/&gt;
+                            no.nav.modig.security.appcert.issuer -
+                            issuer av sertifikat &lt;br/&gt;
+
+
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="queueManager"
+                            type="tns:queueManager">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Oppkoblingsinfo til MQ kømanager. Settes opp
+                            som en JNDI ressurs basert på angitt jndi
+                            navn. Det er kun støtte for å koble seg til
+                            en kømanager pr applikasjon. Fre env-config
+                            hentes hostnavn og port. I tillegg genereres
+                            kanalnavnet deploytime på formen
+                            &amp;lt;miljø&amp;gt;_&amp;lt;applikasjon&amp;gt;
+                            F.eks u1_sakogbehandling. NB: Kanalnavn er
+                            begrenset til 20 tegn. Hvis generert
+                            kanalnavn overstiger denne grensen trunkeres
+                            det ned til 20 tegn fra slutten av strengen.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="externalSingleSignOn"
+                            type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Oppkoblingsinfo til SSO serveren (OpenAm)
+                            som skal konfigureres ved deploy av
+                            applikasjonen
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="emailAddress"
+                            type="tns:emailAddress">
+                    <xs:annotation>
+                        <xs:documentation>
+                            E-postadressen definert med korresponderende
+                            alias på matchende scope på formen:
+                            &lt;br/&gt;&lt;br/&gt;
+                            dittpropertynavn.address=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="smtpServer" type="tns:smtpServer">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Oppkoblingsinfo til e-post server til
+                            korresponderende alias på matchende scope på
+                            formen: &lt;br/&gt;&lt;br/&gt;
+                            dittpropertynavn.host=...
+                            &lt;br/&gt;&lt;br/&gt;
+                            dittpropertynavn.port=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="ldap" type="tns:ldap">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Oppkoblingsinfo til LDAP- eller AD-server
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="directory" type="tns:directory">
+                    <xs:annotation>
+                        <xs:documentation>
+                            file directory on targetServer
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="fileLibrary" type="tns:fileLibrary">
+                    <xs:annotation>
+                        <xs:documentation>Filer og kataloger som er eksponert av andre applikasjoner</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="applicationProperties"
+                            type="tns:applicationProperties">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Applikasjonsspesifikke propert
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="logins">
+        <xs:sequence>
+            <xs:element maxOccurs="1" minOccurs="0" name="openAm" type="tns:openAm">
+            </xs:element>
+
+            <xs:element maxOccurs="1" minOccurs="0" name="spnego">
+                <xs:annotation>
+                    <xs:documentation>
+                        Aktivering av intern single sign-on
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+
+                    <xs:annotation>
+                        <xs:documentation>
+                            LDAP-ressurs som holder brukere, grupper og keytab-prinsipal.
+                            Kerberos autentisering er antatt å ligge på samme server med standard kerberos port 88.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:attribute name="ldapResourceAlias" type="xs:string" use="optional" default="ldap"/>
+                    <xs:attribute name="fallbackLoginPagePath" type="xs:string" use="optional"/>
+
+                </xs:complexType>
+
+            </xs:element>
+
+
+            <xs:element maxOccurs="1" minOccurs="0" name="saml">
+                <xs:annotation>
+                    <xs:documentation>
+                        Aktivering av Saml-token-validering
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element maxOccurs="1" minOccurs="0" name="ldapAuth">
+                <xs:annotation>
+                    <xs:documentation>
+                        Aktivering av ldap-login. For å bruke denne legg følgende til i jboss-web.xml:
+
+                        &lt;jboss-web&gt;
+                        &lt;security-domain&gt;InternalLdap&lt;/security-domain&gt;
+                        &lt;/jboss-web&gt;
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="2" minOccurs="0" name="additionalLdapContext">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string"/>
+                            </xs:simpleType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="ldapResourceAlias" type="xs:string" use="optional" default="ldap">
+                        <xs:annotation>
+                            <xs:documentation>LDAP-ressurs som holder brukere, grupper og keytab-prinsipal.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="additionalBaseContext" type="xs:string" use="optional"
+                                  default="ou=NAV,ou=BusinessUnits">
+                        <xs:annotation>
+                            <xs:documentation>
+                                DEPRECATED. Benytt additionalLdapContext elementet i stedet.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="lockToUser" type="xs:string" use="optional">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Låser autentiseringen til kun å autentisere en gitt spesifikk bruker
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="authenticatedRole" type="xs:string" use="optional">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Hvis en bruker er autentisert har han ikke nødvendigvis noen roller. Sett denne for å
+                                applisere en rolle for alle autentiserte brukere.
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+
+                </xs:complexType>
+            </xs:element>
+            <xs:element maxOccurs="1" minOccurs="0" name="openIdConnect">
+                <xs:annotation>
+                    <xs:documentation>
+                        Aktivering Open ID Connect login
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:annotation>
+                        <xs:documentation>
+                            Loginmodul som setter opp Open ID Connect modul.
+                            Oppsett for logins med JWT token.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="contextRoot">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string"/>
+                            </xs:simpleType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="moduleClass" type="xs:string" use="required"/>
+                    <xs:attribute name="interceptedPathFilter" type="xs:string"/>
+                    <xs:attribute name="mapIdentityToRegistryUser" type="xs:boolean"/>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element maxOccurs="1" minOccurs="0" name="databaseLogin">
+                <xs:annotation>
+                    <xs:documentation>
+                        Database login modul
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:annotation>
+                        <xs:documentation>
+                            Loginmodul som setter opp Database modul.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:attribute name="domainName" type="xs:string"/>
+                    <xs:attribute name="dsJndiName" type="xs:string"/>
+                    <xs:attribute name="principalsQuery" type="xs:string"/>
+                    <xs:attribute name="rolesQuery" type="xs:string"/>
+                    <xs:attribute name="hashAlgorithm" type="xs:string" use="optional" default="SHA-256"/>
+                    <xs:attribute name="hashEncoding" type="xs:string" use="optional" default="base64"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="exposed-services">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="exposedSoap" type="tns:exposedSoap">
+                <xs:annotation>
+                    <xs:documentation>
+                        Webservice som blir eksponert av applikasjonen.
+                        Defininsjonen består av maven koordinater til
+                        wsdl defininsjonen (zip) og relativ url til
+                        endpoint i denne applikasjonen
+                        &lt;br/&gt;&lt;br/&gt; Etter en vellykket deploy
+                        vil denne bli registrert i Envconfig scopet for
+                        samme miljø som applikasjonen kjører i
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedRest" type="tns:exposedRest">
+                <xs:annotation>
+                    <xs:documentation>
+                        Rest service som blir eksponert av
+                        applikasjonen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ejbProvider" type="tns:exposedEjb">
+                <xs:annotation>
+                    <xs:documentation>
+                        DEPRECATED. User exposedEjb instead
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedEjb" type="tns:exposedEjb">
+                <xs:annotation>
+                    <xs:documentation>
+                        Ejb som er tilgjengelig for applikasjonen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedUrl" type="tns:exposedUrl">
+                <xs:annotation>
+                    <xs:documentation>
+                        Ejb som er tilgjengelig for applikasjonen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedLetterTemplate" minOccurs="0"
+                        maxOccurs="unbounded" type="tns:exposedLetterTemplate">
+                <xs:annotation>
+                    <xs:documentation>
+                        Brevmaler som er tilgjengelig for applikasjonen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedQueue" type="tns:exposedQueue">
+                <xs:annotation>
+                    <xs:documentation>
+                        Kø som eies og leses av denne applikasjonen
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="exposedFileLibrary" type="tns:exposedFileLibrary">
+                <xs:annotation>
+                    <xs:documentation>
+                        Katalog som skal brukes utenfor denne applikasjonen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="loadBalancer">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="contextRoot" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>DEPRECATED, blir ikke brukt
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element minOccurs="0" maxOccurs="1" name="lbHealthMonitor" type="tns:lbHealthMonitor">
+                <xs:annotation>
+                    <xs:documentation>DEPRECATED, blir ikke brukt
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="alias" use="optional" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Alias for LoadBalancerConfig ressurs. Hvis dette ikke er angitt brukes
+                    appnavn-loadbalancer som default
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="isAlive" use="optional" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Full sti fil isAlive tjenesten definert av applikasjonen, inkl. context root.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="connectionLimit" use="optional" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Øvre grense for connections til hver node</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="suspend">
+        <xs:attribute name="url" use="required" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Full sti fil suspendtjenesten definert av applikasjonen, inkl. context root.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="timeoutSeconds" use="optional" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Ventetid i sekunder som plugninet venter på suspendtjenesten. Hvis tjenesten da ikke returnerer 200 OK avbrytes deploy med en feilmelding</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="credential" use="required" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Ventetid i sekunder som plugninet venter på suspendtjenesten. Hvis tjenesten da ikke returnerer 200 OK avbrytes deploy med en feilmelding</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+
+    </xs:complexType>
+
+
+    <xs:complexType name="lbHealthMonitor">
+        <xs:annotation>
+            <xs:documentation>DEPRECATED, blir ikke brukt
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="type" use="required">
+            <xs:annotation>
+                <xs:documentation>Hvilken type helsesjekk som brukes i monitor</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="HTTP"></xs:enumeration>
+                    <xs:enumeration value="HTTPS"></xs:enumeration>
+                    <xs:enumeration value="TCP_HALF_OPEN"></xs:enumeration>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="isAliveUrl">
+            <xs:annotation>
+                <xs:documentation>Url til applikasjonens custom isAlive (eks. /xxxx/internal/isAlive)</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string"/>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="interval">
+            <xs:annotation>
+                <xs:documentation>Hvilket intervall helsemonitoren skal kjøres</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:int"/>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="timeout">
+            <xs:annotation>
+                <xs:documentation>Når helsemonitoren skal time ut</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:int"/>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="webservice">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>endpoint url til en webservice. alias matches mot en ressurs av typen
+                            WebserviceEndpoint i Envconfig. Verdien ender opp som en system property med navn
+                            dinproperty.url=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+                <xs:attribute name="skipServiceGateway" type="xs:boolean" default="false">
+                    <xs:annotation>
+                        <xs:documentation>If set to true the system property for this service will be set to the real url of the service and not the service gateway url that is the default behaviour
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="soap">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>endpoint url til en webservice. alias matches mot en ressurs av typen
+                            WebserviceEndpoint i Envconfig. Verdien ender opp som en system property med navn
+                            dinproperty.url=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="ejb">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>provider url til en ejb. alias matches mot en ressurs av typen
+                            Ejb i Envconfig.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="fileLibrary">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>alias matches mot en ressurs av typen
+                            FileLibrary i Fasit.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="rest">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>alias matches mot en ressurs av typen
+                            RestService i Envconfig.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="url">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>alias matches mot en ressurs av typen
+                            Url i Envconfig.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="emailAddress">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>
+                            E-postadressen definert med korresponderende alias på matchende scope på formen:
+                            dittpropertynavn.address=...
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="smtpServer">
+        <xs:annotation>
+            <xs:documentation>Oppkoblingsinfo til e-post server. Kombinerer SmtpServer og bindes til en gitt credentials
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractJndiResource">
+                <xs:attribute name="refCredentialAlias">
+                    <xs:annotation>
+                        <xs:documentation>Credentials som benyttes for e-post server</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="ldap">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType abstract="true" name="abstractPropertyResource">
+        <xs:complexContent>
+            <xs:extension base="tns:aliasResource">
+                <xs:sequence/>
+                <xs:attribute name="mapToProperty" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Grunnnavnet denne ressursen får som en system property på server.
+                            Suffix vil avhenge litt av typen ressurs
+                            Feks:
+                            dittpropertynavn.url=
+                            dittpropertynavn.username=
+                            dittpropertynavn.password=
+
+                            Det er mulig å mappe samme verdi til flere properties ved å legge inn en kommaseparert
+                            liste. myprop1,myprop2
+
+                            Dersom denne ikke angis brukes "alias" som grunnavn.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType abstract="true" name="aliasResource">
+        <xs:sequence/>
+        <xs:attribute name="alias" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Navnet ressursen har i det den miljøspesifikkekonfigurasjonen (env-config). Dette er
+                    nøkkelen som
+                    kobler de to
+                    registerene sammen
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="datasource">
+        <xs:annotation>
+            <xs:documentation>Managed jndi datasource på server. Kan også inneholde settings for connection pool
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPooledResource">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="pool" type="tns:connectionPool">
+                    </xs:element>
+                    <xs:element minOccurs="0" name="flywaySettings" type="tns:flywaySettings">
+                    </xs:element>
+                    <xs:element name="customProperties" type="tns:Properties" maxOccurs="unbounded" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Properties for å styre oppførsel konfigurasjonsobjekt</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
+                <xs:attribute name="cmpEnabled" default="true" type="xs:boolean">
+                    <xs:annotation>
+                        <xs:documentation>Angir om datasourcen skal brukes i Container Managed Persistence eller ikke
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="type" default="ORACLE">
+                    <xs:annotation>
+                        <xs:documentation>Type database som benyttes. Default er oracle</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="ORACLE"></xs:enumeration>
+                            <xs:enumeration value="DB2"></xs:enumeration>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="jtaEnabled" default="true" type="xs:boolean">
+                    <xs:annotation>
+                        <xs:documentation>Angir om datasourcen benytte JTA for JBoss
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="cics">
+        <xs:annotation>
+            <xs:documentation>Managed jndi Cics kobling over CTG på server. Kan også inneholde settings for connection
+                pool
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPooledResource">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="pool" type="tns:connectionPool"/>
+                    <xs:element name="customProperties" type="tns:Properties" maxOccurs="unbounded" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Properties for å styre oppførsel konfigurasjonsobjekt</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="xmlDatasource">
+        <xs:annotation>
+            <xs:documentation>JNDI datasource med xml driver. Kan også inneholde connection pool settings
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:datasource"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="xaDatasource">
+        <xs:annotation>
+            <xs:documentation>JNDI datasource med XA driver. Kan også inneholde connection pool settings
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:datasource"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="letterTemplate">
+        <xs:annotation>
+            <xs:documentation>Brevpakken applikasjonen skal benytte</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType abstract="true" name="abstractJndiResource">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:attribute name="jndi" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType abstract="true" name="abstractPooledResource">
+        <xs:complexContent>
+            <xs:extension base="tns:abstractJndiResource">
+                <xs:attribute name="xaEnabled" type="xs:boolean">
+                    <xs:annotation>
+                        <xs:documentation>Angir om ressursen skal støtte XA eller ikke</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="connectionPool">
+        <xs:annotation>
+            <xs:documentation>Mulighet til å overstyre defaultsettings for connectionpool</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="customProperties" type="tns:Properties" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Properties for å styre oppførsel konfigurasjonsobjekt</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="maxPoolSize" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the maximum number of physical connections that you can create in this
+                    pool
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="minPoolSize" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the minimum number of physical connections to maintain.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="connectionTimeout" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the interval, in seconds, after which a connection request times out
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="reapTime" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the interval, in seconds, between runs of the pool maintenance thread.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="unusedTimeout" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the interval in seconds after which an unused or idle connection is
+                    discarded.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="agedTimeout" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the interval in seconds before a physical connection is discarded
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="queryTimeout" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>Specifies the maximum number of seconds before query times out
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="purgePolicy">
+            <xs:annotation>
+                <xs:documentation>Specifies how to purge connections when a stale connection or fatal connection error
+                    is detected
+
+                    ENTIRE_POOL All connections in the pool are marked stale
+                    FAILING_CONNECTIONS Only the connection that caused the StaleConnectionException is closed
+
+                </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="ENTIRE_POOL"></xs:enumeration>
+                    <xs:enumeration value="FAILING_CONNECTIONS"></xs:enumeration>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="flywaySettings">
+        <xs:annotation>
+            <xs:documentation>Mulighet til å sette spesifike flyway innstillinger</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="placeholders" type="tns:Properties" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Specifies placeholders to replace in database scripts migrated by flyway
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="baselineVersion" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Specifies the baseline version number to start from in existing database
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="encoding" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Specifies the character encoding of the migration
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="baseUrl">
+        <xs:annotation>
+            <xs:documentation>Url på formen protokoll://server:port for bruk i linker til andre tjenester. Blir
+                eksponert som system property på server
+
+                dinproperty.url=http://someserver.adeo.no:8080
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>Url på formen protokoll://server:port for bruk i linker til andre tjenester.
+                            Blir eksponert som system property på server
+
+                            dinproperty.url=http://someserver.adeo.no:8080
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="applicationProperties">
+        <xs:annotation>
+            <xs:documentation>Applikasjonsspesifikke prioeprties som endrer seg mellom miljøer. Denne skal ikke
+                inneholde referanser til andre ressurer (url) eller passord.
+                Verdiene skal ha fornuftige defaults
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:aliasResource">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="credential">
+        <xs:annotation>
+            <xs:documentation>Brukernavn og passord par som blir eksponert som en systemproperty med suffix .username og
+                .password
+
+                Eks
+                dittpropertynavn.username=appService
+                dittpropertynavn.password=secret
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPropertyResource">
+                <xs:sequence>
+                    <xs:annotation>
+                        <xs:documentation>Brukernavn og passord par som blir eksponert som en systemproperty med suffix
+                            .username og
+                            .password
+
+                            Eks
+                            dittpropertynavn.username=appService
+                            dittpropertynavn.password=secret
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="applicationCertificate">
+        <xs:annotation>
+            <xs:documentation>Setting up application certificate on the target server. Alias is used to match with
+                Certificate in fasit. Result is a keystorefile and system properties with
+                - keystore.path in no.nav.modig.security.appcert.keystore
+                - keystore password in no.nav.modig.security.appcert.password
+                - keystore alias in in no.nav.modig.security.appcert.alias
+                - the issurer in no.nav.modig.security.appcert.issuer
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:aliasResource"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="securityMapping">
+        <xs:annotation>
+            <xs:documentation>Mapping fra LDAP bruker til angitt rolle.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="resourceAlias" type="xs:string" use="required">
+        </xs:attribute>
+        <xs:attribute name="toRole" type="xs:string" use="required">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="directory">
+        <xs:annotation>
+            <xs:documentation>
+                Katalog på lokalt filområde. Eksponeres for
+                applikasjonen som en system property som inneholder full
+                path til katalogen
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="file" type="tns:fileElement" minOccurs="0"
+                        maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Filer som skal kopierers inn i denne katalogen
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="mountOnNfs" type="tns:NfsMount"
+                        minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Denne katalogen skal monteres på ett NFS share.
+                        Hvis miljøet det deployes til ikke har NFS
+                        tilgjengelig vil det gis en advarsel og lages en
+                        lokal katalog
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="mountOnCifs" type="tns:CifsMount"
+                        maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Denne katalogen skal monteres på en Cifs share
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Navnet på katalogen. Brukes for skille to kataloger
+                    fra hverandre.
+                </xs:documentation>
+            </xs:annotation>
+
+        </xs:attribute>
+
+        <xs:attribute name="mapToProperty" type="xs:string"
+                      use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    navn på system property som vil inneholde full path
+                    til folder
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="symlink" type="tns:pathType"
+                      use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Map this directory to a given path on the target
+                    system. The symlink must be absolute path. A symlink
+                    can not be the parent of another symlink
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="temporary" type="xs:boolean" default="false"
+                      use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Temporære filer vil bli slettet ved redeploy av
+                    applikasjonen
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="fileElement">
+        <xs:attribute name="source" type="xs:string"></xs:attribute>
+        <xs:attribute name="mapToProperty" type="xs:string"></xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="queueManager">
+        <xs:annotation>
+            <xs:documentation>Oppkoblingsinfo til MQ kømanager. Settes opp som en JNDI ressurs basert på angitt jndi
+                navn. Det er kun støtte for å
+                koble seg til en kømanager pr applikasjon. Fre env-config hentes hostnavn og port.
+                I tillegg genereres kanalnavnet deploytime på formen &amp;lt;miljø&amp;gt;_&amp;lt;applikasjon&amp;gt;
+                F.eks u1_sakogbehandling.
+                NB: Kanalnavn er begrenset til 20 tegn. Hvis generert kanalnavn overstiger denne grensen trunkeres
+                det ned til 20 tegn fra slutten av strengen.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractPooledResource">
+                <xs:sequence>
+                    <xs:element name="credential" type="tns:credential" maxOccurs="1" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Brukercredentials i AD som skal brukes for å koble seg til denne
+                                queuemanager. Vil kun virke med > MQ 8 . Vær obs på begrensening på brukernavn/passord
+                                på 12 tegn
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="channel" type="tns:channel" maxOccurs="1" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Kanalnavn som skal brukes for å koble seg til denne queuemanager. Vær obs
+                                på begrensening på begrensning på 20 tegn
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element minOccurs="0" name="pool" type="tns:connectionPool">
+                    </xs:element>
+                    <xs:element minOccurs="0" name="sessionPool" type="tns:connectionPool">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Session pool konfigurasjon for
+                                QueueConnectionFactory
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="customProperties" type="tns:Properties" maxOccurs="unbounded" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Properties for å styre oppførsel
+                                konfigurasjonsobjekt
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:sequence>
+                        <xs:choice maxOccurs="unbounded" minOccurs="0">
+                            <xs:element name="queue" type="tns:queue">
+                                <xs:annotation>
+                                    <xs:documentation>Køer som skal knyttes til denne kø manageren</xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                        </xs:choice>
+                    </xs:sequence>
+                </xs:sequence>
+                <xs:attribute name="enableSSL" type="xs:boolean"></xs:attribute>
+                <xs:attribute name="cipherSuite" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>TLS cipher suite om man vil bruke noe annet enn TLS_RSA_WITH_AES_128_CBC_SHA
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="unifiedConnectionFactory" type="xs:boolean">
+                    <xs:annotation>
+                        <xs:documentation>Settes til true for å bruke
+                            com.ibm.mq.connector.outbound.ManagedConnectionFactoryImpl. Dette gir mulighet til
+                            å sette opp QueueConnectionFactory i Jboss til å bruke Unified MQConnectionFactory
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="bindToMdb" type="xs:boolean">
+                    <xs:annotation>
+                        <xs:documentation>Settes til true for å koble kømanager til MDB'en som settes opp for
+                            applikasjonen
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="queue">
+        <xs:annotation>
+            <xs:documentation>En jms kø som skal brukes av applikasjonen.</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:abstractJndiResource">
+                <xs:sequence>
+                    <xs:element name="customProperties" type="tns:Properties" maxOccurs="unbounded" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Properties for å styre oppførsel konfigurasjonsobjekt
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="listenerPort" type="tns:listenerPort" maxOccurs="1" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Lytteport på køen</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="activationSpec" type="tns:activationSpec" maxOccurs="1" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Activation Specification for topic</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
+                <xs:attribute name="targetClient" default="JMS">
+                    <xs:annotation>
+                        <xs:documentation>Targetclient enten JMS eller MQ. Hovedsaklig tiltenkt for bruk på Jboss
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="JMS"></xs:enumeration>
+                            <xs:enumeration value="MQ"></xs:enumeration>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ear">
+        <xs:annotation>
+            <xs:documentation>ear fil</xs:documentation>
+        </xs:annotation>
+
+        <xs:complexContent>
+            <xs:extension base="tns:artifact">
+                <xs:sequence>
+                    <xs:element name="classLoader" type="tns:classLoader" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation>Classloader mode and policy for enterprise application</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="classPathLibrary" type="tns:classPathLibrary" minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:documentation>Lib-fil som tilgjengeliggjøres på classpath</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
+                <xs:attribute name="startUpOrder" type="xs:int" use="optional" default="10">
+                    <xs:annotation>
+                        <xs:documentation>startup order when multiple artifacts is in the same application. Smallest
+                            number
+                            starts first. Default Value is 10.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="name" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Used when an application contains multiple ear files as the name shown in the
+                            admin
+                            console of the application server
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+
+    </xs:complexType>
+
+    <xs:complexType name="classPathLibrary">
+        <xs:complexContent>
+            <xs:extension base="tns:artifact">
+                <xs:attribute name="requireClassifier" type="xs:boolean" use="optional" default="false"/>
+                <xs:attribute name="unpack" type="xs:boolean" use="optional" default="false"/>
+                <xs:attribute name="isolatedClassLoader" type="xs:boolean" use="optional" default="false"/>
+                <xs:attribute name="setNativeLibraryPath" type="xs:boolean" use="optional" default="false"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="classLoader">
+        <xs:annotation>
+            <xs:documentation>Map this directory to a given path on the target system.</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:artifact">
+                <xs:attribute name="type" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Class loader type</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="APPLICATION"></xs:enumeration>
+                            <xs:enumeration value="MODULE"></xs:enumeration>
+                            <xs:enumeration value="SERVER"></xs:enumeration>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="mode" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Class loader type</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="PARENT_FIRST"></xs:enumeration>
+                            <xs:enumeration value="PARENT_LAST"></xs:enumeration>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="policy" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Class loader type</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="SINGLE"></xs:enumeration>
+                            <xs:enumeration value="MULTIPLE"></xs:enumeration>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="batch">
+        <xs:annotation>
+            <xs:documentation>batchfil</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:artifact">
+                <xs:attribute name="symlink" use="optional" type="tns:pathType">
+                    <xs:annotation>
+                        <xs:documentation>Map this directory to a given path on the target system. The symlink must be
+                            absolute path. A symlink can not be the parent of another symlink
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:simpleType name="pathType">
+        <xs:annotation>
+            <xs:documentation>Unix style path starting with / and with no whitespace</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType abstract="true" name="artifact">
+        <xs:sequence/>
+        <xs:attribute name="groupId" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Maven groupid of the artifact</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="artifactId" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Maven artifactid</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="version" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Version of the artifact. If not provided the version of the configuration artifact will be used
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+
+    </xs:complexType>
+
+    <xs:complexType abstract="true" name="exposedService">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="exportToZone">
+                <xs:annotation>
+                    <xs:documentation>Denne tjenesten skal eksponeres på andre soner enn den selv kjører i. Alle
+                        tjenester er default eksponert i den sonen den kjører i.
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:annotation>
+                        <xs:documentation>Navn på nettverksonen</xs:documentation>
+                    </xs:annotation>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="SBS"/>
+                        <xs:enumeration value="ALL"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Navnet denne tjenesten vil få i den miljøspesifikke konfigurasjonen (envconfig). Dette
+                    er navnet som klienter som skal bruke
+                    tjenesten må forholde seg til. Navnet må være unikt.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="description" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>En tekst som beskriver den spesifikke tjenesten, evt. annet som er nyttig å vite for
+                    konsumenter av tjenesten.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="exposedSoap">
+        <xs:annotation>
+            <xs:documentation>Eksponert webservice fra denne applikasjonen</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+                <xs:attribute name="path" use="required">
+                    <xs:annotation>
+                        <xs:documentation>Absolutt path til endepunktet som eksponerer denne tjenesten
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:annotation>
+                            <xs:documentation></xs:documentation>
+                        </xs:annotation>
+                        <xs:restriction base="xs:string">
+
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="wsdlGroupId" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>maven groupid til wsdl artifact</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="wsdlArtifactId" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>maven artifactid til wsdl artifact</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="wsdlVersion" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>maven version til wsdl artifact</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="deployToServiceGateway" type="xs:boolean" use="optional" default="true">
+                    <xs:annotation>
+                        <xs:documentation>if set to false this service will be registered in fasit as a different resoure type then WebserviceEndpoint. As a result the service will not be provisioned on service gateway</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="securityToken" use="optional" default="SAML">
+                    <xs:annotation>
+                        <xs:documentation>Sikkerhetstoken i bruk i denne tjenesten</xs:documentation>
+                    </xs:annotation>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="NONE"/>
+                            <xs:enumeration value="LTPA"/>
+                            <xs:enumeration value="SAML"/>
+                            <xs:enumeration value="USERNAME_TOKEN"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="exposedRest">
+        <xs:annotation>
+            <xs:documentation>Eksponert rest service fra denne applikasjonen</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+                <xs:attribute name="path" type="xs:string" use="required">
+                    <xs:annotation>
+                        <xs:documentation>Url til endepunktet som eksponerer denne tjenesten
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="exposedUrl">
+        <xs:annotation>
+            <xs:documentation>Eksponert url fra denne applikasjonen</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+                <xs:attribute name="path" type="xs:string" use="required">
+                    <xs:annotation>
+                        <xs:documentation>Url til endepunktet som eksponerer denne tjenesten
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="exposedLetterTemplate">
+        <xs:annotation>
+            <xs:documentation>Eksponert brevpakke fra denne applikasjonen</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Navn på brevpakke
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="groupId" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Group id til brevmalartifaktet
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="artifactId" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Artifact id til brevmalartifaktet
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="version" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Versjon til brevmalartifaktet</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="description" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>Beskrivelse av brevmalen
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="exposedQueue">
+        <xs:annotation>
+            <xs:documentation>
+                Kø som leses og eies av applikasjonen
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="exposedFileLibrary">
+        <xs:annotation>
+            <xs:documentation>Eksponert filkatalog som skal brukes av andre applikasjoner på samme node
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+                <xs:attribute name="directory" type="xs:string" use="required">
+                    <xs:annotation>
+                        <xs:documentation>navnet på directory element som blir eksponert. Navnet må være det samme.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="exposedEjb">
+        <xs:annotation>
+            <xs:documentation>Ejb som tilbys av applikasjonen</xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="tns:exposedService">
+                <xs:attribute name="jndi" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Jndinavnet som benyttes for lookup av ejb
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="beanHomeInterface" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            En klient lokaliserer en entrerprise beans home interface via jndi. En beans home interface
+                            inneholder
+                            metoder for å opprette, fjerne og finne EJB objects av samme type.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="beanComponentInterface" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Et EJB object er akksesserbart via component interfacet. Component interfacet definerer
+                            business metoder som
+                            kan kalles fra klienten.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="openAm">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="contextRoot">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string"/>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="serverOptions">
+        <xs:sequence>
+            <xs:element name="cron" type="tns:cron" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Cron-jobber som i dag finnes for applikasjonen, hvor det utføres oppgaver som ikke
+                        kan løses på andre måter
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="memoryParameters" type="tns:memoryParameters" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Will be used as the memory settings for the application / process. ResourceAlias maps this to
+                        the named resource in Fasit
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="jvmArgs" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>JVM-argumenter til kjøremiljøet. Disse vil appliseres sist og vil kunne overstyres
+                        av plattformen.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="deploymentScanner" type="tns:deploymentScanner" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Will be used as the settings for the deployment scanner for hot-deploy in Jboss
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="timerManager" type="tns:timerManager" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating timer manager</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="workManager" type="tns:workManager" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating work manager for use by scheduler</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="schedulerConfiguration" type="tns:schedulerConfiguration" minOccurs="0"
+                        maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating a scheduler service for use by the EJB Timer</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="resourceEnvironmentProvider" type="tns:resourceEnvironmentProvider" minOccurs="0"
+                        maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating a resource environment provider for use together with work manager
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="webSockets" type="tns:webSockets" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Configuring the web socket protocol</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="replicationDomain" type="tns:replicationDomain" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating a scheduler service for use by the EJB Timer</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="cacheInstance" type="tns:cacheInstance" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Creating a scheduler service for use by the EJB Timer</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="webSettings" type="tns:webSettings" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Web configuration settings for undertow subsystem</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ejbSettings" type="tns:ejbSettings" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>EJB configuration settings for ejb3 subsystem</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="customProperties" type="tns:ServerProperties" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Properties for å styre oppførsel konfigurasjonsobjekt</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="cron">
+        <xs:attribute name="description" use="required">
+            <xs:annotation>
+
+                <xs:documentation>Beskrivelses tekst som blir med som kommentar i cron-fil
+                </xs:documentation>
+
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="schedule" use="required">
+            <xs:annotation>
+                <xs:documentation>
+
+                    Kommandoer utføres av cron når minutt, time, måneds og år-feltet matcher tidspunkt, .
+                    Et felt kan være en stjerne (*), som alltid står for "first-last". Eks: "* * * * *" hvert
+                    minutt, eller "15 * * * *" kvart over hver hele time.
+
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="command" use="required">
+            <xs:annotation>
+                <xs:documentation>Cronjob-kommandoen</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="memoryParameters">
+        <xs:annotation>
+            <xs:documentation>Mapping from alias to Fasit resource.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="resourceAlias" type="xs:string" use="required">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="deploymentScanner">
+        <xs:annotation>
+            <xs:documentation>Enabling/disabling and setting scan interval.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="scanEnabled" type="xs:boolean" use="optional">
+        </xs:attribute>
+        <xs:attribute name="scanInterval" type="xs:int" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="timerManager">
+        <xs:annotation>
+            <xs:documentation>Configration of Timer Manager for WAS.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="jndi" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="timerThreads" type="xs:int" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="workManager">
+        <xs:annotation>
+            <xs:documentation>Configration of Work Manager for WAS.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="jndi" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="workTimeout" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="alarmThreads" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="maximumThreads" type="xs:int" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="schedulerConfiguration">
+        <xs:annotation>
+            <xs:documentation>Configuration for scheduler.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="jndi" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="datasourceJndi" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="tablePrefix" type="xs:string" use="optional">
+        </xs:attribute>
+        <xs:attribute name="pollInterval" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="datasourceAlias" type="xs:string" use="optional">
+        </xs:attribute>
+        <xs:attribute name="workManagerJndi" type="xs:string">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="replicationDomain">
+        <xs:annotation>
+            <xs:documentation>Configuration for WAS replication domain.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="requestTimeout" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="numberOfReplicas" type="xs:int" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="cacheInstance">
+        <xs:annotation>
+            <xs:documentation>Configuration for scheduler.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="jndi" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="cacheSize" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="defaultPriority" type="xs:int" use="optional">
+        </xs:attribute>
+        <xs:attribute name="replicationType" type="tns:replicationType" use="optional" default="NONE">
+        </xs:attribute>
+        <xs:attribute name="replicationDomain" type="xs:string" use="optional">
+        </xs:attribute>
+        <xs:attribute name="pushFrequency" type="xs:int" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="webSettings">
+        <xs:annotation>
+            <xs:documentation>Configuration for undertow subsystem.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="maxPostSize" type="xs:long">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="ejbSettings">
+        <xs:annotation>
+            <xs:documentation>Configuration for ejb3 subsystem.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="sessionBeanPoolSize" type="xs:int" use="optional"></xs:attribute>
+        <xs:attribute name="sessionBeanTimeout" type="xs:int"></xs:attribute>
+        <xs:attribute name="mdbPoolSize" type="xs:int" use="optional"></xs:attribute>
+        <xs:attribute name="mdbTimeout" type="xs:int"></xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="resourceEnvironmentProvider">
+        <xs:annotation>
+            <xs:documentation>Configuration for Resource Environment Provider WAS.</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="isolatedClassLoader" type="xs:string" use="optional" default="false">
+        </xs:attribute>
+        <xs:attribute name="refFactoryClassName" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="refClassName" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="resEnvEntryName" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="resEnvEntryJndi" type="xs:string">
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="webSockets">
+        <xs:annotation>
+            <xs:documentation>Configuration for WebSockets in JBoss.</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="enable" type="xs:boolean" use="optional" default="false">
+        </xs:attribute>
+
+    </xs:complexType>
+
+    <xs:complexType name="security">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="logins" type="tns:logins"/>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="roleMapping" type="tns:securityMapping">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Mapping fra LDAP bruker til lokal rolle. I MapToProperty angis rollenavnet som applikasjonen
+                            bruker i koden. F.eks
+                            ROLE_OPERATIONS I env-config settes det opp en kommeseparert liste med AD gruppenavnet f.eks
+                            0000-GA-envconfig-admin
+                            Under deploy blir gruppe rolle mappingen tilgjengelig som en System property på formen &amp;lt;rolle&amp;gt;.groups
+                            F.eks ROLE_OPERATIONS.groups=0000-GA-envconfig-admin
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="runAs" type="tns:securityMapping">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Blir satt som runAs bruker under applikasjonen på Was (User RunAs roles)
+                            resourceAlias mapper til en Credential ressurs i Fasit
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="serviceUserResourceAlias" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    Referanse til AD servicebruker i Envconfig som gir applikasjonsertifikat og brukernavn/passord for
+                    denne applikasjonen.
+                    Feks srvVedtak
+                </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="4"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="abacSecurity">
+        <xs:attribute name="serviceUserResourceAlias" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    Referanse til AD servicebruker i fasit brukernavn/passord for bruk til ABAC-integrasjon.
+                    Feks srvvedtak
+                </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="4"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="Property">
+        <xs:attribute name="key" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="ServerProperties">
+        <xs:sequence>
+            <xs:element name="property" type="tns:Property" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="parentObject" use="required" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>Angir hvilket Objekt i under serveren propertyen skal settes.
+                    Properties som kan settes her må hete det samme som de
+                    faktisk heter på WAS. Ved dypere stukturer kan man bruke en . syntaks
+                    f.eks (MessageListenerService.ThreadPool).
+                    Referer til dokumentasjonen til WAS eller ta kontakt med automatiseringsteamet i
+                    Leveransestøtte hvis du har spesielle properties som må settes.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="Properties">
+        <xs:sequence>
+            <xs:element name="property" type="tns:Property" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="parentObject" use="optional" default="J2EEResourceProperty">
+            <xs:annotation>
+                <xs:documentation>Angir hvilket Objekt i konfigstrukturen custom properties skal konfigureres. Dette har
+                    foreløpig kun effekt på Was servere. Vanlige custom properties som kan settes på de fleste
+                    ressurstyper i WAS
+                    har parentObject J2EEResourceProperty. Properties som kan settes her må hete det samme som de
+                    faktisk heter
+                    på WAS. Referer til dokumentasjonen til WAS eller ta kontakt med automatiseringsteamet i
+                    Leveransestøtte
+                    hvis du har spesielle properties som må settes.
+                </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="J2EEResourceProperty"/>
+                    <xs:enumeration value="DataSource"/>
+                    <xs:enumeration value="MQQueueConnectionFactory"/>
+                    <xs:enumeration value="MQConnectionFactory"/>
+                    <xs:enumeration value="ConnectionPool"/>
+                    <xs:enumeration value="MQQueue"/>
+                    <xs:enumeration value="J2CActivationSpec"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="listenerPort">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="maxSessions" type="xs:int" use="optional"/>
+        <xs:attribute name="maxRetries" type="xs:int" use="optional"/>
+        <xs:attribute name="maxMessages" type="xs:int" use="optional"/>
+        <xs:attribute name="initialState" type="tns:initialStates" use="optional"/>
+        <xs:attribute name="description" type="xs:string" use="optional"/>
+        <xs:attribute name="startOnlyOnOneNode" type="xs:boolean" use="optional"/>
+    </xs:complexType>
+
+
+    <xs:complexType name="activationSpec">
+        <xs:annotation>
+            <xs:documentation>J2C Activation Specification specific for WAS.</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="jndi" type="xs:string" use="required"/>
+        <xs:attribute name="sslType" type="tns:sslType" use="optional" default="NONE"/>
+        <xs:attribute name="sslCipherSuite" type="xs:string" use="optional"/>
+        <xs:attribute name="compressHeaders" type="tns:compressHeaders" use="optional" default="NONE"/>
+        <xs:attribute name="compressPayload" type="tns:compressPayload" use="optional" default="NONE"/>
+        <xs:attribute name="msgRetention" type="tns:msgRetention" use="optional" default="YES"/>
+        <xs:attribute name="messageSelector" type="xs:string" use="optional"/>
+        <xs:attribute name="rescanInterval" type="xs:int" use="optional"/>
+        <xs:attribute name="maxPoolSize" type="xs:int" use="optional"/>
+        <xs:attribute name="startTimeout" type="xs:int" use="optional"/>
+        <xs:attribute name="poolTimeout" type="xs:int" use="optional"/>
+        <xs:attribute name="ccsid" type="xs:int" use="optional"/>
+        <xs:attribute name="failureDeliveryCount" type="xs:int" use="optional"/>
+        <xs:attribute name="failIfQuiescing" type="xs:boolean" use="optional"/>
+        <xs:attribute name="stopEndpointIfDeliveryFails" type="xs:boolean" use="optional"/>
+        <xs:attribute name="wasEndpointInitialState" type="tns:wasEndpointInitialState" use="optional"/>
+    </xs:complexType>
+
+    <xs:simpleType name="compressHeaders">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NONE"/>
+            <xs:enumeration value="SYSTEM"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="sslType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NONE"/>
+            <xs:enumeration value="CENTRAL"/>
+            <xs:enumeration value="SPECIFIC"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="compressPayload">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NONE"/>
+            <xs:enumeration value="RLE"/>
+            <xs:enumeration value="ZLIBFAST"/>
+            <xs:enumeration value="ZLIBHIGH"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="msgRetention">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="YES"/>
+            <xs:enumeration value="NO"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="wasEndpointInitialState">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="ACTIVE"/>
+            <xs:enumeration value="ACTIVE_SINGLE_NODE"/>
+            <xs:enumeration value="INACTIVE"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="initialStates">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="START"/>
+            <xs:enumeration value="STOP"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="replicationType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NONE"/>
+            <xs:enumeration value="PUSH_PULL"/>
+            <xs:enumeration value="PUSH"/>
+            <xs:enumeration value="PULL"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="NfsMount">
+        <xs:annotation>
+            <xs:documentation>Angir at katalogen skal monteres på NFS</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="customNFSResourceAlias" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    If this property is not set, the system will use the standard path setup for NFS - which is
+                    preferred.
+                    This property mounts an external NFS share.
+                    Please note that file system race conditions can cause unpredictable behavior when mounting such a
+                    share.
+                    Proceed with caution.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="CifsMount">
+        <xs:annotation>
+            <xs:documentation>
+                Angir at katalogen skal monteres på Cifs filsystem. Hvis det ikke finnes en cifs tilgjengelig i miljøet
+                det deployes til så
+                vil denne
+            </xs:documentation>
+        </xs:annotation>
+
+        <xs:attribute name="alias" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Ressurs alias til cifs server ressursen i fasit</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="channel">
+        <xs:annotation>
+            <xs:documentation>
+                Angir kanalnavn som skal benyttes for å koble til en kømanager. Maksimalt antall tegn er 20.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="alias" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>Ressurs alias til kanal ressursen i fasit</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+</xs:schema>

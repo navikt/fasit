@@ -1,0 +1,1 @@
+alter table resource_properties_aud modify property_value varchar2(1000);

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://appconfig.aura.nav.no" xmlns:service="http://appconfig.aura.nav.no/service" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://appconfig.aura.nav.no http://maven.adeo.no/xsd/appconfig.xsd ">
+
+	<name>app</name>
+
+	<artifacts>
+		<ear groupId="no.nav.app" artifactId="app" />
+	</artifacts>
+
+	<resources>
+		<webservice alias="futureResource" mapToProperty="some.property"/>
+	</resources>
+
+</application>

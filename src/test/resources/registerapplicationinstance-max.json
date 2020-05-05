@@ -1,0 +1,55 @@
+{
+  "application": "fasit",
+  "version": "69.0.0",
+  "environment": "dev",
+  "nodes": [
+    "e34apsl001.devillo.no",
+    "e34apsl002.devillo.no"
+  ],
+  "usedResources": [
+    {
+      "id": 8172,
+      "revision": 1234
+    },
+    {
+      "id": 6911,
+      "revision": 2345
+    },
+    {
+      "id": 7902,
+      "revision": 3456
+    }
+  ],
+  "exposedResources": [
+    {
+      "type": "RestService",
+      "alias": "registerDeployment_v1",
+      "domain": "test.local",
+      "properties": {
+        "url": "https://app-u1.adeo.no/fasit/api/v1/applicationinstance",
+        "description": "Tjeneste for å registrere nye applikasjonsinstanser"
+      }
+    },
+    {
+      "type": "ApplicationUrl",
+      "alias": "FasitHomePage",
+      "properties": {
+        "url": "https://app-u1.adeo.no/fasit/"
+      }
+    }
+  ],
+  "missingResources": [
+    {
+      "alias": "versionService",
+      "type": "RestService"
+    },
+    {
+      "alias": "MyServiceGatewayService",
+      "type": "WebserviceEndpoint"
+    }
+  ],
+  "appConfig": {
+    "format": "xml",
+    "content": "<application xmlns=\"http://appconfig.aura.nav.no\" />"
+  }
+}

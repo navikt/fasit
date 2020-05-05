@@ -1,0 +1,5 @@
+{
+  "title": "fasit api",
+  "description": "This is an interactive API reference for the fasit api.\nBelow you will see the main sections of the API. Click each section in order to see the endpoints that are available in that category and use the 'Try it out' button to make API calls.\n\nGET operations does not require any authentication, except for secrets and files.\nPUT, POST and DELETE operations requires authentication. The api uses basic authentication and authenticaties against adeo.no with your NAV user. You can also use service users. Access to fasit for personal users are handled through 'identrutina'.\n\nGenerally search operations will return an empty list if nothing is found.\n\nGET operations that returns large result sets are paged by default. Page size can be overrideen by setting the query param 'pr_page' (defaults to 100).\nWhen response is paged, the header 'total_count' shows the total number of responses and  the link headers shows link to next and last page.\n\nFor bugs, questions or feature requests create a Jira issue in project Aura or use the contact info below.",
+  "contact": "DGNAVIKTAURA@adeo.no"
+}

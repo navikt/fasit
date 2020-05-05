@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://appconfig.aura.nav.no" xmlns:service="http://appconfig.aura.nav.no/service" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://appconfig.aura.nav.no http://maven.adeo.no/xsd/appconfig.xsd ">
+
+	<name>someotherapp</name>
+
+	<artifacts>
+		<ear groupId="no.nav.someotherapp" artifactId="someotherapp" />
+	</artifacts>
+
+	<exposed-services>
+		<service name="futureResource" wsdlVersion="1.0" wsdlGroupId="aaa" wsdlArtifactId="bbbq" path="" description=""></service>
+	</exposed-services>
+
+</application>

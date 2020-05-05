@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployedApplication xmlns:app="http://appconfig.aura.nav.no">
+	<appconfig>
+
+		<app:name>app</app:name>
+
+		<app:artifacts>
+			<app:ear groupId="no.nav.app" artifactId="app" />
+		</app:artifacts>
+
+		<app:exposed-services>
+			<app:service name="bService" wsdlVersion="0.0.1" wsdlGroupId="no.nav.tjenester.fim" wsdlArtifactId="nav-fim-echo-tjenestespesifikasjon-b"
+				path="/minurl/something" description="asd"/>
+		</app:exposed-services>
+
+		<app:selftestPagePath>/testme</app:selftestPagePath>
+
+	</appconfig>
+</deployedApplication>

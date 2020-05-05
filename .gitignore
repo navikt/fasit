@@ -1,0 +1,16 @@
+.idea
+target
+*.iml
+.project
+.classpath
+.settings
+.svn
+.test
+fasit-frontend/build
+fasit-frontend/node_modules
+rebel.xml
+fasit-appconfig/clean.sh
+persistence.xml
+npm-debug.log
+fasit-frontend/src/main/webapp/*
+/secrets

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://appconfig.aura.nav.no" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://appconfig.aura.nav.no http://maven.adeo.no/xsd/appconfig.xsd">
+    <name>tpr-testapp</name>
+    <selftest>
+        <path>/virgo/internal/selftest</path>
+        <humanReadablePath>/virgo/internal/selftest</humanReadablePath>
+    </selftest>
+
+    <artifacts>
+        <ear groupId="no.nav.somegroup" artifactId="someartifactId" name="someDisplayName"/>
+        <ear groupId="no.nav.somegroup" artifactId="versionedArtifact" version="1.0" startUpOrder="1">
+            <classPathLibrary groupId="no.nav.regler" artifactId="regler" version="1.0.0" requireClassifier="true"
+                              unpack="true" isolatedClassLoader="true" setNativeLibraryPath="true"/>
+            <classPathLibrary groupId="no.nav.regler" artifactId="regler2" version="1.0.0" requireClassifier="true"
+                              unpack="true" isolatedClassLoader="true"/>
+        </ear>
+        <batch groupId="no.nav.somebatchgroup" artifactId="batchArtifact" version="2.0" symlink="/was_app/batch/pen"/>
+    </artifacts>
+
+    <loadBalancer alias="banan.loadbalancer" isAlive="/app/internal/isAlive" connectionLimit="69"/>
+    <suspend url="mgmt/suspend" credential="suspendCredentialAlias" timeoutSeconds="96" />
+
+    <resources>
+        <baseUrl alias="someWebService" mapToProperty="someWS"/>
+        <webservice alias="ws1" mapToProperty="myWs1"/>
+        <ejb alias="ejb1" mapToProperty="myEjb"/>
+        <rest alias="aRestService"/>
+        <emailAddress alias="someAddress" mapToProperty="email"/>
+        <smtpServer alias="smtp" jndi="java:/ds/minJndi" mapToProperty="smtp" refCredentialAlias="etAlias"/>
+        <ldap alias="ldap" mapToProperty="ldapProperty"/>
+        <credential alias="srv_testapp" mapToProperty="myuser"/>
+        <applicationCertificate alias="myCert"/>
+        <datasource alias="someUnmanagedDataSource" mapToProperty="someUnmanagedDataSource"/>
+        <letterTemplate alias="arenabrev_v1"/>
+
+        <datasource alias="myDataSource" jndi="java:/ds/myDatasource" type="ORACLE" jtaEnabled="true">
+            <pool maxPoolSize="50" minPoolSize="1" connectionTimeout="180" reapTime="3600" unusedTimeout="32345"
+                  agedTimeout="123" purgePolicy="ENTIRE_POOL">
+                <customProperties parentObject="ConnectionPool">
+                    <property key="myPoolKey" value="myPoolValue"/>
+                </customProperties>
+            </pool>
+            <flywaySettings baselineVersion="1.0" encoding="ISO-8859-1"/>
+            <customProperties parentObject="J2EEResourceProperty">
+                <property key="mykey" value="myValue"/>
+            </customProperties>
+            <customProperties parentObject="DataSource">
+                <property key="mykey" value="myValue"/>
+            </customProperties>
+        </datasource>
+
+        <datasource alias="myXaDataSource" jndi="java:/ds/myXaDatasource" cmpEnabled="false" xaEnabled="true"
+                    type="DB2">
+            <pool maxPoolSize="50" minPoolSize="1"/>
+        </datasource>
+
+        <datasource alias="myUnmanagedDB2DataSource" cmpEnabled="false" xaEnabled="true" type="DB2">
+            <pool maxPoolSize="50" minPoolSize="1"/>
+        </datasource>
+
+        <xmlDatasource alias="myXmlDataSource" jndi="java:/ds/myXmlDatasource" type="ORACLE">
+            <pool maxPoolSize="50" minPoolSize="1"/>
+        </xmlDatasource>
+
+        <queueManager alias="someQueueManager" jndi="java:/jboss/mqConnectionFactory" enableSSL="true"
+                      unifiedConnectionFactory="true" xaEnabled="true" bindToMdb="true">
+            <credential alias="myMqUser" />
+            <channel alias="myChannel"/>
+            <pool maxPoolSize="50" minPoolSize="1"/>
+                        
+            <sessionPool minPoolSize="2" maxPoolSize="3" agedTimeout="444" connectionTimeout="555" reapTime="666"
+                         unusedTimeout="777" purgePolicy="ENTIRE_POOL"/>
+            <customProperties parentObject="MQQueueConnectionFactory">
+                <property key="replyWithRFH2" value="ALWAYS"/>
+            </customProperties>
+
+            <queue alias="someQueue" jndi="java:/jboss/MY_QUEUE" targetClient="MQ">
+                <customProperties parentObject="MQQueue">
+                    <property key="replyWithRFH2" value="ALWAYS"/>
+                </customProperties>
+                <customProperties>
+                    <property key="CCSID" value="819"/>
+                </customProperties>
+                <listenerPort name="myListenerPort" maxSessions="1" maxRetries="3" maxMessages="1"
+                              initialState="START" startOnlyOnOneNode="true"/>
+                <activationSpec name="mySpec" jndi="jms/mySpec" compressHeaders="SYSTEM" compressPayload="ZLIBHIGH"
+                                sslType="CENTRAL" sslCipherSuite="SSL_RSA_WITH_AES_128_CBC_SHA" wasEndpointInitialState="ACTIVE"/>
+            </queue>
+        </queueManager>
+
+        <queueManager alias="somOtherQueueManager" jndi="java:/jboss/otherQueueConnectionFactory"
+                      unifiedConnectionFactory="true">
+            <queue alias="someQueueInOtherQM" jndi="java:/jboss/MY_OTHER_QUEUE"/>
+        </queueManager>
+
+        <cics alias="myXaCics" jndi="jca/cics/myxacics"/>
+        <cics alias="myCics" jndi="jca/cics/mycics" xaEnabled="true">
+            <pool maxPoolSize="50" minPoolSize="1" connectionTimeout="180" reapTime="3600" unusedTimeout="32345"
+                  agedTimeout="123" purgePolicy="ENTIRE_POOL"/>
+            <customProperties>
+                <property key="mykey" value="myValue"/>
+            </customProperties>
+        </cics>
+
+        <directory name="kodeverkcache" mapToProperty="folder.kodeverk" temporary="true"/>
+        <directory name="folderWithFiles" mapToProperty="folder.withfiles" symlink="/was_app/whazzupp">
+            <file source="foo/bar/importantFile.xml" mapToProperty="file.important"/>
+            <mountOnCifs alias="cifsServer"/>
+        </directory>
+
+        <directory name="nfsFolder" mapToProperty="folder.withfiles" symlink="/was_app/nfs">
+            <mountOnNfs customNFSResourceAlias="sharedNFS"/>
+        </directory>
+        
+        <fileLibrary alias="autotest_ledeteksterv2" mapToProperty="folder.ledetekst" />
+
+        <applicationProperties alias="myCustomProps"/>
+        <webservice alias="ws1" mapToProperty="myWs1" skipServiceGateway="true"/>
+        <soap alias="soap1" mapToProperty="mySoap1"/>
+    </resources>
+
+    <exposed-services>
+        <exposedSoap name="exposeThis" path="/test/brukerprofil" wsdlGroupId="no.nav.tjenester.test" wsdlArtifactId="myWsdl"
+                 wsdlVersion="1.0" securityToken="NONE">
+            <exportToZone>SBS</exportToZone>
+        </exposedSoap>
+        <exposedSoap name="exposedWithoutServicegateway" path="/test/brukerprofil" wsdlGroupId="no.nav.tjenester.test" wsdlArtifactId="myWsdl"
+                     wsdlVersion="1.0" securityToken="NONE" deployToServiceGateway="false">
+            <exportToZone>SBS</exportToZone>
+        </exposedSoap>
+        <exposedSoap name="exposeThisSoapService" path="/test/brukerprofil" wsdlGroupId="no.nav.tjenester.test"
+                     wsdlArtifactId="myWsdl"
+                     wsdlVersion="1.0" securityToken="NONE" description="Dette er en viktig tjeneste">
+            <exportToZone>SBS</exportToZone>
+        </exposedSoap>
+        <exposedSoap name="myLittleWS" description="en beskrivelse av tjenesten" path="/services/AKindOfService"/>
+        <exposedRest name="aRestService" description="dette er en viktig tjenester" path="/nav.no/AKindOfRestService"/>
+        <ejbProvider name="testEJB" jndi="java:/ejb/no/nav/TralalaHome" beanHomeInterface="no.nav.gsak.ejb.TralalaHome"
+                     beanComponentInterface="no.nav.gsak.ejb.Tralala"/>
+        <exposedUrl name="aWebLink" path="linkToAnotherApp">
+            <exportToZone>ALL</exportToZone>
+        </exposedUrl>
+        <exposedLetterTemplate name="arenabrev_v1" groupId="no.nav.brevmal" artifactId="arenabrev" version="1.1"
+                         description="HL3 brevene til arena"></exposedLetterTemplate>
+        <exposedEjb name="testEJB" jndi="java:/ejb/no/nav/TralalaHome" beanHomeInterface="no.nav.gsak.ejb.TralalaHome"
+                    beanComponentInterface="no.nav.gsak.ejb.Tralala"/>
+        <exposedQueue name="someQueue"/>
+        <exposedFileLibrary name="autodeploy-kodeverk" directory="kodeverkcache" />
+    </exposed-services>
+
+    <serverOptions>
+        <cron description="beskrivelsesomblirmedicrontabjobbsomkommentar" schedule="* * * * *" command="kommando"/>
+        <memoryParameters resourceAlias="myMemoryParameters"/>
+	    <jvmArgs>-Dhei=hopp -esa</jvmArgs>
+   	    <timerManager name="testTimer" jndi="timer/Test" timerThreads="2"/>
+	    <workManager name="testWorkManager" jndi="work/Test" workTimeout="60" alarmThreads="2" maximumThreads="20"/>
+		<schedulerConfiguration name="testScheduler" jndi="sched/Test" datasourceJndi="java:/ds/myDatasource" datasourceAlias="myCluster_myDatasource" workManagerJndi="work/Test" tablePrefix="SCHED_" pollInterval="10"/>
+		<webSockets enable="true"/>
+		<replicationDomain name="testDomain" requestTimeout="5" numberOfReplicas="-1"/>
+		<cacheInstance name="testCache" jndi="test/cache" cacheSize="2000" defaultPriority="1"
+                       replicationDomain="testDomain" replicationType="PUSH_PULL" pushFrequency="10"/>
+        <webSettings maxPostSize="100000000"/>
+        <ejbSettings sessionBeanPoolSize="40" sessionBeanTimeout="7200"
+                     mdbPoolSize="60" mdbTimeout="1"/>
+		<customProperties parentObject="TransactionService">
+            <property key="totalTranLifetimeTimeout" value="7200"/>
+        </customProperties>
+        <customProperties parentObject="ServerCluster">
+            <property key="jsfProvider" value="SunRi1.2"/>
+        </customProperties>
+        <customProperties parentObject="TuningParams">
+            <property key="maxInMemorySessionCount" value="1337"/>
+        </customProperties>
+        <customProperties parentObject="ProcessExecution">
+            <property key="processPriority" value="10"/>
+        </customProperties>
+        <customProperties parentObject="Property">
+            <property key="com.ibm.websphere.threadmonitor.interval" value="666"/>
+            <property key="com.ibm.websphere.threadmonitor.threshold" value="1111"/>
+            <property key="com.ibm.websphere.threadmonitor.false.alarm.threshold" value="2222"/>
+        </customProperties>
+        <customProperties parentObject="MessageListenerService.ThreadPool">
+            <property key="inactivityTimeout" value="1111"/>
+            <property key="isGrowable" value="false"/>
+            <property key="maximumSize" value="333"/>
+            <property key="minimumSize" value="222"/>
+        </customProperties>
+        <customProperties parentObject="PMEServerExtension.i18nService">
+            <property key="enable" value="true"/>
+        </customProperties>
+        <customProperties parentObject="PMEServerExtension.applicationProfileService">
+            <property key="enable" value="true"/>
+            <property key="compatibility" value="false"/>
+        </customProperties>
+        <customProperties parentObject="HAManagerService">
+            <property key="enable" value="true"/>
+        </customProperties>
+    </serverOptions>
+
+    <security serviceUserResourceAlias="srv_myapp">
+        <logins>
+            <openAm>
+                <contextRoot>myFirstContextRoot</contextRoot>
+                <contextRoot>mySecondContextRoot</contextRoot>
+            </openAm>
+            <spnego ldapResourceAlias="myLdap" fallbackLoginPagePath="/myApp/login.html"/>
+            <saml/>
+            <ldapAuth ldapResourceAlias="someLdap" additionalBaseContext="OU=ApplAccounts,OU=ServiceAccounts"
+                      lockToUser="e137012" authenticatedRole="jeg_er_autentisert_ihvertfall">
+                <additionalLdapContext>OU=NAV,OU=BusinessUnits</additionalLdapContext>
+            </ldapAuth>
+            <openIdConnect moduleClass="no.nav.aura.loginmodule.JwtLoginModule"
+                           interceptedPathFilter="/testapp/*" mapIdentityToRegistryUser="false">
+                <contextRoot>/myFirstContextRoot</contextRoot>
+                <contextRoot>/mySecondContextRoot</contextRoot>
+            </openIdConnect>
+            <databaseLogin domainName="someDatabaseLogin" dsJndiName="java:/jndi/jdbc/autodeployTestAppDs" principalsQuery="select password as Password from account where username=?" rolesQuery="select role_name as Role, 'Roles' from account_role where username=?"/>
+        </logins>
+        <runAs resourceAlias="someCredential" toRole="aRole"/>
+        <runAs resourceAlias="someOtherCredential" toRole="anOtherRole"/>
+
+        <roleMapping resourceAlias="myFirstRoleAlias" toRole="USER"/>
+        <roleMapping resourceAlias="mySecondRoleAlias" toRole="ADMIN"/>
+    </security>
+
+	<abacSecurity serviceUserResourceAlias="srv_myapp"/>
+    <logging serviceCalls="true" />
+
+    <monitoring>
+        <selftest interval="42"/>
+        <metric path="/metrics1" interval="69"/>
+        <metric path="/metrics2"/>
+    </monitoring>
+</application>
