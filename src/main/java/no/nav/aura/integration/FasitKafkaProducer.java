@@ -25,49 +25,40 @@ public class FasitKafkaProducer {
     private static final Logger log = LoggerFactory.getLogger(FasitKafkaProducer.class);
     private String kafkaDeploymentEventTopic;
 
-    // Feature toggle for kafka integration
-    private final boolean kafkaEnabled = System.getProperty("publish.deployment.events.to.kafka") != null &&
-            System.getProperty("publish.deployment.events.to.kafka").equalsIgnoreCase("true");
+
+    public FasitKafkaProducer() {
+        final String kafkaServers = getProperty("kafka.servers");
+        final String kafkaUsername = getProperty("kafka.username");
+        final String kafkaPassword = getProperty("kafka.password");
+        final boolean saslEnabled = getProperty("kafka.sasl.enabled").equalsIgnoreCase("true");
+        kafkaDeploymentEventTopic = getProperty("kafka.deployment.event.topic");
+
+        Properties prop = new Properties();
+
+        prop.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServers);
+        prop.put(ProducerConfig.CLIENT_ID_CONFIG, "fasit");
+        prop.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "20000");
+        prop.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "https");
+        prop.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, "500");
 
 
-    public FasitKafkaProducer(){
-        if(kafkaEnabled) {
-            final String kafkaServers = getProperty("kafka.servers");
-            final String kafkaUsername = getProperty("kafka.username");
-            final String kafkaPassword = getProperty("kafka.password");
-            final boolean saslEnabled = getProperty("kafka.sasl.enabled").equalsIgnoreCase("true");
-            kafkaDeploymentEventTopic =  getProperty("kafka.deployment.event.topic");
-
-            Properties prop = new Properties();
-
-            prop.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServers);
-            prop.put(ProducerConfig.CLIENT_ID_CONFIG, "fasit");
-            prop.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "20000");
-            prop.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "https");
-            prop.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, "500");
-
-
-            if(saslEnabled) {
-                prop.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-                prop.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-                prop.put(
-                        SaslConfigs.SASL_JAAS_CONFIG,
-                        String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
-                                kafkaUsername, kafkaPassword));
-            }
-
-            try {
-                kafkaProducer = new KafkaProducer<>(prop, new StringSerializer(),
-                        new DeploymentEventSerializer());
-                log.info("Kafka client connected to " + kafkaServers);
-            } catch (KafkaException ke) {
-                throw new RuntimeException("Unable to connect to kafka " + kafkaServers, ke);
-            }
-
+        if (saslEnabled) {
+            prop.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+            prop.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
+            prop.put(
+                    SaslConfigs.SASL_JAAS_CONFIG,
+                    String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
+                            kafkaUsername, kafkaPassword));
         }
-        else {
-            log.info("Kafka integration is disabled. Will skip configuration of Kafka producer");
+
+        try {
+            kafkaProducer = new KafkaProducer<>(prop, new StringSerializer(),
+                    new DeploymentEventSerializer());
+            log.info("Kafka client connected to " + kafkaServers);
+        } catch (KafkaException ke) {
+            throw new RuntimeException("Unable to connect to kafka " + kafkaServers, ke);
         }
+
     }
 
     public FasitKafkaProducer(KafkaProducer producer) {
@@ -75,17 +66,13 @@ public class FasitKafkaProducer {
     }
 
     public void publishDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
-        // Feature toggle for kafka integration
-        // We do not want to send deployment events to kafka if the app was deployed with naisd. That is because naisd posts its own deployment events to kafka
-        if (kafkaEnabled && !isNaisDeployment(appInstance)) {
-            DeploymentEvent.Event deploymentEvent = createDeploymentEvent(appInstance, environment);
-            log.info("Ready to publish deployment-event to topic: %s:%s  %s. CorrelationId: %s",
-                    deploymentEvent.getApplication(),
-                    deploymentEvent.getVersion(),
-                    deploymentEvent.getSkyaEnvironment(),
-                    deploymentEvent.getCorrelationID());
-            kafkaProducer.send(new ProducerRecord<>(kafkaDeploymentEventTopic, deploymentEvent), new KafkaCallback(deploymentEvent));
-        }
+        DeploymentEvent.Event deploymentEvent = createDeploymentEvent(appInstance, environment);
+        log.info("Ready to publish deployment-event to topic: %s:%s  %s. CorrelationId: %s",
+                deploymentEvent.getApplication(),
+                deploymentEvent.getVersion(),
+                deploymentEvent.getSkyaEnvironment(),
+                deploymentEvent.getCorrelationID());
+        kafkaProducer.send(new ProducerRecord<>(kafkaDeploymentEventTopic, deploymentEvent), new KafkaCallback(deploymentEvent));
     }
 
     protected DeploymentEvent.Event createDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
@@ -158,12 +145,7 @@ public class FasitKafkaProducer {
         return platformTypeBuilder.build();
     }
 
-    private boolean isNaisDeployment(ApplicationInstance applicationInstance) {
-        Cluster cluster = applicationInstance.getCluster();
-        return cluster.getName().equalsIgnoreCase("nais");
-    }
-
-    private String getProperty(String key ){
+    private String getProperty(String key) {
         return Optional
                 .ofNullable(System.getProperty(key))
                 .orElseThrow(() ->
@@ -181,8 +163,7 @@ public class FasitKafkaProducer {
         public void onCompletion(RecordMetadata recordMetadata, Exception e) {
             if (e != null) {
                 log.error("Unable to publish deployment-event to topic " + recordMetadata != null ? recordMetadata.topic() : "", e);
-            }
-            else {
+            } else {
                 log.info(String.format(
                         "Published deployment-event to topic: %s:%s  %s. CorrelationId: %s",
                         deploymentEvent.getApplication(),
