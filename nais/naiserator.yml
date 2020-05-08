@@ -13,7 +13,7 @@ spec:
   #   requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
   #     cpu: "1"
   #     memory: 1Gi
-  image: "docker.adeo.no:5000/fasit:IMAGE_VERSION"
+  image: {{ image }}
   port: 8080
   replicas:
     min: 2
@@ -27,68 +27,57 @@ spec:
     initialDelay: 90
     timeout: 2
   ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
-    - "https://fasit.nais.preprod.local/conf/"
-    - "https://fasit.nais.preprod.local/api"
-    - "https://fasit.nais.preprod.local/rest"
+    {{#each ingresses}}
+    - "{{this}}"
+    {{/each}}
   cpuThresholdPercentage: 50
   env:
     - name: "LOG_OUTPUT"
       value: "JSON"
     - name: "ENVIRONMENT_NAME"
-      value: "dev"
+      value: {{ ENVIRONMENT_NAME }}
     - name: "ENVIRONMENT_CLASS"
-      value: "u"
+      value: {{ ENVIRONMENT_CLASS }}
     - name: "ENVCONFDB_URL"
-      value: "jdbc:oracle:thin:@d26dbfl022.test.local:1521/FASIT_CDU101"
+      value: {{ ENVCONFDB_URL }}
     - name: "LDAP_USER_BASEDN"
-      value: "ou=NAV,ou=BusinessUnits,dc=test,dc=local"
+      value: {{ LDAP_USER_BASEDN }}
     - name: "LDAP_SERVICEUSER_BASEDN"
-      value: "ou=ServiceAccounts,dc=test,dc=local"
+      value: {{ LDAP_SERVICEUSER_BASEDN }}
     - name: "LDAP_DOMAIN"
-      value: "TEST.LOCAL"
+      value: {{ LDAP_DOMAIN }}
     - name: "LDAP_BASEDN"
-      value: "dc=test,dc=local"
+      value: {{ LDAP_BASEDN }}
     - name: "LDAP_URL"
-      value: "ldaps://ldapgw.test.local"
+      value: {{ LDAP_URL }}
     - name: "VAULT_URL"
-      value: "https://vault.adeo.no"
-    - name: "BASTA_URL"
-      value: "https://fjas.no/rest"
-    - name: "ORACLE_V1_URL"
-      value: "https://fjas.test.local/rest/v1/oracledb"
+      value: {{ VAULT_URL }}
     - name: "DEPLOYLOG_V1_URL"
-      value: "https://vera.nais.oera-q.local/api/v1/deploylog"
+      value: {{ DEPLOYLOG_V1_URL }}
     - name: "ROLE_OPERATIONS_GROUPS"
-      value: "0000-ga-env_config_L, 0000-GA-WAS_LOGGER-Test, 0000-GA-env-config-testAdmin,\
-      \ 0000-GA-MOTTAK-WS, 0000-GA-Confluence"
-    - name: "ROLE_SELFSERVICE_GROUPS"
-      value: "0000-GA-STDAPPS"
+      value: {{ ROLE_OPERATIONS_GROUPS }}
     - name: "ROLE_PROD_OPERATIONS_GROUPS"
-      value: "0000-ga-env_config_S, 0000-GA-Confluence"
-    - name: "ROLE_SELFSERVICE_PROD_GROUPS"
-      value: "TODO"
+      value: {{ ROLE_PROD_OPERATIONS_GROUPS }}
     - name: "ROLE_SUPERUSER_GROUPS"
-      value: "0000-ga-fasit-superuser, 0000-ga-env_config_L"
-    - name: "PUBLISH_DEPLOYMENT_EVENTS_TO_KAFKA"
-      value: "true"
+      value: {{ ROLE_SUPERUSER_GROUPS }}
     - name: "KAFKA_SERVERS"
-      value: "pkc-e0xg5.europe-north1.gcp.confluent.cloud:9092"
+      value: {{ KAFKA_SERVERS }}
     - name: "KAFKA_SASL_ENABLED"
       value: "true"
     - name: "KAFKA_DEPLOYMENT_EVENT_TOPIC"
-      value: "deployment-events-test"
+      value: {{ KAFKA_DEPLOYMENT_EVENT_TOPIC }}
 
   vault:
     enabled: true
     sidecar: true
     paths:
-      - kvPath: "oracle/data/dev/creds/fasit_cdu101-user"
+      - kvPath: {{ db-vault-path }}
         mountPath: "/secrets/oracle/envconfDB"
-      - kvPath: "serviceuser/data/test/srvssolinux"
+      - kvPath: {{ ldap-user-vault-path }}
         mountPath: "/secrets/ldap/ldap"
-      - kvPath: "serviceuser/data/test/srvfasit"
+      - kvPath: {{ fasit-user-vault-path }}
         mountPath: "/secrets/credential/srvfasit"
-      - kvPath: "certificate/data/dev/fasit-keystore"
+      - kvPath: {{ keystore-vault-path }}
         mountPath: "/secrets/certificate/fasit-keystore"
-      - kvPath: "credential/data/dev/fasit_kafka_user"
+      - kvPath: {{ kafka-user-vault-path }}
         mountPath: "/secrets/credential/fasit.kafka.user"

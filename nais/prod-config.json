@@ -1,0 +1,32 @@
+{
+  "ingresses": [
+     "https://fasit.nais.adeo.no/conf/",
+     "https://fasit.nais.adeo.no/api",
+     "https://fasit.nais.adeo.no/rest",
+     "https://fasit.adeo.no/conf/",
+     "https://fasit.adeo.no/api",
+     "https://fasit.adeo.no/rest"
+  ],
+  "ENVIRONMENT_NAME": "p",
+  "ENVIRONMENT_CLASS": "p",
+  "ENVCONFDB_URL": "jdbc:oracle:thin:@a01dbfl030.adeo.no:1521/fasit",
+  "LDAP_USER_BASEDN": "ou=NAV,ou=BusinessUnits,dc=adeo,dc=no",
+  "LDAP_SERVICEUSER_BASEDN": "ou=ServiceAccounts,dc=adeo,dc=no",
+  "LDAP_DOMAIN": "ADEO.NO",
+  "LDAP_BASEDN": "dc=adeo,dc=no",
+  "LDAP_URL": "ldaps://ldapgw.adeo.no",
+  "VAULT_URL": "https://vault.adeo.no",
+  "DEPLOYLOG_V1_URL": "https://vera.nais.oera.no/api/v1/deploylog",
+  "ROLE_OPERATIONS_GROUPS": "0000-GA-env-config-TestAdmin,0000-GA-fasit-prod-selfservice",
+  "ROLE_PROD_OPERATIONS_GROUPS": "0000-GA-env-config-ProdAdmin,0000-GA-fasit-prod-selfservice",
+  "ROLE_SUPERUSER_GROUPS": "0000-ga-fasit-superuser",
+  "KAFKA_SERVERS": "pkc-e0xg5.europe-north1.gcp.confluent.cloud:9092",
+  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "deployment-events",
+  "db-vault-path": "oracle/data/prod/creds/fasit-user",
+  "ldap-user-vault-path": "serviceuser/data/prod/srvssolinux",
+  "fasit-user-vault-path": "serviceuser/data/prod/srvfasit",
+  "keystore-vault-path": "certificate/data/prod/fasit-keystore",
+  "kafka-user-vault-path": "credential/data/prod/fasit_kafka_user"
+}
+
+

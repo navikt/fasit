@@ -1,0 +1,27 @@
+{
+  "ingresses": [
+    "https://fasit.nais.preprod.local/conf/",
+    "https://fasit.nais.preprod.local/api",
+    "https://fasit.nais.preprod.local/rest"
+  ],
+  "ENVIRONMENT_NAME": "dev",
+  "ENVIRONMENT_CLASS": "u",
+  "ENVCONFDB_URL": "jdbc:oracle:thin:@d26dbfl022.test.local:1521/FASIT_CDU101",
+  "LDAP_USER_BASEDN": "ou=NAV,ou=BusinessUnits,dc=test,dc=local",
+  "LDAP_SERVICEUSER_BASEDN": "ou=ServiceAccounts,dc=test,dc=local",
+  "LDAP_DOMAIN": "TEST.LOCAL",
+  "LDAP_BASEDN": "dc=test,dc=local",
+  "LDAP_URL": "ldaps://ldapgw.test.local",
+  "VAULT_URL": "https://vault.adeo.no",
+  "DEPLOYLOG_V1_URL": "https://vera.nais.oera-q.local/api/v1/deploylog",
+  "ROLE_OPERATIONS_GROUPS": "0000-ga-env_config_L, 0000-GA-WAS_LOGGER-Test, 0000-GA-env-config-testAdmin",
+  "ROLE_PROD_OPERATIONS_GROUPS": "0000-ga-env_config_S",
+  "ROLE_SUPERUSER_GROUPS": "0000-ga-fasit-superuser, 0000-ga-env_config_L",
+  "KAFKA_SERVERS": "pkc-e0xg5.europe-north1.gcp.confluent.cloud:9092",
+  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "deployment-events-test",
+  "db-vault-path": "oracle/data/dev/creds/fasit_cdu101-user",
+  "ldap-user-vault-path": "serviceuser/data/test/srvssolinux",
+  "fasit-user-vault-path": "serviceuser/data/test/srvfasit",
+  "keystore-vault-path": "certificate/data/dev/fasit-keystore",
+  "kafka-user-vault-path": "credential/data/dev/fasit_kafka_user"
+}
