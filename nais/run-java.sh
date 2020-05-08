@@ -30,32 +30,17 @@ echo "systemuser.srvfasit.password=$(cat /secrets/credential/srvfasit/password)"
 # BaseUrl vault
 echo "vault.url=$VAULT_URL" >> config.properties
 
-# Rest basta_rest_api
-echo "basta.url=$BASTA_URL" >> config.properties
-
-# Rest oracle_v1
-echo "oracle_v1.url=$ORACLE_V1_URL" >> config.properties
-
 # Rest deployLog_v1
 echo "deployLog_v1.url=$DEPLOYLOG_V1_URL" >> config.properties
 
 # RoleMapping fasit.operations
 echo "ROLE_OPERATIONS.groups=$ROLE_OPERATIONS_GROUPS" >> config.properties
 
-# RoleMapping fasit.selfservice
-echo "ROLE_SELFSERVICE.groups=$ROLE_SELFSERVICE_GROUPS" >> config.properties
-
 # RoleMapping fasit.prodoperations
 echo "ROLE_PROD_OPERATIONS.groups=$ROLE_PROD_OPERATIONS_GROUPS" >> config.properties
 
-# RoleMapping fasit.selfservice_prod
-echo "ROLE_SELFSERVICE_PROD.groups=$ROLE_SELFSERVICE_PROD_GROUPS" >> config.properties
-
 # RoleMapping fasit.superuser
 echo "ROLE_SUPERUSER.groups=$ROLE_SUPERUSER_GROUPS" >> config.properties
-
-# Feature toggle for Kafka integration
-echo "publish.deployment.events.to.kafka=$PUBLISH_DEPLOYMENT_EVENTS_TO_KAFKA" >> config.properties
 
 #KafkaConfig
 echo "kafka.servers=$KAFKA_SERVERS" >> config.properties

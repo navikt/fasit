@@ -1,5 +1,6 @@
 package no.nav.aura.fasit.rest;
 
+import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
@@ -297,6 +298,7 @@ public class ApplicationInstanceRest {
         AccessChecker.checkAccess(appInstance.getCluster());
 
         lifeCycleSupport.delete(appInstance);
+        //vera.notifyVeraOfUndeployment(applicationInstance.getApplication().getName(), environment.getName(), EntityCommenter.getOnBehalfUserOrRealUser(applicationInstance));
         applicationInstanceRepository.delete(appInstance);
     }
 

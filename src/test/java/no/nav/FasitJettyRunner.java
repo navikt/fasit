@@ -171,7 +171,5 @@ public class FasitJettyRunner {
         System.setProperty("vault.url", "https://avaulturl.com");
         System.setProperty("systemuser.srvfasit.username", "srvfasit");
         System.setProperty("systemuser.srvfasit.password", "secret");
-        System.setProperty("basta.url", "http://localhost:1337");
-        System.setProperty("oracle_v1.url", "http://localhost:1337/v1");
     }
 }
