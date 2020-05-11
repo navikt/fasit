@@ -271,7 +271,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("alias", hasItem("myQueue"));
     }
 
-    /*@Test
+    @Test
     public void findResourceByApplication() {
         given()
                 .when()
@@ -281,9 +281,9 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
                 .body("alias", hasItem("myOtherQueue"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void findResourceByEnvironmentClassAndApplication() {
         given()
                 .when()
@@ -293,7 +293,7 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
                 .body("alias", hasItem("myOtherQueue"));
-    }*/
+    }
 
     /*@Test
     public void QueryParamZoneWithoutEnvironmentOrEnvClassGivesError() {
