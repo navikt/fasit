@@ -230,7 +230,7 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
                 .body("alias", hasItem("myQueue"))
-                .body("lifecycle.status", hasItem("stopped"));
+                .body("lifecycle.status", hasItem("stopped"));§
     }*/
 
     /*@Test
@@ -259,7 +259,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("alias", hasItems("myQueue", "myOtherQueue"));
     }
 
-    /*@Test
+    @Test
     public void findResourceByEnvironment() {
         given()
                 .when()
@@ -269,7 +269,7 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(2))
                 .body("alias", hasItem("myQueue"));
-    }*/
+    }
 
     /*@Test
     public void findResourceByApplication() {
