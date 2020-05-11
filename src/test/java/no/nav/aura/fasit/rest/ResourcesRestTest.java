@@ -407,7 +407,7 @@ public class ResourcesRestTest extends RestTest {
             .body(equalTo("donaldduck"));
     }
 
-    /*@Test
+    @Test
     public void createResourceWithWhitespaceInAlias() {
         ResourcePayload newResourcePayload = new ResourcePayload();
         newResourcePayload.type = BaseUrl;
@@ -427,7 +427,7 @@ public class ResourcesRestTest extends RestTest {
                 .statusCode(200)
                 .body("alias", hasItem("newresource"));
     }
-*/
+
     private Response registerDeployment(ApplicationInstancePayload payload) {
         String s = toJson(payload);
         return given()
