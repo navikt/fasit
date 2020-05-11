@@ -115,7 +115,6 @@ public class ResourcesRestTest extends RestTest {
 
         exposedServices.add(esr);
         environmentRepo.save(t1);
-
     }
 
 
@@ -143,7 +142,7 @@ public class ResourcesRestTest extends RestTest {
         vaultServer.stop();
     }
 
-    /*@Test
+    @Test
     public void findAllResources() {
         System.out.println("dbResource = " + jetty.getBean(ResourceRepository.class).findAll().size());
         given()
@@ -155,9 +154,9 @@ public class ResourcesRestTest extends RestTest {
                 .body("$", hasSize(5))
                 .header("total_count", equalTo("5"));
     }
-*/
 
-  /*  @Test
+
+    @Test
     public void findResourceById() {
         given()
                 .when()
@@ -169,9 +168,9 @@ public class ResourcesRestTest extends RestTest {
                 .body("scope.environmentclass", equalTo("u"))
                 .body("scope.environment", equalTo("u1"))
                 .body("scope.zone", equalTo("fss"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void findByIdAlsoShowsUsedByApplications() {
         given()
                 .when()
@@ -182,9 +181,9 @@ public class ResourcesRestTest extends RestTest {
                 .body("alias", equalTo("myQueue"))
                 .body("usedbyapplications.application", hasItem("fasit"))
                 .body("usedbyapplications", hasSize(1));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void findByLikeAlias() {
         given()
                 .when()
@@ -193,9 +192,9 @@ public class ResourcesRestTest extends RestTest {
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("usedbyapplications", hasSize(4));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void findByIdAlsoShowsExposedByApplication() {
         given()
                 .when()
@@ -205,10 +204,10 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("alias", equalTo("myExposedService"))
                 .body("exposedby.application", equalTo("fasit"));
-    }*/
+    }
 
 
-    /*@Test
+    @Test
     public void findResourceByAlias() {
         given()
                 .when()
@@ -218,9 +217,9 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
                 .body("alias", hasItem("myQueue"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void findStoppedResources() {
         given()
                 .when()
@@ -230,10 +229,10 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
                 .body("alias", hasItem("myQueue"))
-                .body("lifecycle.status", hasItem("stopped"));§
-    }*/
+                .body("lifecycle.status", hasItem("stopped"));
+    }
 
-    /*@Test
+    @Test
     public void findAlertedResources() {
         given()
                 .when()
@@ -245,7 +244,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("alias", hasItem("myDB"))
                 .body("lifecycle.status", hasItem("alerted"));
 
-    }*/
+    }
 
     @Test
     public void findResourceByEnvironmentClass() {
