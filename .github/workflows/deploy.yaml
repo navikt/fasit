@@ -20,6 +20,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: '8.0.x'
+      - name: debug test
+        run: mvn test -Dtest=ResourcesRestTest
 
       - name: Compile
         run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e -X
@@ -43,15 +45,15 @@ jobs:
       - name: Set IMAGE env
         run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
 
-  deploy-dev:
-    name: Deploy to dev-fss
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-fss
-          RESOURCE: nais/naiserator.yml
-          VARS: nais/dev-config.json
+  #deploy-dev:
+  #  name: Deploy to dev-fss
+  #  needs: build
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v1
+  #    - uses: nais/deploy/actions/deploy@v1
+  #      env:
+  #        APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+  #        CLUSTER: dev-fss
+  #        RESOURCE: nais/naiserator.yml
+  #        VARS: nais/dev-config.json

@@ -138,6 +138,7 @@ public class FasitJettyRunner {
     }
 
     public static DataSource createDataSource(String type, String url, String username, String password) {
+        System.out.println("Creating datasource");
         return TestDatabaseHelper.createDataSource(type, url, username, password);
     }
 
