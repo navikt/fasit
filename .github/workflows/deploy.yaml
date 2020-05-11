@@ -15,19 +15,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-      - name: Cache Maven dependencies
-        uses: actions/cache@preview
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+
       - name: Setup java
         uses: actions/setup-java@v1
         with:
           java-version: '8.0.x'
 
-      - name: Compile
+      - name: Build and test
         run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e
 
       - name: Create version
