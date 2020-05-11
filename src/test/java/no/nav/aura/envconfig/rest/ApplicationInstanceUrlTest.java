@@ -126,7 +126,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
     public void registerApplicationInstanceCheckEntityComment() throws Exception {
         byte[] deployedApplicationBS = createDeployedApplicationDO("app-config.xml", "1.0.0");
 
-        given().auth().preemptive().basic("admin", "admin")
+        given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .request().body(deployedApplicationBS)
                 .queryParam("entityStoreComment", "Application app deployed to envionment test")
                 .header("x-onbehalfof", "otheruser")
@@ -141,7 +141,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
                 assertEquals("1.0.0", applicationInstance.getVersion());
 
                 FasitRevision<ApplicationInstance> revision = getHeadrevision(applicationInstance);
-                assertEquals("admin", revision.getAuthor());
+                assertEquals("prodadmin", revision.getAuthor());
                 assertEquals("otheruser", revision.getOnbehalfOf().getId());
                 assertThat(revision.getMessage(), startsWith("Application app"));
 
@@ -153,7 +153,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
     public void registerApplicationV1Simple() throws Exception {
 
         byte[] payload = getAppConfig("/payloads/registerapplicationinstance-min.json");
-        given().auth().preemptive().basic("admin", "admin")
+        given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .request().body(payload)
                 .queryParam("entityStoreComment", "Application app deployed to envionment test")
                 .header("x-onbehalfof", "otheruser")
@@ -169,7 +169,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
                 assertEquals("1.0.0", applicationInstance.getVersion());
 
                 FasitRevision<ApplicationInstance> revision = getHeadrevision(applicationInstance);
-                assertEquals("admin", revision.getAuthor());
+                assertEquals("prodadmin", revision.getAuthor());
                 assertEquals("otheruser", revision.getOnbehalfOf().getId());
                 assertThat(revision.getMessage(), startsWith("Application app"));
 
@@ -188,7 +188,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
     @Test
     public void verifyApplicationAuthenticated() throws Exception {
-        given().auth().preemptive().basic("admin", "admin")
+        given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .request().body(getAppConfig("app-config.xml"))
                 .contentType(ContentType.XML)
                 .expect().statusCode(Status.NO_CONTENT.getStatusCode())
@@ -207,7 +207,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
             }
         });
 
-        given().auth().preemptive().basic("admin", "admin")
+        given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .queryParam("entityStoreComment", "undeployed app")
                 .expect().body(equalTo("")).statusCode(Status.NO_CONTENT.getStatusCode())
                 .when().delete("/conf/environments/test/applications/app");
@@ -251,7 +251,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
         payload.addUsedResources(new UsedResource(resource1.getID(), getHeadrevision(resource1).getRevision()));
         payload.addUsedResources(new UsedResource(resource2.getID(), getHeadrevision(resource2).getRevision()));
 
-        given().auth().preemptive().basic("admin", "admin")
+        given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .request().body(payload.toJson())
                 .contentType(ContentType.JSON)
                 .expect().statusCode(Status.CREATED.getStatusCode())

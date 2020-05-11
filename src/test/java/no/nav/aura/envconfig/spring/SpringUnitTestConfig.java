@@ -38,9 +38,9 @@ public class SpringUnitTestConfig {
 
     @Bean
     public FasitKafkaProducer fasitKafkaProducer() {
-        return new FasitKafkaProducer();
-        //KafkaProducer kafkaProducerMock = mock(KafkaProducer.class);
-        //return new FasitKafkaProducer(kafkaProducerMock);
+        //return new FasitKafkaProducer();
+        KafkaProducer kafkaProducerMock = mock(KafkaProducer.class);
+        return new FasitKafkaProducer(kafkaProducerMock);
     }
 
     @Bean

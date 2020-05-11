@@ -152,7 +152,7 @@ public class SecretRestServiceTest extends no.nav.aura.envconfig.rest.RestTest {
 	}
 
 	private void assert404Error(String uri, String contains) {
-		given().auth().basic("admin", "admin").expect().statusCode(Status.NOT_FOUND.getStatusCode())
+		given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.NOT_FOUND.getStatusCode())
 				.body(Matchers.containsString(contains)).when().get(uri);
 	}
 

@@ -49,13 +49,13 @@ public class SecurityAccessCheckAspectTest extends SpringTest {
 
     @Test
     public void testUpdateAllowedAsAdmin() {
-        createEnvironmentWithUser("admin", EnvironmentClass.u);
+        createEnvironmentWithUser("prodadmin", EnvironmentClass.u);
     }
 
     @Test
     public void testUpdateDisallowedOnProd() {
         Assertions.assertThrows(AccessException.class, () -> {
-            createEnvironmentWithUser("admin", EnvironmentClass.p);
+            createEnvironmentWithUser("user", EnvironmentClass.p);
         });
     }
 
@@ -93,7 +93,7 @@ public class SecurityAccessCheckAspectTest extends SpringTest {
     @Test
     public void testUpdateApplicationWithAdmin() {
         Assertions.assertThrows(AccessException.class, () -> {
-            updateApplicationWithUser("admin");
+            updateApplicationWithUser("user");
         });
     }
 
