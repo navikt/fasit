@@ -21,7 +21,7 @@ jobs:
         with:
           java-version: '8.0.x'
       - name: debug test
-        run: mvn test -Dtest=ResourcesRestTest#findResourceByEnvironmentClass
+        run: mvn test -B -e -Dtest=ResourcesRestTest#findResourceByEnvironmentClass
 
       #- name: Compile
       #  run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e -X
