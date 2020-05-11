@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import static org.mockito.Mockito.mock;
 
 @Configuration
-@EnableJdbcHttpSession
 @EnableTransactionManagement
 @Import({ SpringDomainConfig.class })
 public class SpringUnitTestConfig {

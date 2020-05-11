@@ -62,7 +62,9 @@ public abstract class TestDatabaseHelper {
 
             Resource script = new DefaultResourceLoader().getResource("org/springframework/session/jdbc/schema-h2.sql");
             System.out.println("Using spring session script " + script.getFilename());
-            new ResourceDatabasePopulator(script).execute(ds);
+            ResourceDatabasePopulator resourceDatabasePopulator = new ResourceDatabasePopulator(script);
+            resourceDatabasePopulator.setContinueOnError(true);
+            resourceDatabasePopulator.execute(ds);
 
             return ds;
         } else {
