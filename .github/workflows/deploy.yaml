@@ -23,27 +23,27 @@ jobs:
       - name: debug test
         run: mvn test -Dtest=ResourcesRestTest#findResourceByEnvironmentClass
 
-      - name: Compile
-        run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e -X
+      #- name: Compile
+      #  run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e -X
 
-      - name: Create version
-        run: echo "$(TZ=":CET" date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
+      #- name: Create version
+      #  run: echo "$(TZ=":CET" date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
 
-      - name: Build docker image
-        run: docker build  --tag ${DOCKER_IMAGE}:$(cat .docker_tag) .
-      - name: Login to Github package registry
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
-      - name: Push docker image
-        run: docker push ${DOCKER_IMAGE}:$(cat .docker_tag)
-      - name: Git tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: git tag $(cat .docker_tag) && git push https://${{ github.action }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git $(cat .docker_tag)
+      #- name: Build docker image
+      #  run: docker build  --tag ${DOCKER_IMAGE}:$(cat .docker_tag) .
+      #- name: Login to Github package registry
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
+      #- name: Push docker image
+      #  run: docker push ${DOCKER_IMAGE}:$(cat .docker_tag)
+      #- name: Git tag
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  run: git tag $(cat .docker_tag) && git push https://${{ github.action }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git $(cat .docker_tag)
 
-      - name: Set IMAGE env
-        run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
+      #- name: Set IMAGE env
+      #  run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
 
   #deploy-dev:
   #  name: Deploy to dev-fss
