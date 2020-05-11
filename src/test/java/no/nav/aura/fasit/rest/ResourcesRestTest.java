@@ -331,7 +331,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("revisiontype", hasItems("add", "mod"));
     }
 
-    /*@Test
+    @Test
     public void getResourceTypes() {
         given()
                 .when()
@@ -340,7 +340,7 @@ public class ResourcesRestTest extends RestTest {
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("type", hasItems("DataSource", "BaseUrl"));
-    }*/
+    }
 
     /*@Test
     public void createResource() {
