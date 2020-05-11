@@ -438,7 +438,7 @@ public class ResourcesRestTest extends RestTest {
                 .post("/api/v2/applicationinstances");
     }
 
-    /*@Test
+    @Test
     public void createResourceWillFailWhenMissingRequiredProperties() {
         ResourcePayload invalidResource = new ResourcePayload();
         invalidResource.alias = "invalidresource";
@@ -450,7 +450,7 @@ public class ResourcesRestTest extends RestTest {
                 .statusCode(400)
                 .body(containsString("Missing required key in properties: url"));
     }
-*/
+
   /*  @Test
     public void createResourceWillFailWhenInvalidEnvironmentName() {
         ResourcePayload invalidResource = new ResourcePayload();
