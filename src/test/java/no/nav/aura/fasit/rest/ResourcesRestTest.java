@@ -368,7 +368,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("scope.application", hasItem("fasit"));
     }
 
-/*    @Test
+    @Test
     public void createResourceWithVaultSecret() {
         ResourcePayload newResourcePayload = new ResourcePayload();
         newResourcePayload.type = DataSource;
@@ -405,7 +405,7 @@ public class ResourcesRestTest extends RestTest {
             .statusCode(200)
             .contentType("text/plain")
             .body(equalTo("donaldduck"));
-    }*/
+    }
 
     /*@Test
     public void createResourceWithWhitespaceInAlias() {
