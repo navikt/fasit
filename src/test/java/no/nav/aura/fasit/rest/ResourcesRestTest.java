@@ -342,7 +342,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("type", hasItems("DataSource", "BaseUrl"));
     }
 
-    /*@Test
+    @Test
     public void createResource() {
         ResourcePayload newResourcePayload = new ResourcePayload();
         newResourcePayload.type = BaseUrl;
@@ -367,7 +367,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("scope.environment", hasItem("u1"))
                 .body("scope.application", hasItem("fasit"));
     }
-*/
+
 /*    @Test
     public void createResourceWithVaultSecret() {
         ResourcePayload newResourcePayload = new ResourcePayload();
