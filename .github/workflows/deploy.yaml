@@ -21,8 +21,8 @@ jobs:
         with:
           java-version: '8.0.x'
 
-      - name: Build and test
-        run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e
+      - name: Compile
+        run: mkdir -p /tmp/fasit && mvn install -Djava.io.tmpdir=/tmp/fasit -B -e -X
 
       - name: Create version
         run: echo "$(TZ=":CET" date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
