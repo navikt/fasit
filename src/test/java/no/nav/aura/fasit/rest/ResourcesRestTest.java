@@ -451,7 +451,7 @@ public class ResourcesRestTest extends RestTest {
                 .body(containsString("Missing required key in properties: url"));
     }
 
-  /*  @Test
+    @Test
     public void createResourceWillFailWhenInvalidEnvironmentName() {
         ResourcePayload invalidResource = new ResourcePayload();
         invalidResource.alias = "invalidresource";
@@ -462,9 +462,9 @@ public class ResourcesRestTest extends RestTest {
                 .then()
                 .statusCode(400)
                 .body(containsString("Environment notreal does not exist"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void createResourceWillFailWhenInvalidApplicationtName() {
         ResourcePayload invalidResource = new ResourcePayload();
         invalidResource.alias = "invalidresource";
@@ -475,9 +475,9 @@ public class ResourcesRestTest extends RestTest {
                 .then()
                 .statusCode(400)
                 .body(containsString("Application notreal does not exist"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void duplicateResourceWillFail() {
         ResourcePayload duplicate = createResourcePayload();
 
@@ -490,9 +490,9 @@ public class ResourcesRestTest extends RestTest {
                 .then()
                 .statusCode(400)
                 .body(containsString("Duplicate resource"));
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void deleteResourceShouldBeOk() {
         long id = deleteMe.getID();
 
@@ -514,9 +514,9 @@ public class ResourcesRestTest extends RestTest {
                 .get("/api/v2/resources/" + id)
                 .then()
                 .statusCode(404);
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void deleteResourceThatIsExposedByAnApplicationShouldBeOk() {
 
         ResourcePayload newResourcePayload = new ResourcePayload();
@@ -545,9 +545,9 @@ public class ResourcesRestTest extends RestTest {
                 .delete("/api/v2/resources/" + newResourceId)
                 .then()
                 .statusCode(204);
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void deleteResourceThatIsExposedByMultipleApplicationsShouldBeOk() {
 
         ResourcePayload newResourcePayload = new ResourcePayload();
@@ -618,7 +618,7 @@ public class ResourcesRestTest extends RestTest {
     @Test
     public void updateResourceTypeFails() {
 
-    }*/
+    }
 
     private Response createResource(ResourcePayload resource) {
         return given()
