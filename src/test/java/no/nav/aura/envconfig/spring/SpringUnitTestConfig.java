@@ -12,11 +12,13 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import static org.mockito.Mockito.mock;
 
 @Configuration
+@EnableJdbcHttpSession
 @EnableTransactionManagement
 @Import({ SpringDomainConfig.class })
 public class SpringUnitTestConfig {
