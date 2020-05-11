@@ -316,7 +316,7 @@ public class ResourcesRestTest extends RestTest {
                 .body("alias", hasItems("myQueue", "myOtherQueue"));
     }
 
-    /*@Test
+    @Test
     public void getRevisionsByLink() {
         ResourceRepository resourceRepo = jetty.getBean(ResourceRepository.class);
         dbResource.setAlias("updatedAlias");
@@ -329,7 +329,7 @@ public class ResourcesRestTest extends RestTest {
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(2))
                 .body("revisiontype", hasItems("add", "mod"));
-    }*/
+    }
 
     /*@Test
     public void getResourceTypes() {
