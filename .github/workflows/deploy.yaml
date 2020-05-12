@@ -6,7 +6,7 @@ on:
       - master
 
 env:
-  DOCKER_IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit:${{ github.sha }}
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit:${{ github.sha }}
 
 jobs:
   build:
@@ -45,6 +45,7 @@ jobs:
       - name: Push docker image
         run: docker push ${DOCKER_IMAGE}
 
+  #if: github.ref == 'refs/heads/master'
   deploy-dev:
    name: Deploy to dev-fss
    needs: build
