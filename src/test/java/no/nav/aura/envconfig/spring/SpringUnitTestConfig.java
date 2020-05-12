@@ -34,7 +34,7 @@ public class SpringUnitTestConfig {
 
     @Bean(name = "dataSource")
     public DataSource dataSource() {
-        return TestDatabaseHelper.createDataSource("h2", "jdbc:h2:mem:", "sa", "");
+        return TestDatabaseHelper.createDataSource("h2", "jdbc:h2:mem:spring", "sa", "");
     }
 
     @Bean

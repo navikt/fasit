@@ -31,6 +31,7 @@ public class FasitJettyRunner {
 
     public FasitJettyRunner(int port, DataSource dataSource, String overrideDescriptor) throws IOException {
         server = new Server(port);
+
         setSystemProperties();
         WebAppContext context = getContext(overrideDescriptor);
 

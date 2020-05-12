@@ -31,7 +31,7 @@ abstract public class RestTest {
 
     @BeforeAll
     public static void setUpJetty() throws Exception {
-        jetty = new FasitJettyRunner(0, FasitJettyRunner.createDataSource("h2", "jdbc:h2:mem:", "sa", ""), "src/test/resources/override-test-web.xml");
+        jetty = new FasitJettyRunner(0, FasitJettyRunner.createDataSource("h2", "jdbc:h2:mem:rest", "sa", ""), "src/test/resources/override-test-web.xml");
         jetty.start();
         RestAssured.port = jetty.getPort();
 
