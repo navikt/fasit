@@ -35,7 +35,7 @@ jobs:
         run: mvn package -DskipTests=true -B
 
       - name: Build docker image
-        run: docker build  --tag ${DOCKER_IMAGE} .
+        run: docker build  --tag ${IMAGE} .
       
       - name: Login to Github package registry
         env:
@@ -43,7 +43,7 @@ jobs:
         run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
       
       - name: Push docker image
-        run: docker push ${DOCKER_IMAGE}
+        run: docker push ${IMAGE}
 
   #if: github.ref == 'refs/heads/master'
   deploy-dev:
