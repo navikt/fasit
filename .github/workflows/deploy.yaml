@@ -6,7 +6,7 @@ on:
       - master
 
 env:
-  DOCKER_IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit
+  DOCKER_IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit:${{ github.sha }}
 
 jobs:
   build:
@@ -34,9 +34,6 @@ jobs:
       - name: Build artifact
         run: mvn package -DskipTests=true -B
 
-      - name: Create version
-        run: echo "$(TZ=":CET" date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
-
       - name: Build docker image
         run: docker build  --tag ${DOCKER_IMAGE}:$(cat .docker_tag) .
       
@@ -46,13 +43,12 @@ jobs:
         run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
       
       - name: Push docker image
-        run: docker push ${DOCKER_IMAGE}:$(cat .docker_tag)
+        run: docker push ${DOCKER_IMAGE}
       
       - name: Git tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: git tag $(cat .docker_tag) && git push https://${{ github.action }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git $(cat .docker_tag)
-
 
 
   deploy-dev:
@@ -61,10 +57,6 @@ jobs:
    runs-on: ubuntu-latest
    steps:
       - uses: actions/checkout@v1
-      - name: echo
-        run: cat .docker_tag
-      - name: Set IMAGE env
-        run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
