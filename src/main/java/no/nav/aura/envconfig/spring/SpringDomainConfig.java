@@ -64,7 +64,7 @@ public class SpringDomainConfig {
 
         Properties jpaProperties = new Properties();
         jpaProperties.setProperty("hibernate.hbm2ddl.auto", getHbm2DllAuto());
-        jpaProperties.setProperty("hibernate.show_sql", "true");
+        jpaProperties.setProperty("hibernate.show_sql", "false");
         jpaProperties.setProperty("hibernate.dialect", getDialect());
         jpaProperties.setProperty("hibernate.cache.use_second_level_cache", "true");
         jpaProperties.setProperty("hibernate.cache.use_query_cache", "true");
