@@ -23,8 +23,13 @@ jobs:
       #- name: debug test
       #  run: mvn test -B -e -Dtest=ResourcesRestTest
 
-      - name: Compile
-        run: mvn test  -B -e
+
+      - name: Test
+        run: mvn test  -B -e -X
+      - name: echo
+        run: ls -la /home/runner/work/fasit/fasit/target/surefire-reports
+      - name: Build
+        run: mvn package -DskipTests=true
 
       #- name: Create version
       #  run: echo "$(TZ=":CET" date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
