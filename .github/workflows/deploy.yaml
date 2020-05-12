@@ -44,12 +44,6 @@ jobs:
       
       - name: Push docker image
         run: docker push ${DOCKER_IMAGE}
-      
-      - name: Git tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: git tag $(cat .docker_tag) && git push https://${{ github.action }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git $(cat .docker_tag)
-
 
   deploy-dev:
    name: Deploy to dev-fss
