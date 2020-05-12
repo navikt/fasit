@@ -35,7 +35,7 @@ jobs:
         run: mvn package -DskipTests=true -B
 
       - name: Build docker image
-        run: docker build  --tag ${DOCKER_IMAGE}:$(cat .docker_tag) .
+        run: docker build  --tag ${DOCKER_IMAGE} .
       
       - name: Login to Github package registry
         env:
