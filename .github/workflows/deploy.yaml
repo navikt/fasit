@@ -47,8 +47,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: git tag $(cat .docker_tag) && git push https://${{ github.action }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git $(cat .docker_tag)
 
-      - name: Set IMAGE env
-        run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
+
 
   deploy-dev:
    name: Deploy to dev-fss
@@ -56,6 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - name: echo
+        run: cat .docker_tag
+      - name: Set IMAGE env
+        run: echo ::set-env name=IMAGE::${DOCKER_IMAGE}:$(cat .docker_tag)
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
