@@ -2,4 +2,7 @@
 
 # Fasit
 
-### Operations
+App for handeling environment specific configuration on Aura platform. 
+
+# Development
+To start app on local machine, run FasitJettyRunner.
