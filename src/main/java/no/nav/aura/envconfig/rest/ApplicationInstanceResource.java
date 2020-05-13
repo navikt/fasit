@@ -242,7 +242,7 @@ public class ApplicationInstanceResource {
 
         fasitKafkaProducer.publishDeploymentEvent(applicationInstance, findEnvironment(environmentName));
 
-        log.info(format("Registered new application instance of application %s with version %s to environment %s", applicationName, version, environmentName));
+        log.debug(format("Registered new application instance of application %s with version %s to environment %s", applicationName, version, environmentName));
         return applicationInstance;
 
     }
@@ -400,23 +400,23 @@ public class ApplicationInstanceResource {
         Set<ExposedServiceReference> newExposedServices = new HashSet<>();
 
         for (ExposedResource exposedResource : exposedResources) {
-            log.info("Added exposed resource " + exposedResource.getId() + " " + exposedResource.getAlias());
+            log.debug("Added exposed resource " + exposedResource.getId() + " " + exposedResource.getAlias());
             ExposedServiceReference serviceReference = findExistingExposedResources(exposedResource, existingAppInstance.getExposedServices());
 
             if (serviceReference == null) {
-                log.info("No service reference found " );
+                log.debug("No service reference found " );
                 ResourceType resourceType = ResourceType.getResourceTypeFromName(exposedResource.getType());
                 if (isExposedInternally(resourceType)) {
-                    log.info("Resource is exposed internally, creating new");
+                    log.debug("Resource is exposed internally, creating new");
                     serviceReference = createNewServiceReference(exposedResource, environmentName);
                 } else {
                     Resource storedResource = repository.getById(Resource.class, exposedResource.getId());
-                    log.info("Getting by ID " + exposedResource.getId() + " (from payload) " + storedResource.getID() + " (stored)");
+                    log.debug("Getting by ID " + exposedResource.getId() + " (from payload) " + storedResource.getID() + " (stored)");
                     serviceReference = new ExposedServiceReference(storedResource, null);
                 }
             }
 
-            log.info("Service reference " + serviceReference.getName() + " " + serviceReference.getID()  );
+            log.debug("Service reference " + serviceReference.getName() + " " + serviceReference.getID()  );
             updateResourceIfChanged(exposedResource, serviceReference, environmentName);
 
             List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(Resource.class, serviceReference.getResource().getID());
@@ -528,7 +528,7 @@ public class ApplicationInstanceResource {
 
             if (futureScope.isSubsetOf(resource.getScope())) {
                 future.setResource(resource);
-                log.info("Updating future reference {} for {} in {} ", resource.getName(), futureApplication.getName(), futureEnvironment.getName());
+                log.debug("Updating future reference {} for {} in {} ", resource.getName(), futureApplication.getName(), futureEnvironment.getName());
                 repository.store(future);
             }
         }
@@ -542,7 +542,7 @@ public class ApplicationInstanceResource {
                 ResourceReference resourceReference = new ResourceReference(resource, usedResource.getRevision());
                 resourceReferences.add(resourceReference);
             } else {
-                log.info("Resource {} will not be registered as used since it is exposed by this application", resource);
+                log.debug("Resource {} will not be registered as used since it is exposed by this application", resource);
             }
         }
         for (MissingResource missingResource : missingResources) {

@@ -60,7 +60,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
                 throw new BadRequestException("Application " + applicationName + " is allready mapped to another cluster in " + environment.getName());
             }
             if(!appsInCluster.contains(applicationName)){
-                log.info("Adding new application {} to cluster {} in {}", applicationName, cluster.getName(), environment.getName());
+                log.debug("Adding new application {} to cluster {} in {}", applicationName, cluster.getName(), environment.getName());
                 cluster.addApplication(application);
             }
         }
@@ -70,7 +70,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
             .filter(ai -> !newApps.contains(ai.getApplication().getName()))
             .collect(Collectors.toSet());
         for (ApplicationInstance applicationInstance : removedApps) {
-            log.info("Removing application {} from cluster {} in {}", applicationInstance.getName(), cluster.getName(), environment.getName());
+            log.debug("Removing application {} from cluster {} in {}", applicationInstance.getName(), cluster.getName(), environment.getName());
             cluster.removeApplicationByApplication(applicationInstance);
             
         }
@@ -94,7 +94,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
                 throw new BadRequestException("Host " + hostname + " is not in environment " + environment.getName());
             }
             if(!nodesInCluster.contains(hostname)){
-                log.info("Adding new node {} to cluster {} in {}", hostname, cluster.getName(), environment.getName());
+                log.debug("Adding new node {} to cluster {} in {}", hostname, cluster.getName(), environment.getName());
                 environment.addNode(cluster, nodeInEnvironment.get());
             }
         }
@@ -103,7 +103,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
                 .filter(n -> !newNodes.contains(n.getHostname().toLowerCase()))
                 .collect(Collectors.toSet());
             for (Node removedNode : removedNodes) {
-                log.info("Removing node {} from cluster {} in {}", removedNode.getHostname(), cluster.getName(), environment.getName());
+                log.debug("Removing node {} from cluster {} in {}", removedNode.getHostname(), cluster.getName(), environment.getName());
                 cluster.removeNode(removedNode);
                 
             }

@@ -154,7 +154,7 @@ public class JPAFasitRepository implements FasitRepository {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void delete(ExposedServiceReference exposed) {
-        log.info("Deleting exposed resource ", exposed.getID());
+        log.debug("Deleting exposed resource ", exposed.getID());
         Resource resource = exposed.getResource();
         // Do not remove all kind of resources
         if (ResourceType.externalExposedResourceTypes.contains(resource.getType())) {
@@ -181,7 +181,7 @@ public class JPAFasitRepository implements FasitRepository {
             Node node = (Node) entity;
             Environment environment = getEnvironmentBy(node);
             if (environment != null) {
-                log.info("Removing node {} from environment {} ", node.getHostname(), environment.getName());
+                log.debug("Removing node {} from environment {} ", node.getHostname(), environment.getName());
                 environment.removeNode(node);
                 store(environment);
             }
@@ -200,7 +200,7 @@ public class JPAFasitRepository implements FasitRepository {
             final Resource resource = (Resource) entity;
             ApplicationInstance applicationInstance = findApplicationInstanceByExposedResourceId(resource.getID());
             if (applicationInstance != null) {
-                log.info("Removing exposed resource {} from application instance {} ", resource, applicationInstance);
+                log.debug("Removing exposed resource {} from application instance {} ", resource, applicationInstance);
                 Set<ExposedServiceReference> exposedServices = applicationInstance.getExposedServices();
                 Optional<ExposedServiceReference> findExposed = FluentIterable.from(exposedServices).firstMatch(new com.google.common.base.Predicate<ExposedServiceReference>() {
 

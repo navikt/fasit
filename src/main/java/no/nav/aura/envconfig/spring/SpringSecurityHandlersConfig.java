@@ -53,10 +53,10 @@ public class SpringSecurityHandlersConfig {
         return new SimpleUrlLogoutSuccessHandler(){
             @Override
             public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                log.info("restLogoutSuccessHandler logging out");
+                log.debug("restLogoutSuccessHandler logging out");
                 String refererUrl = request.getHeader("referer");
-                log.info("Referer url for logout " + refererUrl);
-                log.info("isAuthenticated? " + authentication.isAuthenticated() + " " + authentication.getName() + " " + authentication.toString());
+                log.debug("Referer url for logout " + refererUrl);
+                log.debug("isAuthenticated? " + authentication.isAuthenticated() + " " + authentication.getName() + " " + authentication.toString());
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().flush();
             }

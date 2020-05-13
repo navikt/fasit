@@ -159,7 +159,7 @@ public class FasitRestClient {
         }
 
         URI url = uribuilder.build();
-        log.info("REST URL " + url);
+        log.debug("REST URL " + url);
         return url;
     }
 
@@ -171,14 +171,14 @@ public class FasitRestClient {
     public ResourceElement getResource(String environment, String alias, ResourceTypeDO type, DomainDO domain, String appName) {
         URI url = getBaseUrl().path("resources/bestmatch").queryParam("envName", environment).queryParam("domain", domain.getFqn()).queryParam("type", type)
                 .queryParam("alias", alias).queryParam("app", appName).build();
-        log.info("REST URL " + url);
+        log.debug("REST URL " + url);
         ResourceElement resource = get(url, ResourceElement.class);
         return resource;
     }
 
     public ResourceElement getResourceById(long resourceId) {
         URI url = getBaseUrl().path("resources/" + resourceId).build();
-        log.info("REST URL " + url);
+        log.debug("REST URL " + url);
         ResourceElement resource = get(url, ResourceElement.class);
         return resource;
     }
@@ -202,7 +202,7 @@ public class FasitRestClient {
 
     public Response undeployApplication(String environmentName, String applicationName, String comment) {
         URI url = getBaseUrl().path("environments/{env}/applications/{app}").build(environmentName, applicationName);
-        log.info("Undeploying application {} on {} ", applicationName, url);
+        log.debug("Undeploying application {} on {} ", applicationName, url);
         return delete(url, comment);
     }
 
@@ -234,7 +234,7 @@ public class FasitRestClient {
      */
     public Response updateNode(NodeDO nodeDO, String comment) {
         URI uri = getBaseUrl().path("nodes").path(nodeDO.getHostname()).build();
-        log.info("Updating node on url", uri);
+        log.debug("Updating node on url", uri);
         return post(uri, nodeDO, comment);
     }
 
