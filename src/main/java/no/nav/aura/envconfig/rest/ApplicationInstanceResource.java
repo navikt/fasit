@@ -492,7 +492,7 @@ public class ApplicationInstanceResource {
         }
         if (changed) {
             serviceReference.setResource(repository.store(resource));
-            log.info("Updated resource for exposed service: {}", resource);
+            log.debug("Updated resource for exposed service: {}", resource);
         }
         return serviceReference;
 
