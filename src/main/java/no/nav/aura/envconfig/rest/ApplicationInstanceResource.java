@@ -31,7 +31,9 @@ import no.nav.aura.sensu.SensuClient;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
+
 import javax.ws.rs.BadRequestException;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +68,7 @@ public class ApplicationInstanceResource {
     }
 
     @Inject
-    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository,  SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer) {
+    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer) {
         this.repository = repository;
         this.instanceRepository = instanceRepository;
         this.sensuClient = sensuClient;
@@ -79,14 +81,23 @@ public class ApplicationInstanceResource {
     public Response registerApplicationInstance(final String payload) {
         String schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
         Gson gson = new Gson();
-        ApplicationInstance applicationInstance = register(gson.fromJson(schemaValidatedJson, RegisterApplicationInstancePayload.class));
+        RegisterApplicationInstancePayload applicationInstancePayload = gson.fromJson(schemaValidatedJson, RegisterApplicationInstancePayload.class);
+        ApplicationInstance applicationInstance = register(applicationInstancePayload);
+        sensuClient.sendEvent("fasit.jsonSchemaAppInstanceService.post", Collections.emptyMap(),
+                ImmutableMap.of(
+                        "appName", applicationInstancePayload.getApplication(),
+                        "envName", applicationInstancePayload.getEnvironment()));
         return Response.created(URI.create("/v1/applicationinstances/" + applicationInstance.getID())).entity(applicationInstance.toString()).build();
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/environments/{environmentName}/applications/{applicationName}/full")
     public ApplicationInstanceDO getApplicationInstanceWithResources(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
+        sensuClient.sendEvent("fasit.jsonSchemaAppInstanceService.get", Collections.emptyMap(),
+                ImmutableMap.of(
+                        "appName", appName,
+                        "envName", envName));
         Environment environment = findEnvironment(envName);
         ApplicationInstance instance = findApplicationInstance(appName, environment);
         ApplicationInstanceDO appDO = createApplicationDO(environment, instance);
@@ -97,7 +108,7 @@ public class ApplicationInstanceResource {
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON })
+    @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/environments/{environmentName}/applications/{applicationName}")
     public ApplicationInstanceDO getApplicationInstance(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
         Environment environment = findEnvironment(envName);
@@ -404,7 +415,7 @@ public class ApplicationInstanceResource {
             ExposedServiceReference serviceReference = findExistingExposedResources(exposedResource, existingAppInstance.getExposedServices());
 
             if (serviceReference == null) {
-                log.debug("No service reference found " );
+                log.debug("No service reference found ");
                 ResourceType resourceType = ResourceType.getResourceTypeFromName(exposedResource.getType());
                 if (isExposedInternally(resourceType)) {
                     log.debug("Resource is exposed internally, creating new");
@@ -416,7 +427,7 @@ public class ApplicationInstanceResource {
                 }
             }
 
-            log.debug("Service reference " + serviceReference.getName() + " " + serviceReference.getID()  );
+            log.debug("Service reference " + serviceReference.getName() + " " + serviceReference.getID());
             updateResourceIfChanged(exposedResource, serviceReference, environmentName);
 
             List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(Resource.class, serviceReference.getResource().getID());
