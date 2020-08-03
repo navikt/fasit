@@ -25,7 +25,7 @@ public class Application2PayloadTransformer extends ToPayloadTransformer<Applica
     protected ApplicationPayload transform(Application application) {
         ApplicationPayload payload = new ApplicationPayload();
         payload.addLink("self", UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getApplication").build(application.getName()));
-        payload.addLink("instances", UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).queryParam("application", application.getName()).build());
+        payload.addLink("instances", UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "findApplicationInstancesByApplication").build(application.getName()));
         payload.addLink("revisions", UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getRevisions").build(application.getName()));
         if (revision != null){
             payload.revision=revision;
@@ -36,6 +36,5 @@ public class Application2PayloadTransformer extends ToPayloadTransformer<Applica
         payload.groupId = application.getGroupId();
 
         return payload;
-
     }
 }
