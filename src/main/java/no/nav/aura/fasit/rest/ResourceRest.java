@@ -243,9 +243,6 @@ public class ResourceRest extends AbstractResourceRest {
         return Response.created(resourceUrl).build();
     }
 
-    /**
-     * TODO crate doc. Sometin bout ResourceType and properties to use. Link to resource type api
-     */
     @PUT
     @Path("{resourceId}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -256,7 +253,7 @@ public class ResourceRest extends AbstractResourceRest {
         checkAccess(oldResource);
 
         if (oldResource.getType() != payload.type) {
-            throw new BadRequestException("Change of resource type is not allowed. Delete this resouce and create a new one");
+            throw new BadRequestException("Change of resource type is not allowed. Delete this resource and create a new one");
         }
 
         Resource updatedResource = new Payload2ResourceTransformer(validationHelpers, oldResource).apply(payload);

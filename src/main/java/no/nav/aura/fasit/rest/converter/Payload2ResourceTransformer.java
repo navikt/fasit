@@ -41,6 +41,8 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         validatePropertiesForType(payload);
         validatePropertyContent(payload);
 
+
+
         String trimmedAlias = payload.alias.trim();
 
         if(defaultValue.isPresent()) {
@@ -117,6 +119,11 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
 
     private List<String> validateRequiredProps(String propType, Set<PropertyField> supportedFields, Set<String> payloadProperties) {
 
+        // Skip checking for secret value if we are updating a resource.
+        // Users are not required to add the secret payload everytime they update a resource
+        if(defaultValue.isPresent() && propType.equals("secrets")) {
+            return new ArrayList<>();
+        }
 
         List<String> validationMessages = new ArrayList<>();
         Set<String> supportedFieldNames = supportedFields.stream().map((field) -> field.getName()).collect(toSet());

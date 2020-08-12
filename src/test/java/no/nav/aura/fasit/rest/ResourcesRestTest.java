@@ -11,7 +11,6 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.resource.SecurityToken;
-import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.rest.RestTest;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.fasit.repository.ApplicationRepository;
@@ -28,17 +27,17 @@ import java.util.Set;
 
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.semantics.Action.*;
-import static com.xebialabs.restito.semantics.Condition.basicAuth;
-import static com.xebialabs.restito.semantics.Condition.post;
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
 import static no.nav.aura.envconfig.model.resource.ResourceType.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
 public class ResourcesRestTest extends RestTest {
     private static Resource dbResource;
+    private static Resource openamResource;
     private static Resource mqResouce;
     private static Resource exposedWs;
     private static Environment u1;
@@ -80,6 +79,14 @@ public class ResourcesRestTest extends RestTest {
         db.putSecretWithValue("password", "secret");
         db.setLifeCycleStatus(LifeCycleStatus.ALERTED);
         dbResource = resourceRepo.save(db);
+
+        Resource openam = new Resource("myOpemA,", OpenAm, new Scope(u).environment(u1).application(fasit));
+        openam.putProperty("restUrl", "http://myurl.com");
+        openam.putProperty("logoutUrl", "http://logoutUrl.com");
+        openam.putProperty("hostname", "hostname.com");
+        openam.putProperty("username", "username");
+        openam.putSecretWithValue("password", "aSecretPassword");
+        openamResource = resourceRepo.save(openam);
 
         Resource queue = new Resource("myQueue", Queue, new Scope(t).domain(Domain.TestLocal).environment(t1));
         queue.putProperty("queueName", "QA.MY_QUEUE");
@@ -397,13 +404,13 @@ public class ResourcesRestTest extends RestTest {
                 .then(ok(), stringContent("{\"data\":{\"data\": {\"password\": \"donaldduck\"}, \"metadata\": {}}}"), contentType("application/json"));
 
         given()
-            .when()
-            .auth().basic("user", "user")
-            .get(passwordRef)
-            .then()
-            .statusCode(200)
-            .contentType("text/plain")
-            .body(equalTo("donaldduck"));
+                .when()
+                .auth().basic("user", "user")
+                .get(passwordRef)
+                .then()
+                .statusCode(200)
+                .contentType("text/plain")
+                .body(equalTo("donaldduck"));
     }
 
     @Test
@@ -535,7 +542,6 @@ public class ResourcesRestTest extends RestTest {
         app.exposedresources.add(new ApplicationInstancePayload.ResourceRefPayload(newResourceId));
 
 
-
         registerDeployment(app);
         given()
                 .auth()
@@ -610,13 +616,44 @@ public class ResourcesRestTest extends RestTest {
     }
 
     @Test
-    public void updateNonExistingResourceFails() {
+    public void resourcesWithSecretsDoesNotRequireSecretAsPartOfPayloadIfSecretHasNotChanged() {
+        Long openamResourceID = openamResource.getID();
+        String secretPathBeforeUpdate = given()
+                .when()
+                .get("/api/v2/resources/" + openamResourceID)
+                .getBody().path("secrets.password.ref");
 
-    }
+        ResourcePayload updatePayload = new ResourcePayload();
+        updatePayload.type = OpenAm;
+        updatePayload.alias = openamResource.getAlias();
+        updatePayload.addProperty("restUrl", "http://newUrl.com");
+        updatePayload.addProperty("logoutUrl", openamResource.getProperties().get("logoutUrl"));
+        updatePayload.addProperty("hostname", "newHostname");
+        updatePayload.addProperty("username", openamResource.getProperties().get("username"));
+        updatePayload.scope = new ScopePayload().environmentClass(u);
 
-    @Test
-    public void updateResourceTypeFails() {
+        Response response = updateResource(updatePayload, openamResourceID);
+        assertThat(response.getStatusCode(), is(200));
 
+        String secretPathAfterUpdate = given()
+                .auth().basic("user", "user")
+                .when()
+                .get("/api/v2/resources/" + openamResourceID)
+                .then()
+                .body("properties.restUrl", equalTo("http://newUrl.com"))
+                .extract()
+                .path("secrets.password.ref");
+
+        assertThat(secretPathBeforeUpdate, equalTo(secretPathAfterUpdate));
+
+        given()
+                .when()
+                .auth().basic("user", "user")
+                .get(secretPathBeforeUpdate)
+                .then()
+                .statusCode(200)
+                .contentType("text/plain")
+                .body(equalTo("aSecretPassword"));
     }
 
     private Response createResource(ResourcePayload resource) {
