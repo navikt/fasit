@@ -80,7 +80,7 @@ public class ResourcesRestTest extends RestTest {
         db.setLifeCycleStatus(LifeCycleStatus.ALERTED);
         dbResource = resourceRepo.save(db);
 
-        Resource openam = new Resource("myOpemA,", OpenAm, new Scope(u).environment(u1).application(fasit));
+        Resource openam = new Resource("openAM,", OpenAm, new Scope(u).environment(u1).application(fasit));
         openam.putProperty("restUrl", "http://myurl.com");
         openam.putProperty("logoutUrl", "http://logoutUrl.com");
         openam.putProperty("hostname", "hostname.com");
@@ -158,8 +158,8 @@ public class ResourcesRestTest extends RestTest {
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("$", hasSize(5))
-                .header("total_count", equalTo("5"));
+                .body("$", hasSize(6))
+                .header("total_count", equalTo("6"));
     }
 
 
