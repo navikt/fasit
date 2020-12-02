@@ -15,7 +15,7 @@
         <resteasy.version>3.0.19.Final</resteasy.version>
         <ojdbc.version>19.3.0.0</ojdbc.version>
         <hibernate.version>5.4.3.Final</hibernate.version>
-        <jetty.version>9.4.19.v20190610</jetty.version>
+        <jetty.version>9.4.35.v20201120</jetty.version>
         <kafka.version>2.0.0</kafka.version>
         <protobuf.version>3.8.0</protobuf.version>
         <skipITs>true</skipITs>
