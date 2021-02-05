@@ -2,7 +2,8 @@
   "ingresses": [
     "https://fasit.nais.preprod.local/conf/",
     "https://fasit.nais.preprod.local/api",
-    "https://fasit.nais.preprod.local/rest"
+    "https://fasit.nais.preprod.local/rest",
+    "https://fasit.dev.intern.nav.no/api"
   ],
   "ENVIRONMENT_NAME": "dev",
   "ENVIRONMENT_CLASS": "u",
