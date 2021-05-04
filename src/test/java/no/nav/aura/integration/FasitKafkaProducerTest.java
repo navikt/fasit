@@ -1,10 +1,16 @@
 package no.nav.aura.integration;
 
 import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
 import no.nav.protos.deployment.DeploymentEvent;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import static no.nav.protos.deployment.DeploymentEvent.Event;
@@ -20,6 +26,27 @@ public class FasitKafkaProducerTest {
     static {
         System.setProperty("fasit.encryptionkeys.username", "junit");
         System.setProperty("fasit.encryptionkeys.password", "password");
+    }
+
+    // This test is run on-demand to check Kafka connectivity using TLS auth.
+    // Extract credentials from Kafkarator secrets, then change the test parameters to get it working.
+    @Ignore
+    @Test
+    public void tlsConnectionIntegrationTest() {
+        System.setProperty("kafka.servers", "10.6.3.18:26484");
+        System.setProperty("kafka.credstore.password", "changeme");
+        System.setProperty("kafka.keystore.path", "/tmp/client.keystore.p12");
+        System.setProperty("kafka.truststore.path", "/tmp/client.truststore.jks");
+        System.setProperty("kafka.deployment.event.topic", "aura.dev-rapid");
+
+        Cluster cluster = new Cluster("myCluster", Domain.TestLocal);
+        ApplicationInstance appInstance = new ApplicationInstance(new Application("myApp"), cluster);
+        appInstance.setVersion("1.1");
+        appInstance.setUpdatedBy("mr. deployer");
+
+        Environment environment = new Environment("test", EnvironmentClass.t);
+        FasitKafkaProducer fasitKafkaProducer = new FasitKafkaProducer();
+        fasitKafkaProducer.publishDeploymentEvent(appInstance, environment);
     }
 
     @Test
@@ -93,7 +120,7 @@ public class FasitKafkaProducerTest {
         appInstance.setVersion("1.1");
 
         return createDeploymentEvent(envClass, appInstance);
-}
+    }
 
 
     private Event createDeploymentEvent(EnvironmentClass envClass, ApplicationInstance appInstance) {
@@ -103,7 +130,7 @@ public class FasitKafkaProducerTest {
         return fasitKafkaProducer.createDeploymentEvent(
                 appInstance,
                 environment
-                );
+        );
     }
 
 
