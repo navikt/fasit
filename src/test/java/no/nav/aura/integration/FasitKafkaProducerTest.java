@@ -10,7 +10,7 @@ import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.model.infrastructure.PlatformType;
 import no.nav.protos.deployment.DeploymentEvent;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static no.nav.protos.deployment.DeploymentEvent.Event;
@@ -30,10 +30,10 @@ public class FasitKafkaProducerTest {
 
     // This test is run on-demand to check Kafka connectivity using TLS auth.
     // Extract credentials from Kafkarator secrets, then change the test parameters to get it working.
-    @Ignore
     @Test
+    @Disabled
     public void tlsConnectionIntegrationTest() {
-        System.setProperty("kafka.servers", "10.6.3.18:26484");
+        System.setProperty("kafka.servers", "127.0.0.1:26484");
         System.setProperty("kafka.credstore.password", "changeme");
         System.setProperty("kafka.keystore.path", "/tmp/client.keystore.p12");
         System.setProperty("kafka.truststore.path", "/tmp/client.truststore.jks");
