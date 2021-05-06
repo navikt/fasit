@@ -18,7 +18,7 @@
   "ROLE_OPERATIONS_GROUPS": "0000-ga-env_config_L, 0000-GA-WAS_LOGGER-Test, 0000-GA-env-config-testAdmin",
   "ROLE_PROD_OPERATIONS_GROUPS": "0000-ga-env_config_S",
   "ROLE_SUPERUSER_GROUPS": "0000-ga-fasit-superuser, 0000-ga-env_config_L",
-  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "dev-rapid",
+  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "aura.dev-rapid",
   "KAFKA_POOL": "nav-dev",
   "db-vault-path": "oracle/data/dev/creds/fasit_cdu101-user",
   "ldap-user-vault-path": "serviceuser/data/test/srvssolinux",

@@ -20,7 +20,7 @@
   "ROLE_OPERATIONS_GROUPS": "0000-GA-env-config-TestAdmin,0000-GA-fasit-prod-selfservice",
   "ROLE_PROD_OPERATIONS_GROUPS": "0000-GA-env-config-ProdAdmin,0000-GA-fasit-prod-selfservice",
   "ROLE_SUPERUSER_GROUPS": "0000-ga-fasit-superuser",
-  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "dev-rapid",
+  "KAFKA_DEPLOYMENT_EVENT_TOPIC": "aura.dev-rapid",
   "KAFKA_POOL": "nav-infrastructure",
   "db-vault-path": "oracle/data/prod/creds/fasit-user",
   "ldap-user-vault-path": "serviceuser/data/prod/srvssolinux",
