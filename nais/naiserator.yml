@@ -31,6 +31,8 @@ spec:
     - "{{this}}"
     {{/each}}
   cpuThresholdPercentage: 50
+  kafka:
+    pool: {{ KAFKA_POOL }}
   env:
     - name: "LOG_OUTPUT"
       value: "JSON"
@@ -60,10 +62,6 @@ spec:
       value: {{ ROLE_PROD_OPERATIONS_GROUPS }}
     - name: "ROLE_SUPERUSER_GROUPS"
       value: {{ ROLE_SUPERUSER_GROUPS }}
-    - name: "KAFKA_SERVERS"
-      value: {{ KAFKA_SERVERS }}
-    - name: "KAFKA_SASL_ENABLED"
-      value: "true"
     - name: "KAFKA_DEPLOYMENT_EVENT_TOPIC"
       value: {{ KAFKA_DEPLOYMENT_EVENT_TOPIC }}
 

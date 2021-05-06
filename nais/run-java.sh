@@ -42,11 +42,11 @@ echo "ROLE_PROD_OPERATIONS.groups=$ROLE_PROD_OPERATIONS_GROUPS" >> config.proper
 # RoleMapping fasit.superuser
 echo "ROLE_SUPERUSER.groups=$ROLE_SUPERUSER_GROUPS" >> config.properties
 
-#KafkaConfig
-echo "kafka.servers=$KAFKA_SERVERS" >> config.properties
-echo "kafka.sasl.enabled=$KAFKA_SASL_ENABLED" >> config.properties
-echo "kafka.username=$(cat /secrets/credential/fasit.kafka.user/USERNAME)" >> config.properties
-echo "kafka.password=$(cat /secrets/credential/fasit.kafka.user/PASSWORD)" >> config.properties
+# Kafka configuration from Kafkarator
+echo "kafka.servers=$KAFKA_BROKERS" >> config.properties
+echo "kafka.credstore.password=$KAFKA_CREDSTORE_PASSWORD" >> config.properties
+echo "kafka.keystore.path=$KAFKA_KEYSTORE_PATH" >> config.properties
+echo "kafka.truststore.path=$KAFKA_TRUSTSTORE_PATH" >> config.properties
 echo "kafka.deployment.event.topic=$KAFKA_DEPLOYMENT_EVENT_TOPIC" >> config.properties
 
 # Start the server

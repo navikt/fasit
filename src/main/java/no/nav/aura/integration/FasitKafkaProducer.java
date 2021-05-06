@@ -2,12 +2,18 @@ package no.nav.aura.integration;
 
 import com.google.protobuf.Timestamp;
 import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.model.infrastructure.*;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.protos.deployment.DeploymentEvent;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.KafkaException;
-import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -28,9 +34,9 @@ public class FasitKafkaProducer {
 
     public FasitKafkaProducer() {
         final String kafkaServers = getProperty("kafka.servers");
-        final String kafkaUsername = getProperty("kafka.username");
-        final String kafkaPassword = getProperty("kafka.password");
-        final boolean saslEnabled = getProperty("kafka.sasl.enabled").equalsIgnoreCase("true");
+        final String kafkaCredstorePassword = getProperty("kafka.credstore.password");
+        final String kafkaKeystorePath = getProperty("kafka.keystore.path");
+        final String kafkaTruststorePath = getProperty("kafka.truststore.path");
         kafkaDeploymentEventTopic = getProperty("kafka.deployment.event.topic");
 
         Properties prop = new Properties();
@@ -41,15 +47,11 @@ public class FasitKafkaProducer {
         prop.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "https");
         prop.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, "500");
 
-
-        if (saslEnabled) {
-            prop.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-            prop.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-            prop.put(
-                    SaslConfigs.SASL_JAAS_CONFIG,
-                    String.format("org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
-                            kafkaUsername, kafkaPassword));
-        }
+        prop.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, kafkaKeystorePath);
+        prop.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, kafkaTruststorePath);
+        prop.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, kafkaCredstorePassword);
+        prop.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, kafkaCredstorePassword);
+        prop.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
 
         try {
             kafkaProducer = new KafkaProducer<>(prop, new StringSerializer(),
