@@ -118,7 +118,6 @@ public class FasitKafkaProducerTest {
         Cluster cluster = new Cluster("nais", domain);
         ApplicationInstance appInstance = new ApplicationInstance(new Application("myApp"), cluster);
         appInstance.setVersion("1.1");
-
         return createDeploymentEvent(envClass, appInstance);
     }
 
@@ -127,10 +126,17 @@ public class FasitKafkaProducerTest {
         KafkaProducer kafkaProducer = mock(KafkaProducer.class);
         FasitKafkaProducer fasitKafkaProducer = new FasitKafkaProducer(kafkaProducer);
         Environment environment = new Environment("myenv", envClass);
-        return fasitKafkaProducer.createDeploymentEvent(
-                appInstance,
-                environment
-        );
+        Event event;
+        try {
+            event = fasitKafkaProducer.createDeploymentEvent(
+                    appInstance,
+                    environment
+            ).unpack(Event.class);
+            return event;
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            assertThat("deployment event unpacked", false);
+        }
+        return null;
     }
 
 
@@ -148,14 +154,20 @@ public class FasitKafkaProducerTest {
 
     @Test
     public void serializationAndDeserializationToAndFromProtobufWorks() {
+        KafkaProducer kafkaProducer = mock(KafkaProducer.class);
+        FasitKafkaProducer fasitKafkaProducer = new FasitKafkaProducer(kafkaProducer);
         ApplicationInstance appInstance = createAppInstanceWithCluster("myCluster", Domain.TestLocal, EnvironmentClass.t, PlatformType.WILDFLY);
-        Event deploymentEvent = createDeploymentEvent(EnvironmentClass.t, appInstance);
+        Environment environment = new Environment("myenv", EnvironmentClass.t);
+        com.google.protobuf.Any deploymentEvent = fasitKafkaProducer.createDeploymentEvent(
+                appInstance,
+                environment
+        );
 
         DeploymentEventSerializer serializer = new DeploymentEventSerializer();
         DeployementEventDeserializer deserializer = new DeployementEventDeserializer();
 
         byte[] serialized = serializer.serialize("topic", deploymentEvent);
-        Event deserialized = deserializer.deserialize("topic", serialized);
+        com.google.protobuf.Any deserialized = deserializer.deserialize("topic", serialized);
 
         assertEquals(deserialized, deploymentEvent);
     }

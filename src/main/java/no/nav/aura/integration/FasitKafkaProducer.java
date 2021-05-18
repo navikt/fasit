@@ -1,5 +1,6 @@
 package no.nav.aura.integration;
 
+import com.google.protobuf.Any;
 import com.google.protobuf.Timestamp;
 import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
@@ -27,7 +28,7 @@ import java.util.UUID;
 
 public class FasitKafkaProducer {
 
-    private KafkaProducer<String, DeploymentEvent.Event> kafkaProducer;
+    private KafkaProducer<String, com.google.protobuf.Any> kafkaProducer;
     private static final Logger log = LoggerFactory.getLogger(FasitKafkaProducer.class);
     private String kafkaDeploymentEventTopic;
 
@@ -68,16 +69,12 @@ public class FasitKafkaProducer {
     }
 
     public void publishDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
-        DeploymentEvent.Event deploymentEvent = createDeploymentEvent(appInstance, environment);
-        log.info("Ready to publish deployment-event to topic: %s:%s  %s. CorrelationId: %s",
-                deploymentEvent.getApplication(),
-                deploymentEvent.getVersion(),
-                deploymentEvent.getSkyaEnvironment(),
-                deploymentEvent.getCorrelationID());
+        com.google.protobuf.Any deploymentEvent = createDeploymentEvent(appInstance, environment);
+        log.info("Ready to publish deployment event");
         kafkaProducer.send(new ProducerRecord<>(kafkaDeploymentEventTopic, deploymentEvent), new KafkaCallback(deploymentEvent));
     }
 
-    protected DeploymentEvent.Event createDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
+    protected com.google.protobuf.Any createDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
         final Cluster cluster = appInstance.getCluster();
 
         Instant timestamp = Instant.now();
@@ -97,7 +94,7 @@ public class FasitKafkaProducer {
         Optional.ofNullable(updatedBy).ifPresent(deployedBy ->
                 deploymentEventBuilder.setDeployer(DeploymentEvent.Actor.newBuilder().setName(deployedBy).build()));
 
-        return deploymentEventBuilder.build();
+        return Any.pack(deploymentEventBuilder.build());
     }
 
     private String generateUUID() {
@@ -155,9 +152,9 @@ public class FasitKafkaProducer {
     }
 
     class KafkaCallback implements Callback {
-        private final DeploymentEvent.Event deploymentEvent;
+        private final com.google.protobuf.Any deploymentEvent;
 
-        public KafkaCallback(DeploymentEvent.Event deploymentEvent) {
+        public KafkaCallback(com.google.protobuf.Any deploymentEvent) {
             this.deploymentEvent = deploymentEvent;
         }
 
@@ -166,12 +163,19 @@ public class FasitKafkaProducer {
             if (e != null) {
                 log.error("Unable to publish deployment-event to topic " + recordMetadata != null ? recordMetadata.topic() : "", e);
             } else {
+                DeploymentEvent.Event event;
+                try {
+                    event = this.deploymentEvent.unpack(DeploymentEvent.Event.class);
+                } catch (com.google.protobuf.InvalidProtocolBufferException ex) {
+                    log.error("Event published with wrong format: " + ex.toString());
+                    return;
+                }
                 log.info(String.format(
                         "Published deployment-event to topic: %s:%s  %s. CorrelationId: %s",
-                        deploymentEvent.getApplication(),
-                        deploymentEvent.getVersion(),
-                        deploymentEvent.getSkyaEnvironment(),
-                        deploymentEvent.getCorrelationID()));
+                        event.getApplication(),
+                        event.getVersion(),
+                        event.getSkyaEnvironment(),
+                        event.getCorrelationID()));
             }
         }
     }

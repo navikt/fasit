@@ -1,12 +1,11 @@
 package no.nav.aura.integration;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import no.nav.protos.deployment.DeploymentEvent;
 import org.apache.kafka.common.serialization.Deserializer;
 
 import java.util.Map;
 
-public class DeployementEventDeserializer  implements Deserializer {
+public class DeployementEventDeserializer implements Deserializer {
 
     @Override
     public void configure(Map map, boolean b) {
@@ -14,11 +13,11 @@ public class DeployementEventDeserializer  implements Deserializer {
     }
 
     @Override
-    public DeploymentEvent.Event deserialize(String s, byte[] bytes) {
+    public com.google.protobuf.Any deserialize(String s, byte[] bytes) {
         try {
-            return DeploymentEvent.Event.parseFrom(bytes);
+            return com.google.protobuf.Any.parseFrom(bytes);
         } catch (InvalidProtocolBufferException ipbe) {
-            throw new RuntimeException("Error deserializoing", ipbe);
+            throw new RuntimeException("Error deserializing", ipbe);
         }
     }
 
