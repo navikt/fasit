@@ -54,4 +54,4 @@ echo "kafka.truststore.path=$KAFKA_TRUSTSTORE_PATH" >> $CONFIG_DIR/config.proper
 echo "kafka.deployment.event.topic=$KAFKA_DEPLOYMENT_EVENT_TOPIC" >> $CONFIG_DIR/config.properties
 
 # Start the server
-exec java ${DEFAULT_JVM_OPTS} ${JAVA_OPTS} -jar /app/app.jar ${RUNTIME_OPTS} $@
+exec java ${DEFAULT_JVM_OPTS} ${JAVA_OPTS} -Dfasit.configDir=$CONFIG_DIR -jar /app/app.jar ${RUNTIME_OPTS} $@
