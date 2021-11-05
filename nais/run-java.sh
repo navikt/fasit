@@ -3,7 +3,6 @@
 
 CONFIG_DIR=/tmp/config
 mkdir -p $CONFIG_DIR
-export CLASSPATH=$CONFIG_DIR:$CLASSPATH
 
 echo "environment.name=$ENVIRONMENT_NAME" >> $CONFIG_DIR/config.properties
 echo "environment.class=$ENVIRONMENT_CLASS" >> $CONFIG_DIR/config.properties

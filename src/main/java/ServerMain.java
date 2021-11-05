@@ -139,7 +139,7 @@ public class ServerMain {
     private static void setSystemProperties() {
         //System.setProperty("environment.name", "dev");
         //System.setProperty("environment.class", "u");
-        File configFile = new File("config.properties");
+        File configFile = new File("/tmp/config/config.properties");
         if (configFile.isFile()) {
             try {
                 Properties props = new Properties();
