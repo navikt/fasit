@@ -9,7 +9,7 @@
   ],
   "ENVIRONMENT_NAME": "p",
   "ENVIRONMENT_CLASS": "p",
-  "ENVCONFDB_URL": "jdbc:oracle:thin:@a01dbfl030.adeo.no:1521/fasit",
+  "ENVCONFDB_URL": "jdbc:oracle:thin:@a01dbfl050.adeo.no:1521/fasit",
   "LDAP_USER_BASEDN": "ou=NAV,ou=BusinessUnits,dc=adeo,dc=no",
   "LDAP_SERVICEUSER_BASEDN": "ou=ServiceAccounts,dc=adeo,dc=no",
   "LDAP_DOMAIN": "ADEO.NO",
