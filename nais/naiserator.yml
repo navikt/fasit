@@ -30,7 +30,6 @@ spec:
     {{#each ingresses}}
     - "{{this}}"
     {{/each}}
-  cpuThresholdPercentage: 50
   kafka:
     pool: {{ KAFKA_POOL }}
   env:
