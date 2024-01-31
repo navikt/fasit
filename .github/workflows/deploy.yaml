@@ -5,9 +5,10 @@ on:
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit:${{ github.sha }}
+  TEAM: team-atom
 permissions:
   contents: read
-  packages: write
+  #packages: write
   id-token: write
 
 jobs:
@@ -37,21 +38,31 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
     steps:
       - uses: actions/checkout@v1
       - name: Build artifact
         run: mvn package -DskipTests=true -B
 
-      - name: Build docker image
-        run: docker build  --tag ${IMAGE} .
-      
-      - name: Login to Github package registry
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
-      
-      - name: Push docker image
-        run: docker push ${IMAGE}
+      - uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: ${{ env.TEAM }}
+          tag: ${{ github.sha }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+
+#      - name: Build docker image
+#        run: docker build  --tag ${IMAGE} .
+#
+#      - name: Login to Github package registry
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: echo "$GITHUB_TOKEN" | docker login docker.pkg.github.com -u "$GITHUB_REPOSITORY" --password-stdin
+#
+#      - name: Push docker image
+#        run: docker push ${IMAGE}
 
   deploy-dev:
      name: Deploy to dev-fss
@@ -60,23 +71,25 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - uses: actions/checkout@v2
-        - uses: nais/deploy/actions/deploy@v1
+        - uses: nais/deploy/actions/deploy@v2
           env:
             CLUSTER: dev-fss
             RESOURCE: nais/naiserator.yml
-            VAR: image=${IMAGE}
+            VAR: image=${{ needs.build.outputs.image }}
             VARS: nais/dev-config.json
 
   deploy-prod:
     name: Deploy to prod-fss
-    needs: deploy-dev
+    needs:
+      - build
+      - deploy-dev
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: nais/deploy/actions/deploy@v1
+      - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod-fss
           RESOURCE: nais/naiserator.yml
-          VAR: image=${IMAGE}
+          VAR: image=${{ needs.build.outputs.image }}
           VARS: nais/prod-config.json
