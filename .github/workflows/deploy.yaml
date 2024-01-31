@@ -5,6 +5,10 @@ on:
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/fasit:${{ github.sha }}
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 
 jobs:
   test:
