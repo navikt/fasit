@@ -12,7 +12,7 @@ spec:
        memory: 2Gi  # app will be killed if exceeding these limits
      requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
        cpu: 50m
-       memory: 200m
+       memory: 200Mi
   image: {{ image }}
   port: 8080
   replicas:
