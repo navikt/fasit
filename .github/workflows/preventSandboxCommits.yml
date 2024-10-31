@@ -1,0 +1,26 @@
+name: Prevent sandbox commits
+
+on:
+  push:
+    branches-ignore:
+      - 'sandbox'
+
+jobs:
+  detectSandboxCommits:
+    name: "Prevent sandbox commits"
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whether there are commits from the sandbox branch in this branch
+        # if: github.ref != 'refs/heads/sandbox'
+        shell: bash
+        run: |
+          FILE=.github/SANDBOX.md
+          if test -f "$FILE"; then
+              echo "The SANDBOX.md file exists. This is an indication that code from the sandbox branch has been merged into a non-sandbox branch, which is prohibited."
+              exit 1
+          else
+              echo "No sandbox commits detected in this branch. All is good!"
+          fi
