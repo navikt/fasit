@@ -32,7 +32,7 @@ jobs:
           echo "::set-output name=yearweek::$(date +'%Y-%W')"
 
       - name: Cache Maven dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@preview
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
