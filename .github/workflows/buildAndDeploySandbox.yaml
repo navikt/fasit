@@ -50,7 +50,6 @@ jobs:
   build:
     name: Build and public docker image
     needs: test
-    if: github.ref == 'refs/heads/sandbox'
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.docker-build-push.outputs.image }}
@@ -79,7 +78,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: prod-fss
+          CLUSTER: dev-fss
           RESOURCE: nais/naiserator.yml
           VAR: image=${{ needs.build.outputs.image }}
           VARS: nais/dev-config.json
