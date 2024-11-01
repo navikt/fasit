@@ -1,0 +1,56 @@
+
+name: 'Delete and create new Sandbox-branch'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  createNewSandbox:
+    permissions:
+      contents: "write"
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branches: sandbox
+
+      - name: Create branch
+        uses: peterjgrainger/action-create-branch@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: 'sandbox'
+
+      - name: Add SANDBOX.md
+        run: 'printf " # This \"dummy\" file belongs to the \"sandbox\" git branch. \n\nDo not move or delete this file! It is here to detect whether changes \nhave been included from the \"sandbox\" git branch or not.\n\nThis is to prevent changes from the sandbox branch to end up\nin the main branch." > .github/SANDBOX.md'
+        shell: bash
+
+      - name: commit changed files
+        uses: EndBug/add-and-commit@v9
+        with:
+          new_branch: sandbox
+          message: "Created SANDBOX.md"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: push code to sandbox
+        run: git push origin HEAD:sandbox
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  call-buildAndDeploySandbox:
+    needs: createNewSandbox
+    permissions:
+      contents: "read"
+      checks: "write"
+      id-token: "write"
+      packages: "write"
+    secrets: inherit
+    uses: ./.github/workflows/buildAndDeploySandbox.yaml

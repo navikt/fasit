@@ -1,7 +1,10 @@
-name: Build and deploy fasit
+name: Build and deploy fasit - Sandbox
 
 on:
-  push
+  push:
+    branches:
+      - sandbox
+  workflow_call:
 
 env:
   TEAM: team-atom
@@ -15,9 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          TIME=$(TZ="Europe/Oslo" date +%Y.%m.%d-%H.%M)
+          COMMIT=$(git rev-parse --short=12 HEAD)
+          export VERSION="$TIME-$COMMIT-sandbox"
+          echo "Building version $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "::set-output name=yearweek::$(date +'%Y-%W')"
+
       - name: Cache Maven dependencies
-        uses: actions/cache@preview
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -34,12 +50,11 @@ jobs:
   build:
     name: Build and public docker image
     needs: test
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.docker-build-push.outputs.image }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Build artifact
         run: mvn package -DskipTests=true -B
 
@@ -47,36 +62,23 @@ jobs:
         id: docker-build-push
         with:
           team: ${{ env.TEAM }}
-          tag: ${{ github.sha }}
+          tag: ${{ env.VERSION }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
 
-  deploy-dev:
-     name: Deploy to dev-fss
-     needs: build
-     if: github.ref == 'refs/heads/master'
-     runs-on: ubuntu-latest
-     steps:
-        - uses: actions/checkout@v2
-        - uses: nais/deploy/actions/deploy@v2
-          env:
-            CLUSTER: dev-fss
-            RESOURCE: nais/naiserator.yml
-            VAR: image=${{ needs.build.outputs.image }}
-            VARS: nais/dev-config.json
-
-  deploy-prod:
-    name: Deploy to prod-fss
+  deploy-sandbox:
+    name: Deploy to dev-fss
     needs:
       - build
-      - deploy-dev
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Set version
+        id: version
+        run: echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: prod-fss
+          CLUSTER: dev-fss
           RESOURCE: nais/naiserator.yml
           VAR: image=${{ needs.build.outputs.image }}
-          VARS: nais/prod-config.json
+          VARS: nais/dev-config.json

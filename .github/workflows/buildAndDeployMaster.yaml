@@ -1,0 +1,84 @@
+name: Build and deploy fasit - Master
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  TEAM: team-atom
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          TIME=$(TZ="Europe/Oslo" date +%Y.%m.%d-%H.%M)
+          COMMIT=$(git rev-parse --short=12 HEAD)
+          export VERSION="$TIME-$COMMIT"
+          echo "Building version $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "::set-output name=yearweek::$(date +'%Y-%W')"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '8.0.x'
+      - name: Test
+        run: mvn test  -B -e -X
+
+  build:
+    name: Build and public docker image
+    needs: test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build artifact
+        run: mvn package -DskipTests=true -B
+
+      - uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: ${{ env.TEAM }}
+          tag: ${{ env.VERSION }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+
+  deploy-prod:
+    name: Deploy to prod-fss
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set version
+        id: version
+        run: echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: prod-fss
+          RESOURCE: nais/naiserator.yml
+          VAR: image=${{ needs.build.outputs.image }}
+          VARS: nais/prod-config.json
