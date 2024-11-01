@@ -35,11 +35,12 @@ jobs:
         run: mvn test  -B -e -X
 
   build:
-    name: Build and public docker image
+    name: Build and publish docker image
     needs: test
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.docker-build-push.outputs.image }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Set version
