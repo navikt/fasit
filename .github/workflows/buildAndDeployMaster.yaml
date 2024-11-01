@@ -18,19 +18,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set version
-        id: version
-        shell: bash
-        run: |
-          TIME=$(TZ="Europe/Oslo" date +%Y.%m.%d-%H.%M)
-          COMMIT=$(git rev-parse --short=12 HEAD)
-          export VERSION="$TIME-$COMMIT"
-          echo "Building version $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
-          echo "::set-output name=yearweek::$(date +'%Y-%W')"
-
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -55,6 +42,18 @@ jobs:
       image: ${{ steps.docker-build-push.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          TIME=$(TZ="Europe/Oslo" date +%Y.%m.%d-%H.%M)
+          COMMIT=$(git rev-parse --short=12 HEAD)
+          export VERSION="$TIME-$COMMIT"
+          echo "Building version $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "::set-output name=yearweek::$(date +'%Y-%W')"
       - name: Build artifact
         run: mvn package -DskipTests=true -B
 
