@@ -7,8 +7,11 @@ metadata:
     team: "team-atom"
 spec:
   resources:
-     requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
-       cpu: 100m
+    limits:
+       cpu: 500m # app will have its cpu usage throttled if exceeding this limit
+       memory: 2Gi  # app will be killed if exceeding these limits
+    requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
+       cpu: 200m
        memory: 512Mi
   image: {{ image }}
   port: 8080
@@ -60,6 +63,8 @@ spec:
       value: {{ ROLE_SUPERUSER_GROUPS }}
     - name: "KAFKA_DEPLOYMENT_EVENT_TOPIC"
       value: {{ KAFKA_DEPLOYMENT_EVENT_TOPIC }}
+    - name: "OTEL_RESOURCE_ATTRIBUTES"
+      value: "deployment.environment.name={{ENVIRONMENT_CLASS}}"
 
   vault:
     enabled: true
