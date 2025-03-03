@@ -70,7 +70,7 @@ public class FasitKafkaProducer {
 
     public void publishDeploymentEvent(ApplicationInstance appInstance, Environment environment) {
         com.google.protobuf.Any deploymentEvent = createDeploymentEvent(appInstance, environment);
-        log.info("Ready to publish deployment event");
+        log.info("Ready to publish deployment event for " + appInstance.getApplication());
         kafkaProducer.send(new ProducerRecord<>(kafkaDeploymentEventTopic, deploymentEvent), new KafkaCallback(deploymentEvent));
     }
 
