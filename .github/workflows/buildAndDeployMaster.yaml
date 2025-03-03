@@ -12,12 +12,15 @@ permissions:
   id-token: write
 
 jobs:
-  test:
-    name: Run tests
+  build:
+    name: Build and publish docker image
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -33,16 +36,6 @@ jobs:
       - name: Test
         run: mvn test  -B -e -X
 
-  build:
-    name: Build and publish docker image
-    needs: test
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.docker-build-push.outputs.image }}
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
       - name: Set version
         id: version
         shell: bash
