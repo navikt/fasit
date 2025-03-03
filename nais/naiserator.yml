@@ -77,3 +77,11 @@ spec:
         mountPath: "/secrets/certificate/fasit-keystore"
       - kvPath: {{ kafka-user-vault-path }}
         mountPath: "/secrets/credential/fasit.kafka.user"
+
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+      destinations:
+        - id: "grafana-lgtm"
+        - id: "elastic-apm"
