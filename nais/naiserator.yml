@@ -7,12 +7,9 @@ metadata:
     team: "team-atom"
 spec:
   resources:
-     limits:
-       cpu: 500m # app will have its cpu usage throttled if exceeding this limit
-       memory: 2Gi  # app will be killed if exceeding these limits
      requests: # App is guaranteed the requested resources and  will be scheduled on nodes with at least this amount of resources available
-       cpu: 50m
-       memory: 200Mi
+       cpu: 100m
+       memory: 5120Mi
   image: {{ image }}
   port: 8080
   replicas:
