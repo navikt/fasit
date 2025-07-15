@@ -44,11 +44,7 @@ import java.util.Collections;
 @Configuration
 @EnableWebSecurity
 @EnableAspectJAutoProxy
-//@Profile("test")
-//@ImportResource({ "classpath:spring-test-security.xml" })
-//@Import(SpringSecurityHandlersConfig.class)
 public class SpringSecurityTestConfig {
-    private static Logger log = LoggerFactory.getLogger(SpringSecurityTestConfig.class);
     
     @Bean
     UserDetailsService inMemoryUserDetails() {
@@ -111,7 +107,6 @@ public class SpringSecurityTestConfig {
                 .exceptionHandling(exceptions -> exceptions
 						.authenticationEntryPoint(restEntryPoint())
 		                .accessDeniedHandler((request, response, accessDeniedException) -> {
-		                    log.warn("Access denied for request: {}", request.getRequestURI());
 		                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
 		                })
 	                );
@@ -221,10 +216,7 @@ public class SpringSecurityTestConfig {
         return new SimpleUrlLogoutSuccessHandler(){
             @Override
             public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                log.debug("restLogoutSuccessHandler logging out");
                 String refererUrl = request.getHeader("referer");
-                log.debug("Referer url for logout " + refererUrl);
-                log.debug("isAuthenticated? " + authentication.isAuthenticated() + " " + authentication.getName() + " " + authentication.toString());
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().flush();
             }
@@ -242,8 +234,6 @@ public class SpringSecurityTestConfig {
 
             @Override
             public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-            	log.info("restEntryPoint commence called with exception: " + authException.getMessage());
-            	log.warn("Unauthorized access attempt: {}", request.getRequestURI());
                 response.setHeader("WWW-Authenticate","Basic realm=\"fasit\"" );
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
             }

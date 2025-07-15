@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 public class FlywayUtil {
     private static Logger log = LoggerFactory.getLogger(FlywayUtil.class);
 
-    public static final String DB_MIGRATION_ENVCONF_DB = "/db/migration/envconfDB";
+    public static final String DB_MIGRATION_ENVCONF_DB = "classpath:db/migration/envconfDB";
 
     public static void migrateFlyway(DataSource dataSource) {
     	log.info("Starting Flyway migration for envconfDB");
@@ -18,6 +18,7 @@ public class FlywayUtil {
     	Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations(DB_MIGRATION_ENVCONF_DB)
+    			.baselineOnMigrate(true)
                 .load();
         MigrateResult result = flyway.migrate();
         log.info("{} flyway migration scripts ran", result.migrationsExecuted);
