@@ -3,6 +3,7 @@ package no.nav.aura.envconfig.rest;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.ResourceTypeDO;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.client.rest.ResourceElementList;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.model.resource.Resource;
@@ -10,15 +11,17 @@ import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -34,18 +37,21 @@ public class ResourceRestServiceSpringTest extends SpringTest {
     private ApplicationInstance applicationInstance;
     private Application application;
     private Resource datasourceResource;
+    private Resource credResource;
 
     @Inject
     private ApplicationInstanceRepository appInstanceRepository;
 
-    @Mock
-    private UriInfo uriInfoMock;
 
     @BeforeEach
     public void setup() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
-        initializeUriInfo();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("");
+        request.setServerName("localhost");
+        request.setServerPort(1337);
+        request.setScheme("http");
+        ServletRequestAttributes attributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(attributes);
 
         service = new ResourcesRestService(repository, appInstanceRepository);
 
@@ -58,7 +64,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
         cluster.addNode(new Node("hostname.test.local", "username", "password"));
         env.addCluster(cluster);
         env = repository.store(env);
-        repository.store(new Resource("appUser", ResourceType.Credential, new Scope(EnvironmentClass.t)));
+        credResource = repository.store(new Resource("appUser", ResourceType.Credential, new Scope(EnvironmentClass.t)));
 
         datasourceResource = repository.store(new Resource("appDb2", ResourceType.DataSource, new Scope(env)));
 
@@ -67,6 +73,14 @@ public class ResourceRestServiceSpringTest extends SpringTest {
         applicationInstance = applicationInstances.iterator().next();
         assertNull(applicationInstance.getVersion());
     }
+    
+    @AfterEach
+    public void tearDown() {
+	   RequestContextHolder.resetRequestAttributes();
+    	repository.delete(env);
+		repository.delete(datasourceResource);
+		repository.delete(credResource);
+	}
 
     @Test
     public void resourcesMustShowDodgyResources() throws URISyntaxException {
@@ -74,13 +88,9 @@ public class ResourceRestServiceSpringTest extends SpringTest {
         ResourceElement resourceElement = findResourceElement();
         assertEquals(false, resourceElement.isDodgy());
 
-        initializeUriInfo();
-
         datasourceResource.markAsDodgy(false);
         resourceElement = findResourceElement();
         assertEquals(false, resourceElement.isDodgy());
-
-        initializeUriInfo();
 
         datasourceResource.markAsDodgy(true);
         resourceElement = findResourceElement();
@@ -89,8 +99,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
     }
 
     private ResourceElement findResourceElement() {
-        ResourceElement resourceElement;
-        resourceElement = service.findResources(
+        return service.findResources(
                 datasourceResource.getScope().getEnvClass().name(),
                 datasourceResource.getScope().getEnvironmentName(),
                 Domain.TestLocal.getFqn(),
@@ -98,9 +107,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
                 ResourceTypeDO.DataSource,
                 datasourceResource.getName(),
                 true,
-                false,
-                uriInfoMock)[0];
-        return resourceElement;
+                false).getResourceElements().get(0);
     }
 
     @Test
@@ -129,10 +136,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
                 ResourceTypeDO.DataSource,
                 resourceName1,
                 true,
-                true,
-                uriInfoMock)[0];
-
-        initializeUriInfo();
+                true).getResourceElements().get(0);
 
         ResourceElement resourceElement2 = service.findResources(
                 env.getEnvClass().name(),
@@ -142,8 +146,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
                 ResourceTypeDO.DataSource,
                 resourceName2,
                 true,
-                true,
-                uriInfoMock)[0];
+                true).getResourceElements().get(0);
 
         ApplicationInstanceDO usedInApplicationInstance1 = resourceElement1.getUsedInApplication().get(0);
         ApplicationInstanceDO usedInApplicationInstance2 = resourceElement2.getUsedInApplication().get(0);
@@ -175,8 +178,7 @@ public class ResourceRestServiceSpringTest extends SpringTest {
                 ResourceTypeDO.DataSource,
                 resourceName,
                 true,
-                true,
-                uriInfoMock)[0];
+                true).getResourceElements().get(0);
 
         ApplicationInstanceDO usedInApplicationInstance = resourceElement.getUsedInApplication().get(0);
 
@@ -184,10 +186,4 @@ public class ResourceRestServiceSpringTest extends SpringTest {
         assertEquals(usedInApplicationInstance.getName(), expectedApplicationName);
 
     }
-
-    private void initializeUriInfo() throws URISyntaxException {
-        Mockito.when(uriInfoMock.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://someserver"));
-        Mockito.when(uriInfoMock.getBaseUri()).thenReturn(new URI("http://someserver"));
-    }
-
 }

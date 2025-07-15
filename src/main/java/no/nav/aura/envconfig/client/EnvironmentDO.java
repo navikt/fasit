@@ -1,12 +1,13 @@
 package no.nav.aura.envconfig.client;
 
-import java.net.URI;
-
-import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @XmlRootElement(name = "environment")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -20,11 +21,18 @@ public class EnvironmentDO {
     public EnvironmentDO() {
     }
 
-    public EnvironmentDO(String name, String envClass, UriBuilder uriBuilder) {
+    public EnvironmentDO(String name, String envClass, URI baseUri) {
         this.name = name;
         this.envClass = envClass;
-        ref = uriBuilder.clone().path("conf/environments/{env}").build(name);
-        applicationsRef = uriBuilder.clone().path("conf/environments/{env}/applications").build(name);
+        ref = UriComponentsBuilder.fromUri(baseUri)
+                .path("/conf/environments/{env}")
+                .buildAndExpand(name)
+                .toUri();
+                
+        applicationsRef = UriComponentsBuilder.fromUri(baseUri)
+                .path("/conf/environments/{env}/applications")
+                .buildAndExpand(name)
+                .toUri();
     }
 
     public String getName() {

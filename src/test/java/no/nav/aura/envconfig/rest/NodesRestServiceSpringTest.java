@@ -11,44 +11,65 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.integration.VeraRestClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @EnableJpaRepositories(basePackageClasses = NodeRepository.class)
+@WebAppConfiguration
 public class NodesRestServiceSpringTest extends SpringTest {
 
     private NodesRestService nodeService;
     private Node node;
     private Resource resource;
+    private Cluster cluster;
     @Inject
     private NodeRepository nodeRepository;
 
-    private VeraRestClient vera = mock(VeraRestClient.class);
+    private final VeraRestClient vera = mock(VeraRestClient.class);
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+    
+    private MockMvc mockMvc;
+    
     @BeforeEach
     public void setup() {
-        UriInfo uriInfoMock = mock(UriInfo.class);
-        Mockito.when(uriInfoMock.getBaseUriBuilder()).thenReturn(UriBuilder.fromUri("http://someserver"));
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        
+        // Set up a mock request context for ServletUriComponentsBuilder
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setScheme("http");
+        request.setServerName("localhost");
+        request.setServerPort(1337);
+        request.setContextPath("");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         nodeService = new NodesRestService(repository, nodeRepository, vera);
-        nodeService.setUriInfo(uriInfoMock);
 
         Environment utvEnv = new Environment("myUtvEnv", EnvironmentClass.u);
-        Cluster cluster = new Cluster("cluster", Domain.Devillo);
+        cluster = new Cluster("cluster", Domain.Devillo);
         utvEnv.addCluster(cluster);
 
         utvEnv.addNode(cluster, new Node("myNewHost.devillo.no", "username", "password"));
@@ -65,6 +86,16 @@ public class NodesRestServiceSpringTest extends SpringTest {
         resource = repository.store(resource);
 
     }
+    
+    @AfterEach
+    public void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
+
+//        repository.delete(cluster);
+//        repository.delete(repository.findNodeBy("myNewHost.devillo.no"));
+        repository.delete(resource);
+		repository.delete(repository.findEnvironmentBy("myUtvEnv"));
+	}
 
     @Test
     public void deleteNodeWithNoCluster() {

@@ -1,6 +1,7 @@
 package no.nav.aura.envconfig.util;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +13,13 @@ public class FlywayUtil {
     public static final String DB_MIGRATION_ENVCONF_DB = "/db/migration/envconfDB";
 
     public static void migrateFlyway(DataSource dataSource) {
-        Flyway flyway = new Flyway();
-
-        flyway.setDataSource(dataSource);
-        flyway.setLocations(DB_MIGRATION_ENVCONF_DB);
-
-        int migrationsApplied = flyway.migrate();
-        log.info(migrationsApplied + " flyway migration scripts ran");
+    	log.info("Starting Flyway migration for envconfDB");
+    	
+    	Flyway flyway = Flyway.configure()
+                .dataSource(dataSource)
+                .locations(DB_MIGRATION_ENVCONF_DB)
+                .load();
+        MigrateResult result = flyway.migrate();
+        log.info("{} flyway migration scripts ran", result.migrationsExecuted);
     }
 }

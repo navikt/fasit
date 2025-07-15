@@ -2,27 +2,41 @@ package no.nav.aura.fasit.rest;
 
 import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.rest.RestTest;
 import no.nav.aura.fasit.repository.ApplicationRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.rest.model.ApplicationPayload;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.hamcrest.Matchers.*;
 
+@TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationRestTest extends RestTest {
+    private static Logger log = LoggerFactory.getLogger(ApplicationRestTest.class);
 
+	@Inject
+	private ApplicationRepository applicationRepository;
+	
+	@Inject
+	private EnvironmentRepository environmentRepo;
+	
 
+		
     @BeforeAll
     @Transactional
-    public static void setUp() throws Exception {
-        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
+    void setUp() throws Exception {
        applicationRepository.save(new Application("tsys"));
        applicationRepository.save(new Application("gosys"));
        applicationRepository.save(new Application("deleteme"));
@@ -31,7 +45,6 @@ public class ApplicationRestTest extends RestTest {
        // For å sjekke portkonflikt       
        Application app1 = applicationRepository.save(new Application("app1"));
        app1.setPortOffset(1);
-       EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
        Environment u1 = environmentRepo.save(new Environment("u1", EnvironmentClass.u));
        Cluster cluster1 = u1.addCluster(new Cluster( "cluster1", Domain.Devillo));
        ApplicationInstance fasitAppInst = cluster1.addApplication(fasit);
@@ -40,7 +53,16 @@ public class ApplicationRestTest extends RestTest {
        environmentRepo.save(u1);
     }
 
+    @AfterAll
+    void tearDown() throws Exception {
+    	cleanupEnvironments();
+    	
+    	cleanupApplications();
+    	
+		log.info("Cleaned up test data");
+	}
 
+    
     @Test
     public void findApplicationAll() {
         given()
@@ -92,7 +114,7 @@ public class ApplicationRestTest extends RestTest {
     public void createApplication() {
         ApplicationPayload app =new ApplicationPayload("newapp");
         given()
-            .auth().basic("superuser", "superuser")
+            .auth().preemptive().basic("superuser", "superuser")
             .body(toJson(app))
             .contentType(ContentType.JSON)
         .when()
@@ -113,7 +135,7 @@ public class ApplicationRestTest extends RestTest {
             .post("/api/v2/applications")
         .then()
             .statusCode(400)
-            .body(containsString("allready exists"));
+            .body(containsString("already exists"));
     }
     
     
@@ -124,7 +146,7 @@ public class ApplicationRestTest extends RestTest {
         app.groupId="newgroup";
         app.portOffset=69;
         given()
-            .auth().basic("operation", "operation")
+            .auth().preemptive().basic("operation", "operation")
             .body(toJson(app))
             .contentType(ContentType.JSON)
         .when()
@@ -155,7 +177,7 @@ public class ApplicationRestTest extends RestTest {
         ApplicationPayload app =new ApplicationPayload("fasit");
         app.portOffset=1;
         given()
-            .auth().basic("operation", "operation")
+            .auth().preemptive().basic("operation", "operation")
             .body(toJson(app))
             .contentType(ContentType.JSON)
         .when()
@@ -168,7 +190,7 @@ public class ApplicationRestTest extends RestTest {
     @Test
     public void deleteApplication() {
         given()
-            .auth().basic("operation", "operation")
+            .auth().preemptive().basic("operation", "operation")
             .contentType(ContentType.JSON)
         .when()
             .delete("/api/v2/applications/deleteme")
@@ -184,7 +206,7 @@ public class ApplicationRestTest extends RestTest {
     @Test
     public void deleteApplicationWithApplicationInstancesIsNotAllowed() {
         given()
-            .auth().basic("operation", "operation")
+            .auth().preemptive().basic("operation", "operation")
             .contentType(ContentType.JSON)
         .when()
             .delete("/api/v2/applications/fasit")

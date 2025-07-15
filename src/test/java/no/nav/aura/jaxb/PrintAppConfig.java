@@ -18,8 +18,8 @@ import javax.xml.transform.stream.StreamSource;
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.appconfig.resource.Directory;
 import no.nav.aura.appconfig.resource.NfsMount;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
 
 public class PrintAppConfig {
 

@@ -54,7 +54,7 @@ public class LoginRestTest extends RestTest {
             .formParam("username", "user")
             .formParam("password", "feilpassord")
         .when()
-            .post("/api/v2/login")
+            .post("/api/login")
         .then()
             .statusCode(401);
     }
@@ -79,7 +79,7 @@ public class LoginRestTest extends RestTest {
                 .statusCode(200)
                 .extract();
             
-            assertThat(response.cookie(SESSIONCOOKIE), isEmptyString());
+            assertThat(response.cookie(SESSIONCOOKIE), emptyString());
     }
     
     @Test

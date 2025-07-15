@@ -1,14 +1,14 @@
 package no.nav.aura.fasit.client.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import no.nav.aura.envconfig.client.rest.ResourceElement;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.google.gson.Gson;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
 
 public class RegisterApplicationInstancePayload {
     private String application;
@@ -70,9 +70,10 @@ public class RegisterApplicationInstancePayload {
         this.nodes = nodes;
     }
 
-    public void setNodes(String... nodes) {
-        this.nodes = Arrays.asList(nodes);
-    }
+//    @JsonIgnore
+//    public void setNodes(String... nodes) {
+//        this.nodes = Arrays.asList(nodes);
+//    }
 
     public List<ExposedResource> getExposedResources() {
         return exposedResources;
@@ -84,7 +85,11 @@ public class RegisterApplicationInstancePayload {
 
 
     public String toJson() {
-        return new Gson().toJson(this);
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializing object to JSON", e);
+        }
     }
 
     public Set<UsedResource> getUsedResources() {
