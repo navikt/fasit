@@ -1,9 +1,13 @@
 package no.nav.aura;
 
-import no.nav.aura.envconfig.util.FlywayUtil;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.dbcp.BasicDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,18 +16,14 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
-import javax.sql.DataSource;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
+import no.nav.aura.envconfig.util.FlywayUtil;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
 @ComponentScan(basePackages = "no.nav.aura")
 @EnableCaching
 public class FasitApplication {
-	private static final Logger log = LoggerFactory.getLogger(FasitApplication.class);
-    public static void main(String[] args) {
+
+	public static void main(String[] args) {
         System.out.println("Starting fasit with Spring Boot...");
         setSystemProperties();
     	SpringApplication springApp = new SpringApplication(FasitApplication.class);
@@ -44,7 +44,6 @@ public class FasitApplication {
         ds.setPassword(password);
         ds.setMaxWait(20000);
         System.out.println("using database " + ds.getUsername() + "@" + ds.getUrl());
-        log.info("using database " + ds.getUsername() + "@" + ds.getUrl());
         FlywayUtil.migrateFlyway(ds);
         return ds;
     }
@@ -56,7 +55,6 @@ public class FasitApplication {
                 Properties props = new Properties();
                 props.load(new FileInputStream(configFile));
                 props.entrySet().forEach(entry -> {
-                	log.info("Setting system property: {}={}", entry.getKey(), entry.getValue());
                     System.setProperty(entry.getKey().toString(), entry.getValue().toString());
                 });
             } catch (IOException e) {
