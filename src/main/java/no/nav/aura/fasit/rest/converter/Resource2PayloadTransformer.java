@@ -17,9 +17,9 @@ import no.nav.aura.fasit.rest.model.ScopePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.NonUniqueResultException;
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -50,18 +50,24 @@ public class Resource2PayloadTransformer extends ToPayloadTransformer<Resource, 
 
     @Override
     protected ResourcePayload transform(Resource from) {
-        UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(ResourceRest.class).path("{resourceId}");
         ResourcePayload resourcePayload = new ResourcePayload(from.getType(), from.getAlias());
 
-        resourcePayload.addLink("self", uriBuilder.build(from.getID()));
-        resourcePayload.addLink("revisions", uriBuilder.clone().path("revisions").build(from.getID()));
+        resourcePayload.addLink("self", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/resources/{resourceId}")
+                .buildAndExpand(from.getID())
+                .toUri());
+        
+        resourcePayload.addLink("revisions", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/resources/{resourceId}/revisions")
+                .buildAndExpand(from.getID())
+                .toUri());
 
         Scope resourceScope = from.getScope();
         resourcePayload.scope = transform(resourceScope);
         resourcePayload.dodgy = from.isDodgy();
         addPropertiesToResourceElement(from, resourcePayload);
         addSecrets(from, resourcePayload);
-        addFiles(from, resourcePayload, uriBuilder);
+        addFiles(from, resourcePayload);
 
         if (revision != null) {
             resourcePayload.revision = revision;
@@ -84,9 +90,12 @@ public class Resource2PayloadTransformer extends ToPayloadTransformer<Resource, 
         }
     }
 
-    private void addFiles(Resource resource, ResourcePayload resourceElement, UriBuilder uriBuilder) {
+    private void addFiles(Resource resource, ResourcePayload resourceElement) {
         for (Map.Entry<String, FileEntity> entry : resource.getFiles().entrySet()) {
-            URI fileUri = uriBuilder.clone().path("file").path("{filename}").build(resource.getID(), entry.getKey());
+            URI fileUri = UriComponentsBuilder.fromUri(baseUri)
+                    .path("/api/v2/resources/{resourceId}/file/{filename}")
+                    .buildAndExpand(resource.getID(), entry.getKey())
+                    .toUri();
             resourceElement.addFile(entry.getKey(), fileUri);
         }
     }
@@ -123,8 +132,10 @@ public class Resource2PayloadTransformer extends ToPayloadTransformer<Resource, 
         usedApplicationInstancePayload.application = appInstance.getApplication().getName();
         usedApplicationInstancePayload.version = appInstance.getVersion();
         usedApplicationInstancePayload.id = appInstance.getID();
-        usedApplicationInstancePayload.ref = UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getApplicationInstance").build(appInstance.getID());
-
+        usedApplicationInstancePayload.ref = UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applicationinstances/{id}")
+                .buildAndExpand(appInstance.getID())
+                .toUri();
         return usedApplicationInstancePayload;
     }
 

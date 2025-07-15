@@ -5,27 +5,21 @@ import javax.sql.DataSource;
 import no.nav.aura.envconfig.util.InsideJobService;
 
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
-import no.nav.aura.sensu.SensuClient;
+import no.nav.aura.fasit.rest.search.SearchRepository;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import static org.mockito.Mockito.mock;
-
 @Configuration
 @EnableTransactionManagement
-@Import({ SpringDomainConfig.class })
+@Import({ SpringDomainConfig.class, SearchRepository.class })
 public class SpringUnitTestConfig {
 
     public SpringUnitTestConfig() {
         System.setProperty("fasit.encryptionkeys.username", "junit");
         System.setProperty("fasit.encryptionkeys.password", "password");
-    }
-
-    @Bean
-    public SensuClient sensuClient() {
-        return mock(SensuClient.class);
     }
 
     @Bean(name = "dataSource")

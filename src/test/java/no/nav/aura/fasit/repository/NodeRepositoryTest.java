@@ -1,38 +1,30 @@
 package no.nav.aura.fasit.repository;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-import java.util.List;
-
-import javax.inject.Inject;
-
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
-
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.Cluster;
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.Node;
-import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 import no.nav.aura.envconfig.util.TestHelper;
 import no.nav.aura.fasit.repository.specs.NodeSpecs;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.transaction.annotation.Transactional;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringUnitTestConfig.class })
+import javax.inject.Inject;
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional
 public class NodeRepositoryTest {
 
@@ -42,22 +34,21 @@ public class NodeRepositoryTest {
     @Autowired
     private FasitRepository repository;
     private Application application;
-    private ApplicationGroup multiApplicationGroup;
     private Environment t1;
     private Cluster clusterTestLocal;
     private Node nodeTestLocal;
 
-    private final String appGroupWithOneApplication = "appGroupWithOneApplication";
-    private final static String appGroupWithMultipleApplications = "appGroupWithMultipleApplications";
+    private ApplicationGroup appGroupWithOneApplication;
+    private ApplicationGroup multiApplicationGroup;
 
     @BeforeEach
     public void setup() throws Exception {
         String appName = "tsys";
 
-        application = (Application) repository.store(new Application(appName));
-        repository.store(new ApplicationGroup(appGroupWithOneApplication, application));
+        application = repository.store(new Application(appName));
+        appGroupWithOneApplication = repository.store(new ApplicationGroup("appGroupWithOneApplication", application));
 
-        multiApplicationGroup = repository.store(new ApplicationGroup(appGroupWithMultipleApplications));
+        multiApplicationGroup = repository.store(new ApplicationGroup("appGroupWithMultipleApplications"));
         Application firstapp = createApplication("myFirstApp");
         multiApplicationGroup.addApplication(firstapp);
         multiApplicationGroup.addApplication(createApplication("mySecondApp"));
@@ -83,6 +74,16 @@ public class NodeRepositoryTest {
         nodeTestLocal = TestHelper.assertAndGetSingle(t1.getNodes());
         repository.store(clusterOeraT);
     }
+    
+    @AfterEach
+    public void tearDown() throws Exception {
+		// Cleanup the repository after each test
+		repository.delete(t1);
+		repository.delete(application);
+		repository.delete(appGroupWithOneApplication);
+		repository.delete(multiApplicationGroup);
+	}
+    
 
     private Application createApplication(String applicationName) {
         Application entity = new Application(applicationName);

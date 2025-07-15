@@ -1,17 +1,15 @@
 package no.nav.aura.envconfig.filter;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import no.nav.aura.sensu.SensuClient;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 
-import static org.springframework.web.context.support.WebApplicationContextUtils.getRequiredWebApplicationContext;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 public class HttpMetricFilter implements Filter {
 
@@ -30,26 +28,20 @@ public class HttpMetricFilter implements Filter {
     private static final String REST_SEARCH_API = "/api/v1/search";
     private static final String REST_NAVSEARCH_API = "/api/v1/navsearch";
 
-    private SensuClient sensuClient;
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        sensuClient = getRequiredWebApplicationContext(filterConfig.getServletContext()).
-                getBean(SensuClient.class);
     }
 
-    @SuppressWarnings("serial")
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String uri = mapToTimedService(httpRequest.getRequestURI());
 
         if (uri != null) {
-            long start = System.currentTimeMillis();
+//            long start = System.currentTimeMillis();
             chain.doFilter(request, response);
-            long end = System.currentTimeMillis();
-            sensuClient.sendEvent("fasitrequests.all", createEventTags((HttpServletRequest) request, (HttpServletResponse)response, uri), ImmutableMap.of("responsetime", end - start));
+//            long end = System.currentTimeMillis();
         } else {
             chain.doFilter(request, response);
         }
@@ -187,13 +179,13 @@ public class HttpMetricFilter implements Filter {
         return Arrays.copyOfRange(split, 1, split.length);
     }
 
-    private static Map<String, Object> createEventTags(HttpServletRequest request, HttpServletResponse response, String uri) {
-        Map<String, Object> tags = Maps.newHashMap();
-        tags.put("uri", uri);
-        tags.put("method", request.getMethod());
-        tags.put("statuscode", response.getStatus());
-        return tags;
-    }
+//    private static Map<String, Object> createEventTags(HttpServletRequest request, HttpServletResponse response, String uri) {
+//        Map<String, Object> tags = Maps.newHashMap();
+//        tags.put("uri", uri);
+//        tags.put("method", request.getMethod());
+//        tags.put("statuscode", response.getStatus());
+//        return tags;
+//    }
 
     @Override
     public void destroy() {

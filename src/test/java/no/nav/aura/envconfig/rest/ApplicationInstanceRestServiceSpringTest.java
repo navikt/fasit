@@ -8,7 +8,6 @@ import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
 import no.nav.aura.integration.VeraRestClient;
-import no.nav.aura.sensu.SensuClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +31,7 @@ public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
 
     @BeforeEach
     public void setup() {
-        service = new ApplicationInstanceRestService(repository, mock(SensuClient.class), mock(VeraRestClient.class));
+        service = new ApplicationInstanceRestService(repository, mock(VeraRestClient.class));
         env = new Environment("env", EnvironmentClass.t);
         cluster = new Cluster("myCluster", Domain.TestLocal);
         cluster.setLoadBalancerUrl(loadBalancer);

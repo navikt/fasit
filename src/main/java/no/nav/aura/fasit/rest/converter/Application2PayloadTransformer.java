@@ -2,11 +2,9 @@ package no.nav.aura.fasit.rest.converter;
 
 import java.net.URI;
 
-import javax.ws.rs.core.UriBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.fasit.rest.ApplicationInstanceRest;
-import no.nav.aura.fasit.rest.ApplicationRest;
 import no.nav.aura.fasit.rest.model.ApplicationPayload;
 
 public class Application2PayloadTransformer extends ToPayloadTransformer<Application, ApplicationPayload> {
@@ -24,9 +22,23 @@ public class Application2PayloadTransformer extends ToPayloadTransformer<Applica
     @Override
     protected ApplicationPayload transform(Application application) {
         ApplicationPayload payload = new ApplicationPayload();
-        payload.addLink("self", UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getApplication").build(application.getName()));
-        payload.addLink("instances", UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "findApplicationInstancesByApplication").build(application.getName()));
-        payload.addLink("revisions", UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getRevisions").build(application.getName()));
+        
+        payload.addLink("self", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applications/{name}")
+                .buildAndExpand(application.getName())
+                .toUri());
+        
+        payload.addLink("instances", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applicationinstances")
+                .queryParam("application", application.getName())
+                .build()
+                .toUri());
+        
+        payload.addLink("revisions", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applications/{name}/revisions")
+                .buildAndExpand(application.getName())
+                .toUri());
+
         if (revision != null){
             payload.revision=revision;
         }

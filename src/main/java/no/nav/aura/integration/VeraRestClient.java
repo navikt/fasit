@@ -1,16 +1,16 @@
 package no.nav.aura.integration;
 
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.StatusType;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,11 +24,10 @@ public class VeraRestClient {
 
     private String veraUrl;
 
-    private Client httpClient;
+    private final RestTemplate restTemplate;
 
     public VeraRestClient(String url) {
-        log.info("Using {} as vera endpoint url", url);
-        httpClient = ClientBuilder.newClient();
+        this.restTemplate = new RestTemplate();
         veraUrl = url;
     }
 
@@ -59,18 +58,19 @@ public class VeraRestClient {
     }
 
     private void postToVera(String deploymentMode, String url, Map<String, String> requestBody, int retries) {
-        Response response = null;
         try {
-            response = httpClient.target(url).request().post(Entity.entity(requestBody, MediaType.APPLICATION_JSON));
-            StatusType responseStatus = response.getStatusInfo();
-
-            if (responseStatus.getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("Notified VERA of {} with info {} at endpoint {}", deploymentMode, requestBody, url);
             } else {
-                log.warn("Unable to update VERA, got response {} {}", responseStatus.getStatusCode(), responseStatus.getReasonPhrase());
+                log.warn("Unable to update VERA, got response {} {}", 
+                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase());
             }
-            response.close();
-
         } catch (Exception e) {
             if (retries < MAX_RETRIES) {
                 try {
@@ -82,12 +82,7 @@ public class VeraRestClient {
                 postToVera(deploymentMode, url, requestBody, retries + 1);
             } else {
                 log.error("Unable to update Vera after " + MAX_RETRIES + " retries, giving up.");
-            }
-        } finally {
-            if (response != null) {
-                response.close();
-            }
+            } 
         }
-
     }
 }

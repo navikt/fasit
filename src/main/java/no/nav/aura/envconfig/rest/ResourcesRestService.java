@@ -1,9 +1,45 @@
 package no.nav.aura.envconfig.rest;
 
+import static no.nav.aura.envconfig.rest.util.Converters.toEnumOrNull;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.envers.RevisionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.DomainDO;
@@ -12,48 +48,28 @@ import no.nav.aura.envconfig.client.ResourceTypeDO;
 import no.nav.aura.envconfig.client.rest.PropertyElement;
 import no.nav.aura.envconfig.client.rest.PropertyElement.Type;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.client.rest.ResourceElementList;
 import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.resource.*;
+import no.nav.aura.envconfig.model.resource.FileEntity;
+import no.nav.aura.envconfig.model.resource.PropertyField;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
-import no.nav.aura.envconfig.spring.User;
 import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.envers.RevisionType;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.*;
-import java.util.Map.Entry;
-
-import static no.nav.aura.envconfig.rest.util.Converters.toEnumOrNull;
 
 /**
  * Api for å h�ndtere ressurser i envconfig
  */
-@Component
-@Path("/conf/resources")
+@RestController
+@RequestMapping("/conf/resources")
 public class ResourcesRestService {
 
     private FasitRepository repo;
@@ -90,44 +106,47 @@ public class ResourcesRestService {
      * @HTTP 400 ved noe feil i inputparametere
      * @HTTP 404 Hvis det ikke er noen treff
      */
-    @GET
-    @Path("/bestmatch")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public ResourceElement getBestMatchingResource(@QueryParam("envClass") String envClass, @QueryParam("envName") String envName, @QueryParam("domain") String domain,
-            @QueryParam("app") String application, @QueryParam("type") ResourceTypeDO type, @QueryParam("alias") String alias, @Context UriInfo uriInfo) {
+    @GetMapping(path = "/bestmatch", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+    public ResourceElement getBestMatchingResource(
+            @RequestParam(name = "envClass", required = false) String envClass,
+            @RequestParam(name = "envName", required = false) String envName, 
+            @RequestParam(name = "domain", required = false) String domain,
+            @RequestParam(name = "app", required = false) String application, 
+            @RequestParam(name = "type", required = false) ResourceTypeDO type, 
+            @RequestParam(name = "alias", required = false) String alias) {
 
         Scope scope = getSearchScope(envClass, envName, domain, application);
 
         if (scope.getApplication() == null) {
-            throw new BadRequestException("Bad or missing required parameter 'app'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad or missing required parameter 'app'");
         }
         if (scope.getDomain() == null) {
-            throw new BadRequestException("Bad or missing required parameter 'domain'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad or missing required parameter 'domain'");
         }
 
         if (scope.getEnvironmentName() == null) {
-            throw new BadRequestException("Bad or missing required parameter 'envName'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad or missing required parameter 'envName'");
         }
 
         ResourceType resourceType = toEnumOrNull(ResourceType.class, enumNameOrNull(type));
         if (resourceType == null) {
-            throw new BadRequestException("Bad or missing required parameter 'type'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad or missing required parameter 'type'");
         }
 
         if (StringUtils.isEmpty(alias)) {
-            throw new BadRequestException("Missing required parameter 'alias'");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter 'alias'");
         }
 
-        ResourceElement[] resources = findResources(envClass, envName, domain, application, type, alias, true, false, uriInfo);
-        if (resources.length == 0) {
-            throw new NotFoundException("Found no active resources with alias " + alias + " of type " + resourceType + " in scope " + scope);
+        ResourceElementList resources = findResources(envClass, envName, domain, application, type, alias, true, false);
+        if (resources.size() == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Found no active resources with alias " + alias + " of type " + resourceType + " in scope " + scope);
         }
 
-        if (resources.length != 1) {
-            throw new RuntimeException("Found " + resources.length + " resources with alias " + alias + " of type " + resourceType + " in scope " + scope + ". Expected only one");
+        if (resources.size() != 1) {
+            throw new RuntimeException("Found " + resources.size() + " resources with alias " + alias + " of type " + resourceType + " in scope " + scope + ". Expected only one");
         }
 
-        return resources[0];
+        return resources.getResourceElements().get(0);
     }
 
     /**
@@ -155,14 +174,18 @@ public class ResourcesRestService {
      * @HTTP 400 ved noe feil i inputparametere
      */
 
-    @SuppressWarnings("serial")
-    @GET
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public ResourceElement[] findResources(@QueryParam("envClass") String envClass, @QueryParam("envName") String envName, @QueryParam("domain") String domain,
-            @QueryParam("app") String application, @QueryParam("type") ResourceTypeDO type, @QueryParam("alias") String alias, @QueryParam("bestmatch") Boolean bestmatch,
-            @QueryParam("usage") @DefaultValue("false") Boolean usage, @Context final UriInfo uriInfo) {
+    @GetMapping(produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+    public ResourceElementList findResources(
+            @RequestParam(required = false) String envClass, 
+            @RequestParam(required = false) String envName, 
+            @RequestParam(required = false) String domain,
+            @RequestParam(required = false) String app, 
+            @RequestParam(required = false) ResourceTypeDO type, 
+            @RequestParam(required = false) String alias, 
+            @RequestParam(required = false) Boolean bestmatch,
+            @RequestParam(required = false, defaultValue = "false") Boolean usage) {
 
-        final Scope scope = getSearchScope(envClass, envName, domain, application);
+        final Scope scope = getSearchScope(envClass, envName, domain, app);
 
         final Boolean showUsedInApplications = usage;
 
@@ -172,7 +195,7 @@ public class ResourcesRestService {
 
         if (activeResources.isEmpty()) {
             log.debug("Found no resources with alias:{} of type:{} in {}", alias, resourceType, scope);
-            return new ResourceElement[] {};
+            return new ResourceElementList();
         }
 
         if (bestmatch != null && bestmatch) {
@@ -181,11 +204,11 @@ public class ResourcesRestService {
 
         log.info("Found {} resources with alias:{} of type:{} in {} , bestmatch: {}", activeResources.size(), alias, resourceType, scope, bestmatch);
 
-        return FluentIterable.from(activeResources).transform(new SerializableFunction<Resource, ResourceElement>() {
-            public ResourceElement process(Resource resource) {
-                return createResourceElement(uriInfo, resource, showUsedInApplications);
-            }
-        }).toArray(ResourceElement.class);
+        List<ResourceElement> elements = activeResources.stream()
+                .map(resource -> createResourceElement(resource, showUsedInApplications))
+                .collect(Collectors.toList());
+        
+        return new ResourceElementList(elements);
     }
 
     @SuppressWarnings("serial")
@@ -216,14 +239,12 @@ public class ResourcesRestService {
      * 
      * @HTTP 400 ved feil eller manglende properties
      */
-    @PUT
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
     @Transactional
-    public ResourceElement createResource(MultipartFormDataInput input, @Context UriInfo uriInfo) {
-        Map<String, List<InputPart>> multipartMap = input.getFormDataMap();
-        ResourceTypeDO resourceType = toEnumOrNull(ResourceTypeDO.class, getSingleAsString(multipartMap, "type"));
-        return createResource(resourceType, input, uriInfo);
+    public ResourceElement createResource(MultipartHttpServletRequest request) {
+//        Map<String, List<InputPart>> multipartMap = request.getFormDataMap();
+        ResourceTypeDO resourceType = toEnumOrNull(ResourceTypeDO.class, getSingleAsString(request, "type"));
+        return createResource(resourceType, request);
     }
 
     /**
@@ -237,35 +258,31 @@ public class ResourcesRestService {
      * @HTTP 400 ved feil eller manglende properties
      * @deprecated -use createResource
      */
-    @PUT
-    @Path("/{type}")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_XML)
+    @PutMapping(path = "/{type}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     @Deprecated
     @Transactional
-    public ResourceElement addResource(@PathParam("type") ResourceTypeDO type, MultipartFormDataInput input, @Context UriInfo uriInfo) {
-        return createResource(type, input, uriInfo);
+    public ResourceElement addResource(@PathVariable(name = "type") ResourceTypeDO type, MultipartHttpServletRequest request) {
+        return createResource(type, request);
     }
 
-    private ResourceElement createResource(ResourceTypeDO type, MultipartFormDataInput input, @Context UriInfo uriInfo) {
+    private ResourceElement createResource(ResourceTypeDO type, MultipartHttpServletRequest request) {
         ResourceType resourceType = toEnumOrNull(ResourceType.class, enumNameOrNull(type));
-        Map<String, List<InputPart>> multipartMap = input.getFormDataMap();
         if (type == null) {
-            throw new BadRequestException("Missing required parameter type. Legal values is: " + Arrays.asList(ResourceType.values()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required parameter type. Legal values is: " + Arrays.asList(ResourceType.values()));
         }
 
-        Scope scope = createStoreageScope(multipartMap, EnvironmentClass.valueOf(getSingleAsString(multipartMap, "scope.environmentclass", true)));
-        String alias = getSingleAsString(multipartMap, "alias");
+        Scope scope = createStoreageScope(request, EnvironmentClass.valueOf(getSingleAsString(request, "scope.environmentclass", true)));
+        String alias = getSingleAsString(request, "alias");
         Resource resource = new Resource(alias, resourceType, scope);
-        String adGroups = getSingleAsString(multipartMap, "accessAdGroups", false);
+        String adGroups = getSingleAsString(request, "accessAdGroups", false);
         if (adGroups != null) {
             resource.getAccessControl().setAdGroups(adGroups);
         }
 
-        addPropertiesToResource(input, resource);
+        addPropertiesToResource(request, resource);
         Resource storedResource = repo.store(resource);
         log.info("Create resource {} of type {} with scope:{} id:{}", storedResource.getAlias(), resourceType, storedResource.getScope(), storedResource.getID());
-        return createResourceElement(uriInfo, storedResource, false);
+        return createResourceElement(storedResource, false);
     }
 
     /**
@@ -274,11 +291,9 @@ public class ResourcesRestService {
      * 
      * @HTTP 404 Hvis ressursen ikke finnes
      */
-    @GET
-    @Path("/{resourceId}")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public ResourceElement getResource(@PathParam("resourceId") Long resourceId, @Context UriInfo uriInfo) {
-        return createResourceElement(uriInfo, getResourceById(resourceId), false);
+    @GetMapping(path = "/{resourceId}", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+    public ResourceElement getResource(@PathVariable(name = "resourceId") Long resourceId) {
+        return createResourceElement(getResourceById(resourceId), false);
     }
 
     /**
@@ -288,12 +303,12 @@ public class ResourcesRestService {
      * 
      * @HTTP 404 Hvis ressursen ikke finnes
      */
-    @DELETE
-    @Path("/{resourceId}")
-    public void deleteResource(@PathParam("resourceId") Long resourceId) {
+    @DeleteMapping("/{resourceId}")
+    public ResponseEntity<Void> deleteResource(@PathVariable(name = "resourceId") Long resourceId) {
         Resource resource = getResourceById(resourceId);
         log.info("deleting resource alias:{} id:{}", resource.getAlias(), resource.getID());
         repo.delete(resource);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -306,17 +321,15 @@ public class ResourcesRestService {
      * @HTTP 400 ved feil eller manglende properties
      * @HTTP 404 Hvis ressursen ikke finnes
      */
-    @POST
-    @Path("/{resourceId}")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @PostMapping(path = "/{resourceId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, 
+            produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
     @Transactional
-    public ResourceElement updateResource(@PathParam("resourceId") Long resourceId, MultipartFormDataInput input, @Context UriInfo uriInfo) {
+    public ResourceElement updateResource(@PathVariable(name = "resourceId") Long resourceId, MultipartHttpServletRequest request) {
         Resource resource = getResourceById(resourceId);
-        addPropertiesToResource(input, resource);
+        addPropertiesToResource(request, resource);
         log.info("updating resource alias:{} id:{}", resource.getAlias(), resource.getID());
         repo.store(resource);
-        return createResourceElement(uriInfo, resource, false);
+        return createResourceElement(resource, false);
     }
 
     private Resource getResourceById(Long resourceId) {
@@ -324,31 +337,31 @@ public class ResourcesRestService {
         try {
             resource = repo.getById(Resource.class, resourceId);
         } catch (NoResultException e) {
-            throw new NotFoundException("Resource with id " + resourceId + " is not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource with id " + resourceId + " is not found");
         }
         return resource;
     }
 
-    private Resource addPropertiesToResource(MultipartFormDataInput multipart, Resource resource) {
-        Map<String, List<InputPart>> input = multipart.getFormDataMap();
-        Scope changedScope = createStoreageScope(input, resource.getScope().getEnvClass());
-        
-        if(inputContains(input, "scope.domain")){
+    @SuppressWarnings("deprecation")
+	private Resource addPropertiesToResource(MultipartHttpServletRequest request, Resource resource) {
+        Scope changedScope = createStoreageScope(request, resource.getScope().getEnvClass());
+
+        if(inputContains(request, "scope.domain")){
             resource.getScope().domain(changedScope.getDomain());
          }
-        if(inputContains(input, "scope.environmentname")){
+        if(inputContains(request, "scope.environmentname")){
             resource.getScope().envName(changedScope.getEnvironmentName());
          }
-        if(inputContains(input, "scope.application")){
+        if(inputContains(request, "scope.application")){
             resource.getScope().application(changedScope.getApplication());
          }
         
-        if(inputContains(input, "lifeCycleStatus")){
-           updateStatus(resource, LifeCycleStatusDO.valueOf(getSingleAsString(input, "lifeCycleStatus")));
+        if(inputContains(request, "lifeCycleStatus")){
+           updateStatus(resource, LifeCycleStatusDO.valueOf(getSingleAsString(request, "lifeCycleStatus")));
         }
         
-        if(inputContains(input, "accessAdGroup")){
-            resource.getAccessControl().setAdGroups(getSingleAsString(input, "accessAdGroup"));
+        if(inputContains(request, "accessAdGroup")){
+            resource.getAccessControl().setAdGroups(getSingleAsString(request, "accessAdGroup"));
          }
         
         List<PropertyField> validProperties = resource.getType().getResourcePropertyFields();
@@ -358,18 +371,18 @@ public class ResourcesRestService {
             switch (property.getType()) {
             case ENUM:
             case TEXT:
-                if (inputContains(input, propertyName)) {
-                    resource.putPropertyAndValidate(propertyName, getSingleAsString(input, propertyName));
+                if (inputContains(request, propertyName)) {
+                    resource.putPropertyAndValidate(propertyName, getSingleAsString(request, propertyName));
                 }
                 break;
             case SECRET:
-                if (inputContains(input, propertyName)) {
-                    resource.putSecretAndValidate(propertyName, getSingleAsString(input, propertyName));
+                if (inputContains(request, propertyName)) {
+                    resource.putSecretAndValidate(propertyName, getSingleAsString(request, propertyName));
                 }
                 break;
             case FILE:
-                if (inputContains(input, propertyName + ".filename")) {
-                    FileEntity file = new FileEntity(getSingleAsString(input, propertyName + ".filename"), getInputStream(input, propertyName + ".file"));
+                if (inputContains(request, propertyName + ".filename")) {
+                    FileEntity file = new FileEntity(getSingleAsString(request, propertyName + ".filename"), getInputStream(request, propertyName + ".file"));
                     resource.putFileAndValidate(propertyName, file);
                 }
                 break;
@@ -394,20 +407,21 @@ public class ResourcesRestService {
         
     }
 
-    private boolean inputContains(Map<String, List<InputPart>> input, String propertyName) {
-        return input.keySet().contains(propertyName);
+    private boolean inputContains(MultipartHttpServletRequest request, String propertyName) {
+        return request.getParameterMap().containsKey(propertyName) || request.getFileMap().containsKey(propertyName);
     }
 
-    private ResourceElement createResourceElement(UriInfo uriInfo, Resource resource, Boolean showUsage) {
+    private ResourceElement createResourceElement(Resource resource, Boolean showUsage) {
         // MODTP-990 Need to make sure ResourceType can be mapped to a ResourceTypeDO element. If not set resourceType to null
         // This is so that we are able to return resources that are not part of the ResourceTypeDO enum such as Datapower
         ResourceTypeDO resourceType = toEnumOrNull(ResourceTypeDO.class, resource.getType().name());
         ResourceElement resourceElement = new ResourceElement(resourceType, resource.getAlias());
 
-        resourceElement.setRef(uriInfo.getBaseUriBuilder().clone()
-                .path(ResourcesRestService.class)
-                .path(ResourcesRestService.class, "getResource")
-                .build(resource.getID()));
+        URI ref = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/conf/resources/{resourceId}")
+                .buildAndExpand(resource.getID())
+                .toUri();
+        resourceElement.setRef(ref);
 
         Scope resourceScope = resource.getScope();
         resourceElement.setEnvironmentClass(enumNameOrNull(resourceScope.getEnvClass()));
@@ -426,12 +440,12 @@ public class ResourcesRestService {
         resourceElement.setDodgy(resource.isDodgy());
         resourceElement.setAccessAdGroup(resource.getAccessControl().getAdGroups());
         addPropertiesToResourceElement(resource, resourceElement);
-        URI baseUrl = uriInfo.getBaseUriBuilder().build();
+        URI baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
         addSecretsToResourceElement(resource, resourceElement, baseUrl);
         addFilesToResourceElement(resource, resourceElement, baseUrl);
 
         if (showUsage) {
-            addUsedByApplicationInfoToElement(resource, resourceElement, uriInfo);
+            addUsedByApplicationInfoToElement(resource, resourceElement);
         }
 
         if (resource.getLifeCycleStatus() != null) {
@@ -448,22 +462,22 @@ public class ResourcesRestService {
         return history.isEmpty() ? null : history.get(0).fst;
     }
 
-    private void addUsedByApplicationInfoToElement(Resource resource, ResourceElement resourceElement, UriInfo uriInfo) {
+    private void addUsedByApplicationInfoToElement(Resource resource, ResourceElement resourceElement) {
 
         List<ApplicationInstance> applications = applicationInstanceRepository.findApplicationInstancesUsing(resource);
         List<ApplicationInstanceDO> usedInApplications = new ArrayList<ApplicationInstanceDO>();
 
         for (ApplicationInstance applicationInstance : applications) {
             Environment environment = repo.getEnvironmentBy(applicationInstance.getCluster());
-            ApplicationInstanceDO usedInApplication = createApplicationDO(environment, applicationInstance, uriInfo);
+            ApplicationInstanceDO usedInApplication = createApplicationDO(environment, applicationInstance);
             usedInApplications.add(usedInApplication);
         }
 
         resourceElement.setUsedInApplication(usedInApplications);
     }
 
-    private ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance, UriInfo uriInfo) {
-        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriInfo.getBaseUriBuilder());
+    private ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance) {
+        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), ServletUriComponentsBuilder.fromCurrentContextPath());
         return appDO;
     }
 
@@ -485,7 +499,7 @@ public class ResourcesRestService {
             if (environment != null) {
                 scope.envClass(environment.getEnvClass());
             } else {
-                throw new BadRequestException("Unable to find environment with name " + envName + " You need to specify environmentName or environmentClass");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to find environment with name " + envName + " You need to specify environmentName or environmentClass");
             }
         }
         return scope;
@@ -493,7 +507,10 @@ public class ResourcesRestService {
 
     private void addFilesToResourceElement(Resource resource, ResourceElement resourceElement, URI baseUrl) {
         for (Entry<String, FileEntity> entry : resource.getFiles().entrySet()) {
-            URI ref = UriBuilder.fromUri(baseUrl).path(FileRestService.createPath(resource, entry.getKey())).build();
+            URI ref = ServletUriComponentsBuilder.fromUri(baseUrl)
+                    .path(FileRestService.createPath(resource, entry.getKey()))
+                    .build()
+                    .toUri();
             resourceElement.addProperty(new PropertyElement(entry.getKey(), ref, Type.FILE));
         }
     }
@@ -506,7 +523,10 @@ public class ResourcesRestService {
 
     private void addSecretsToResourceElement(Resource resource, ResourceElement resourceElement, URI baseUrl) {
         for (Entry<String, Secret> entry : resource.getSecrets().entrySet()) {
-            URI ref = UriBuilder.fromUri(baseUrl).path(SecretRestService.createPath(entry.getValue())).build();
+            URI ref = ServletUriComponentsBuilder.fromUri(baseUrl)
+                    .path(SecretRestService.createPath(entry.getValue()))
+                    .build()
+                    .toUri();
             resourceElement.addProperty(new PropertyElement(entry.getKey(), ref, Type.SECRET));
         }
     }
@@ -518,26 +538,26 @@ public class ResourcesRestService {
         return null;
     }
 
-    private Scope createStoreageScope(Map<String, List<InputPart>> multipartMap, EnvironmentClass envclass) {
+    private Scope createStoreageScope(MultipartHttpServletRequest request, EnvironmentClass envclass) {
         Scope scope = new Scope(envclass);
-        String domain = getSingleAsString(multipartMap, "scope.domain", false);
+        String domain = getSingleAsString(request, "scope.domain", false);
         if (domain != null) {
             scope.domain(Domain.fromFqdn(domain));
         }
 
-        String envName = getSingleAsString(multipartMap, "scope.environmentname", false);
+        String envName = getSingleAsString(request, "scope.environmentname", false);
         if (envName != null && !envName.isEmpty()) {
             Environment environment = repo.findEnvironmentBy(envName.toLowerCase());
             if (environment == null) {
-                throw new BadRequestException("Environment with name " + envName + " not found");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Environment with name " + envName + " not found");
             }
             scope.envName(envName);
         }
-        String applicationName = getSingleAsString(multipartMap, "scope.application", false);
+        String applicationName = getSingleAsString(request, "scope.application", false);
         if (applicationName != null && !applicationName.isEmpty()) {
             Application app = repo.findApplicationByName(applicationName);
             if (app == null) {
-                throw new BadRequestException("Application with name " + applicationName + " not found");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application with name " + applicationName + " not found");
             }
             scope.application(app);
         }
@@ -545,11 +565,10 @@ public class ResourcesRestService {
         return scope;
     }
 
-    private InputStream getInputStream(Map<String, List<InputPart>> multipartMap, String property) {
-        InputPart input = getSingle(multipartMap, property);
-        if (input != null) {
+    private InputStream getInputStream(MultipartHttpServletRequest request, String property) {
+        if (request.getFileMap().containsKey(property)) {
             try {
-                return input.getBody(InputStream.class, null);
+                return request.getFile(property).getInputStream();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -557,41 +576,39 @@ public class ResourcesRestService {
         return null;
     }
 
-    private String getSingleAsString(Map<String, List<InputPart>> multipartMap, String property) {
-        return getSingleAsString(multipartMap, property, true);
+    private String getSingleAsString(MultipartHttpServletRequest request, String property) {
+        return getSingleAsString(request, property, true);
     }
 
-    private String getSingleAsString(Map<String, List<InputPart>> multipartMap, String property, boolean mandatory) {
-        InputPart input = getSingle(multipartMap, property, mandatory);
-        if (input != null) {
-            try {
-                return input.getBodyAsString();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return null;
-    }
-
-    private InputPart getSingle(Map<String, List<InputPart>> multipartMap, String property) {
-        return getSingle(multipartMap, property, true);
-    }
-
-    private InputPart getSingle(Map<String, List<InputPart>> multipartMap, String property, boolean mandatory) {
-        List<InputPart> list = multipartMap.get(property);
-        if (list == null || list.isEmpty()) {
+    private String getSingleAsString(MultipartHttpServletRequest request, String property, boolean mandatory) {
+        if (!request.getParameterMap().containsKey(property)) {
             if (mandatory) {
-                log.warn("Missing required property " + property);
-                throw new BadRequestException("Missing required property " + property);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required property " + property);
             }
             return null;
         }
-        if (list.size() == 1) {
-            return list.get(0);
-        } else {
-            log.warn("More than one property with name " + property + " is in request. Only one is expected");
-            throw new BadRequestException("More than one property with name " + property + " is in request. Only one is expected");
-        }
+        return request.getParameter(property);
     }
+
+//    private InputPart getSingle(Map<String, List<InputPart>> multipartMap, String property) {
+//        return getSingle(multipartMap, property, true);
+//    }
+
+//    private InputPart getSingle(Map<String, List<InputPart>> multipartMap, String property, boolean mandatory) {
+//        List<InputPart> list = multipartMap.get(property);
+//        if (list == null || list.isEmpty()) {
+//            if (mandatory) {
+//                log.warn("Missing required property " + property);
+//                throw new BadRequestException("Missing required property " + property);
+//            }
+//            return null;
+//        }
+//        if (list.size() == 1) {
+//            return list.get(0);
+//        } else {
+//            log.warn("More than one property with name " + property + " is in request. Only one is expected");
+//            throw new BadRequestException("More than one property with name " + property + " is in request. Only one is expected");
+//        }
+//    }
 
 }

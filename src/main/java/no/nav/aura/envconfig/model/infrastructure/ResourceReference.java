@@ -5,6 +5,8 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
@@ -18,11 +20,12 @@ import javax.persistence.*;
 public class ResourceReference extends ModelEntity implements Reference {
 
     @ManyToOne(optional = true, cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "resource_entid")
     private Resource resource;
 
     private String alias;
-
+    
     private Boolean future;
 
     @Enumerated(EnumType.STRING)
