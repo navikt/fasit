@@ -55,9 +55,6 @@ public class Payload2ApplicationInstanceTransformer extends FromPayloadTransform
 
         instance.setExposedServices(transformExposed(from.exposedresources));
 
-        // TODO
-        log.debug("Received loadbalancerurl {}, No place to put it yet", from.loadbalancerurl);
-
         Set<Port> ports = transformPorts(from.nodes);
         instance.setPorts(ports);
 
