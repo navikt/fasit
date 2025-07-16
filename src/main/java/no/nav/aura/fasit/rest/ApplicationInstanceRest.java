@@ -100,11 +100,7 @@ public class ApplicationInstanceRest {
     		@RequestParam(name = "usage", defaultValue = "true") Boolean showUsage,
     		@RequestParam(name = "page", defaultValue = "0") int page,
     		@RequestParam(name = "pr_page", defaultValue = "100") int pr_page) {
-        // @TODO cleanup
-//        LifeCycleStatus lifeCycleStatus = null;
-//        if (lifeCycleStatusStr != null) {
-//            lifeCycleStatus = LifeCycleStatus.valueOf(lifeCycleStatusStr.toUpperCase());
-//        }
+
         Specification<ApplicationInstance> spec = ApplicationInstanceSpecs.find(environmentName, environmentClass, applicationName, lifeCycleStatus);
 
         Page<ApplicationInstance> result = findApplicationInstancesBy(spec, page, pr_page);
