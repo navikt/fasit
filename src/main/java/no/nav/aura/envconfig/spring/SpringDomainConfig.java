@@ -1,5 +1,7 @@
 package no.nav.aura.envconfig.spring;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
 
 import javax.persistence.EntityManagerFactory;
@@ -13,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.orm.hibernate5.HibernateExceptionTranslator;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -23,12 +24,14 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.JPAFasitRepository;
 import no.nav.aura.envconfig.auditing.MdcEnrichmentFilter;
-import no.nav.aura.envconfig.filter.CorsFilter;
 import no.nav.aura.envconfig.filter.EntityCommentBindingFilter;
 import no.nav.aura.envconfig.filter.HttpMetricFilter;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
@@ -108,11 +111,18 @@ public class SpringDomainConfig {
 		filter.setForceEncoding(true);
 		return filter;
 	}
-    
 
     @Bean
-    Filter corsFilter() {
-        return new CorsFilter();
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "X-Comment"));
+        configuration.setExposedHeaders(Arrays.asList("total_count", "Link", "Location"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
     
     @Bean
@@ -133,7 +143,6 @@ public class SpringDomainConfig {
         return serializer;
     }
 
-    
 //    private String getDialect() {
 //        if ("true".equals(System.getProperty("useH2"))) {
 //            return H2Dialect.class.getName();

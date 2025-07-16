@@ -1,11 +1,16 @@
 package no.nav.aura.envconfig.spring;
 
-import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.filter.DummyUserLookup;
-import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -31,15 +36,12 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+import org.springframework.web.cors.CorsConfigurationSource;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Collections;
+import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.filter.DummyUserLookup;
+import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -78,10 +80,15 @@ public class SpringSecurityTestConfig {
     }
     
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(
+    		HttpSecurity http,
+    		@Autowired CorsConfigurationSource corsConfigurationSource ) throws Exception {
         http
+        		.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .csrf(csrf -> csrf
+                		.disable())
                 .authorizeRequests(requests -> requests
                 		.dispatcherTypeMatchers(DispatcherType.REQUEST, DispatcherType.ERROR).permitAll() // allow access to error dispatcher and drop redirects
                         .antMatchers("/conf/secrets/**").authenticated()
@@ -95,8 +102,6 @@ public class SpringSecurityTestConfig {
                         .antMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
                 		.authenticationEntryPoint(restEntryPoint()))
-                .csrf(csrf -> csrf
-                        .disable())
                 .formLogin(login -> login
                         .loginProcessingUrl("/api/login")
                         .successHandler(restLoginSuccessHandler())
