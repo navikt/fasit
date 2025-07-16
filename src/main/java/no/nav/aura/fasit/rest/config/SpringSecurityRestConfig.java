@@ -1,9 +1,5 @@
 package no.nav.aura.fasit.rest.config;
 
-import no.nav.aura.envconfig.filter.LdapUserLookup;
-import no.nav.aura.envconfig.spring.AuthoritiesMapper;
-import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -12,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -26,6 +23,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import no.nav.aura.envconfig.filter.LdapUserLookup;
+import no.nav.aura.envconfig.spring.AuthoritiesMapper;
+import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
 
 
 @Configuration
@@ -36,8 +38,11 @@ import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuc
 public class SpringSecurityRestConfig { 
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(
+    		HttpSecurity http,
+    		@Autowired CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
+        		.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeRequests(requests -> requests
