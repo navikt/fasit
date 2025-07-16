@@ -41,21 +41,6 @@ public class SpringSecurityConfig {
     }
 
     @Bean
-    ActiveDirectoryLdapAuthenticationProvider ldapAuthProvider(
-        @Value("${ldap.domain}") String ldapDomain,
-        @Value("${ldap.url}") String ldapUrl,
-        GrantedAuthoritiesMapper grantedAuthoritiesMapper) {
-    	
-    	ActiveDirectoryLdapAuthenticationProvider provider = new ActiveDirectoryLdapAuthenticationProvider(ldapDomain, ldapUrl);
-        provider.setAuthoritiesMapper(grantedAuthoritiesMapper);
-        provider.setUserDetailsContextMapper(new NAVLdapUserDetailsMapper());
-        provider.setUseAuthenticationRequestCredentials(true);
-        provider.setConvertSubErrorCodesToExceptions(true);
-        provider.setSearchFilter("(&(objectClass=user)(|(sAMAccountName={1})(userPrincipalName={0})(mail={0})))");
-        return provider;
-    }
-
-    @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
     	log.info("Creating AuthenticationManager");
         return authenticationConfiguration.getAuthenticationManager();

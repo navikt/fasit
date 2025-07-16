@@ -9,9 +9,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,6 +21,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -27,6 +31,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import no.nav.aura.envconfig.filter.LdapUserLookup;
 import no.nav.aura.envconfig.spring.AuthoritiesMapper;
+import no.nav.aura.envconfig.spring.NAVLdapUserDetailsMapper;
+import no.nav.aura.envconfig.spring.SpringSecurityHandlersConfig;
 import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
 
 
@@ -34,13 +40,17 @@ import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
 @EnableWebSecurity
 @EnableAspectJAutoProxy 
 //@ImportResource({ "classpath:spring-security-rest.xml" })
-//@Import({ SpringSecurityHandlersConfig.class })
+@Import({ SpringSecurityHandlersConfig.class })
 public class SpringSecurityRestConfig { 
 
     @Bean
     SecurityFilterChain securityFilterChain(
     		HttpSecurity http,
-    		@Autowired CorsConfigurationSource corsConfigurationSource) throws Exception {
+    		@Autowired CorsConfigurationSource corsConfigurationSource,
+    		@Autowired AuthenticationEntryPoint restEntryPoint,
+    		@Autowired RestAuthenticationSuccessHandler restLoginSuccessHandler,
+    		@Autowired SimpleUrlAuthenticationFailureHandler restfulAuthenticationFailureHandler,
+    		@Autowired SimpleUrlLogoutSuccessHandler restfulLogoutSuccessHandler) throws Exception {
         http
         		.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(management -> management
@@ -57,18 +67,18 @@ public class SpringSecurityRestConfig {
                         .antMatchers("/api/v2/**").authenticated()
                         .antMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
-                		.authenticationEntryPoint(restEntryPoint()))
+                		.authenticationEntryPoint(restEntryPoint))
                 .csrf(csrf -> csrf
                         .disable())
                 .formLogin(login -> login
                         .loginProcessingUrl("/api/login")
-                        .successHandler(restLoginSuccessHandler())
-                        .failureHandler(restfulAuthenticationFailureHandler()))
+                        .successHandler(restLoginSuccessHandler)
+                        .failureHandler(restfulAuthenticationFailureHandler))
                 .logout(logout -> logout
                         .logoutUrl("/api/logout")
-                        .logoutSuccessHandler(restfulLogoutSuccessHandler()))
+                        .logoutSuccessHandler(restfulLogoutSuccessHandler))
                 .exceptionHandling(exceptions -> exceptions
-						.authenticationEntryPoint(restEntryPoint())
+						.authenticationEntryPoint(restEntryPoint)
 		                .accessDeniedHandler((request, response, accessDeniedException) -> {
 		                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
 		                })
@@ -78,62 +88,27 @@ public class SpringSecurityRestConfig {
     }
 	
     @Bean
+    ActiveDirectoryLdapAuthenticationProvider ldapAuthProvider(
+        @Value("${ldap.domain}") String ldapDomain,
+        @Value("${ldap.url}") String ldapUrl,
+        GrantedAuthoritiesMapper grantedAuthoritiesMapper) {
+    	
+    	ActiveDirectoryLdapAuthenticationProvider provider = new ActiveDirectoryLdapAuthenticationProvider(ldapDomain, ldapUrl);
+        provider.setAuthoritiesMapper(grantedAuthoritiesMapper);
+        provider.setUserDetailsContextMapper(new NAVLdapUserDetailsMapper());
+        provider.setUseAuthenticationRequestCredentials(true);
+        provider.setConvertSubErrorCodesToExceptions(true);
+        provider.setSearchFilter("(&(objectClass=user)(|(sAMAccountName={1})(userPrincipalName={0})(mail={0})))");
+        return provider;
+    }
+
+    @Bean
     LdapUserLookup ldapUserLookup(Environment env) {
         return new LdapUserLookup(env);
     }
-    
-    @Bean(name = "grantedAuthoritiesMapper")
-    AuthoritiesMapper grantedAuthoritiesMapper(Environment env) {
-        return new AuthoritiesMapper(env);
+
+    @Bean
+    NAVLdapUserDetailsMapper myUserDetails() {
+        return new NAVLdapUserDetailsMapper();
     }
-
-    @Bean(name = "restLoginSuccessHandler")
-    RestAuthenticationSuccessHandler restLoginSuccessHandler() {
-        return new RestAuthenticationSuccessHandler();
-    }
-
-    @Bean(name = "restLoginFailureHandler")
-    SimpleUrlAuthenticationFailureHandler restfulAuthenticationFailureHandler() {
-        return new SimpleUrlAuthenticationFailureHandler(){
-            @Override
-            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                PrintWriter writer = response.getWriter();
-                writer.write(exception.getMessage());
-                writer.flush();
-
-            }
-        };
-    }
-
-    @Bean(name = "restLogoutSuccessHandler")
-    SimpleUrlLogoutSuccessHandler restfulLogoutSuccessHandler() {
-        return new SimpleUrlLogoutSuccessHandler(){
-            @Override
-            public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-//                String refererUrl = request.getHeader("referer");
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().flush();
-            }
-        };
-
-    }
-
-
-    /**
-     * @return 401 i stedet for redirect
-     */
-    @Bean(name = "restEntryPoint")
-	AuthenticationEntryPoint restEntryPoint(){
-        return new AuthenticationEntryPoint() {
-
-            @Override
-            public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                response.setHeader("WWW-Authenticate","Basic realm=\"fasit\"" );
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-            }
-        };
-    }
-    
 }

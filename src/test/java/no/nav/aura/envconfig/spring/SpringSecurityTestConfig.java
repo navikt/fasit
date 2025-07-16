@@ -1,20 +1,16 @@
 package no.nav.aura.envconfig.spring;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
 
 import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -25,7 +21,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -46,6 +41,7 @@ import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
 @Configuration
 @EnableWebSecurity
 @EnableAspectJAutoProxy
+@Import({ SpringSecurityHandlersConfig.class })
 public class SpringSecurityTestConfig {
     
     @Bean
@@ -82,7 +78,11 @@ public class SpringSecurityTestConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
     		HttpSecurity http,
-    		@Autowired CorsConfigurationSource corsConfigurationSource ) throws Exception {
+    		@Autowired CorsConfigurationSource corsConfigurationSource,
+    		@Autowired AuthenticationEntryPoint restEntryPoint,
+    		@Autowired RestAuthenticationSuccessHandler restLoginSuccessHandler,
+    		@Autowired SimpleUrlAuthenticationFailureHandler restfulAuthenticationFailureHandler,
+    		@Autowired SimpleUrlLogoutSuccessHandler restfulLogoutSuccessHandler) throws Exception {
         http
         		.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(management -> management
@@ -101,16 +101,16 @@ public class SpringSecurityTestConfig {
                         .antMatchers("/api/v2/**").authenticated()
                         .antMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
-                		.authenticationEntryPoint(restEntryPoint()))
+                		.authenticationEntryPoint(restEntryPoint))
                 .formLogin(login -> login
                         .loginProcessingUrl("/api/login")
-                        .successHandler(restLoginSuccessHandler())
-                        .failureHandler(restfulAuthenticationFailureHandler()))
+                        .successHandler(restLoginSuccessHandler)
+                        .failureHandler(restfulAuthenticationFailureHandler))
                 .logout(logout -> logout
                         .logoutUrl("/api/logout")
-                        .logoutSuccessHandler(restfulLogoutSuccessHandler()))
+                        .logoutSuccessHandler(restfulLogoutSuccessHandler))
                 .exceptionHandling(exceptions -> exceptions
-						.authenticationEntryPoint(restEntryPoint())
+						.authenticationEntryPoint(restEntryPoint)
 		                .accessDeniedHandler((request, response, accessDeniedException) -> {
 		                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
 		                })
@@ -124,11 +124,11 @@ public class SpringSecurityTestConfig {
         return new DummyUserLookup();
     }
     
-    @Bean
-    NAVLdapUserDetailsMapper myUserDetails() {
-        return new NAVLdapUserDetailsMapper();
-    }
-
+//    @Bean
+//    NAVLdapUserDetailsMapper myUserDetails() {
+//        return new NAVLdapUserDetailsMapper();
+//    }
+//
     @Bean
     DataIntegrityRulesEvaluator getDataIntegrityRulesEvaluator(FasitRepository repository) {
         return new DataIntegrityRulesEvaluator(repository);
@@ -189,60 +189,4 @@ public class SpringSecurityTestConfig {
 	    };
 	}
 
-
-    
-    @Bean(name = "grantedAuthoritiesMapper")
-    AuthoritiesMapper grantedAuthoritiesMapper(Environment env) {
-        return new AuthoritiesMapper(env);
-    }
-
-    @Bean(name = "restLoginSuccessHandler")
-    static RestAuthenticationSuccessHandler restLoginSuccessHandler() {
-        return new RestAuthenticationSuccessHandler();
-    }
-
-    @Bean(name = "restLoginFailureHandler")
-    static SimpleUrlAuthenticationFailureHandler restfulAuthenticationFailureHandler() {
-        return new SimpleUrlAuthenticationFailureHandler(){
-            @Override
-            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                PrintWriter writer = response.getWriter();
-                writer.write(exception.getMessage());
-                writer.flush();
-
-            }
-        };
-    }
-
-    @Bean(name = "restLogoutSuccessHandler")
-    static SimpleUrlLogoutSuccessHandler restfulLogoutSuccessHandler() {
-        return new SimpleUrlLogoutSuccessHandler(){
-            @Override
-            public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                String refererUrl = request.getHeader("referer");
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().flush();
-            }
-        };
-
-    }
-
-
-    /**
-     * @return 401 i stedet for redirect
-     */
-    @Bean(name = "restEntryPoint")
-    static AuthenticationEntryPoint restEntryPoint(){
-        return new AuthenticationEntryPoint() {
-
-            @Override
-            public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-                response.setHeader("WWW-Authenticate","Basic realm=\"fasit\"" );
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-            }
-        };
-    }
-    
 }
