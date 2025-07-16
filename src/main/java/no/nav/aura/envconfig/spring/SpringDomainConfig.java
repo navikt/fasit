@@ -140,6 +140,8 @@ public class SpringDomainConfig {
     CookieSerializer cookieSerializer() {
         DefaultCookieSerializer serializer = new DefaultCookieSerializer();
         serializer.setCookieName("JSESSIONID");
+        
+        // TODO better handling of SameSite attribute. Should be set to "Lax" by default or have a check for isDev. 
         serializer.setSameSite("None");  // Allow cross-site requests
         serializer.setUseSecureCookie(true);  // Required when SameSite=None
         return serializer;
