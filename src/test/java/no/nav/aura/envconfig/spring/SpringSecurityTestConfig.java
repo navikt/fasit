@@ -124,11 +124,11 @@ public class SpringSecurityTestConfig {
         return new DummyUserLookup();
     }
     
-//    @Bean
-//    NAVLdapUserDetailsMapper myUserDetails() {
-//        return new NAVLdapUserDetailsMapper();
-//    }
-//
+    @Bean
+    NAVLdapUserDetailsMapper myUserDetails() {
+        return new NAVLdapUserDetailsMapper();
+    }
+
     @Bean
     DataIntegrityRulesEvaluator getDataIntegrityRulesEvaluator(FasitRepository repository) {
         return new DataIntegrityRulesEvaluator(repository);
