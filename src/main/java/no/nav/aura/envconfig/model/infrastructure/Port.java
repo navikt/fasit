@@ -3,7 +3,7 @@ package no.nav.aura.envconfig.model.infrastructure;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")

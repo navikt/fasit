@@ -4,7 +4,7 @@ import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.*;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.*;
+import jakarta.persistence.criteria.*;
 import java.util.Collection;
 
 import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;

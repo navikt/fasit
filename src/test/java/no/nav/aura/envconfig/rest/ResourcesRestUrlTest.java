@@ -17,7 +17,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.http.HttpStatus;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.io.File;
 import java.util.List;
 import java.util.Set;

@@ -7,10 +7,9 @@ import no.nav.aura.fasit.rest.model.PortPayload.PortType;
 import no.nav.aura.integration.VeraRestClient;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;

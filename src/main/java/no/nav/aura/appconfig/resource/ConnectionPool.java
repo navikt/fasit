@@ -4,7 +4,7 @@ import no.nav.aura.appconfig.JaxbPropertyHelper;
 import no.nav.aura.appconfig.jaxb.JaxbPropertySet;
 import no.nav.aura.appconfig.jaxb.ParentConfigObject;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

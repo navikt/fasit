@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.is;
 import java.net.URI;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
