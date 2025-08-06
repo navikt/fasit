@@ -2,12 +2,6 @@ package no.nav;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 
-import jakarta.inject.Inject;
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.JPAFasitRepository;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,6 +11,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import jakarta.inject.Inject;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "no.nav.aura", excludeFilters = {@ComponentScan.Filter(Configuration.class ), @ComponentScan.Filter(SpringBootApplication.class)})
