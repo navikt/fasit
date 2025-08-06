@@ -17,13 +17,12 @@ import no.nav.aura.fasit.client.model.MissingResource;
 import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
-import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.junit.jupiter.api.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,21 +53,23 @@ public class ApplicationInstanceResourceUnitTest {
     public void setUp() {
         repository = mock(JPAFasitRepository.class);
         instanceRepository = mock(ApplicationInstanceRepository.class);
-        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceResource(repository, instanceRepository, mock(FasitKafkaProducer.class));
     }
 
     @Test
     public void invalidJsonYieldsBadRequest() {
-        Assertions.assertThrows(BadRequestException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ApplicationInstanceResource.validateJson("<xml />");
         });
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
     public void missingRequiredPropertiesYieldsBadRequest() {
-        Assertions.assertThrows(BadRequestException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", "{}");
         });
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
@@ -79,39 +80,44 @@ public class ApplicationInstanceResourceUnitTest {
 
     @Test
     public void nonexistentApplicationYields404() {
-        Assertions.assertThrows(NotFoundException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyApplicationExists("-_-");
         });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
     public void nonexistentEnvironmentYields404() {
-        Assertions.assertThrows(NotFoundException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyEnvironmentExists("^_^");
         });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
     public void nonexistentNodesYields404() {
-        Assertions.assertThrows(NotFoundException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyNodesExist(Lists.newArrayList("bleep", "blaap", "bloop"));
         });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
     public void nonexistentApplicationMappingInEnvironmentYields404() {
-        Assertions.assertThrows(NotFoundException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyApplicationIsDefinedInEnvironment("bop", "shoo");
         });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
-    public void nonexistentUsedResourcesYieldsBadRequest() {
-        Assertions.assertThrows(NotFoundException.class, () -> {
+    public void nonexistentUsedResourcesYieldsNotFound() {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             when(repository.getRevision(Resource.class, 1337, 69)).thenThrow(RevisionDoesNotExistException.class);
             UsedResource nonexistentUsedResource = new UsedResource(1337, 69);
             service.verifyUsedResources(Lists.newArrayList(nonexistentUsedResource));
         });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
@@ -122,26 +128,29 @@ public class ApplicationInstanceResourceUnitTest {
 
     @Test
     public void exposedResourcesLackingMandatoryFieldsYieldsBadRequest() {
-        Assertions.assertThrows(BadRequestException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ExposedResource exposedResourceLackingMandatoryFields = new ExposedResource(ResourceTypeDO.BaseUrl.name(), null, null);
             service.verifyExposedResources(Lists.newArrayList(exposedResourceLackingMandatoryFields));
         });
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
     public void exposedResourcesWithNonexistentFieldsYieldsBadRequest() {
-        Assertions.assertThrows(BadRequestException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ExposedResource exposedResourceWithNonexistentFields = new ExposedResource(ResourceTypeDO.BaseUrl.name(), "alias", ImmutableMap.of("url", "http://baseurl.com", "blapp", "setter"));
             service.verifyExposedResources(Lists.newArrayList(exposedResourceWithNonexistentFields));
         });
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
     public void exposedResourcesWithNonexistentResourceTypeYieldsBadRequest() {
-        Assertions.assertThrows(BadRequestException.class, () -> {
+        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ExposedResource exposedResourceWithNonexistentResourceType = new ExposedResource("nonexistentResourceType", null, null);
             service.verifyExposedResources(Lists.newArrayList(exposedResourceWithNonexistentResourceType));
         });
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
@@ -187,7 +196,7 @@ public class ApplicationInstanceResourceUnitTest {
         try {
             service.verifyExposedResources(Lists.newArrayList(exposedQueue));
             Assertions.fail("No exception");
-        } catch (BadRequestException e) {
+        } catch (ResponseStatusException e) {
             assertThat(e.getMessage(), Matchers.containsString(expectedMessage));
         }
     }

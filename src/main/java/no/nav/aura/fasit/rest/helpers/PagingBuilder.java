@@ -1,27 +1,45 @@
 package no.nav.aura.fasit.rest.helpers;
 
 import java.net.URI;
-import java.util.ArrayList;
-
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 public abstract class PagingBuilder {
-
-    public static ResponseBuilder pagingResponseBuilder(Page<?> page, URI request) {
-        UriBuilder requestUriBuilder = UriBuilder.fromUri(request).replaceQueryParam("page", "{page}");
-
+    public static ResponseEntity.BodyBuilder pagingResponseBuilder(Page<?> page, URI request) {
         int currentPage = page.getNumber();
-        ArrayList<Link> links = new ArrayList<>();
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("total_count", String.valueOf(page.getTotalElements()));
+        
+        // Add Link header similar to JAX-RS Links
+        StringBuilder linkHeader = new StringBuilder();
+        
         if (currentPage + 1 < page.getTotalPages()) {
-            links.add(Link.fromUri(requestUriBuilder.build(currentPage + 1)).rel("next").build());
+            URI nextUri = ServletUriComponentsBuilder.fromUri(request)
+                .replaceQueryParam("page", currentPage + 1)
+                .build()
+                .toUri();
+            linkHeader.append("<").append(nextUri).append(">; rel=\"next\"");
         }
-        links.add(Link.fromUri(requestUriBuilder.build(page.getTotalPages() - 1)).rel("last").build());
-        return Response.ok().links(links.toArray(new Link[]{})).header("total_count", page.getTotalElements());
+        
+        if (page.getTotalPages() > 0) {
+            if (linkHeader.length() > 0) {
+                linkHeader.append(", ");
+            }
+            URI lastUri = ServletUriComponentsBuilder.fromUri(request)
+                .replaceQueryParam("page", page.getTotalPages() - 1)
+                .build()
+                .toUri();
+            linkHeader.append("<").append(lastUri).append(">; rel=\"last\"");
+        }
+        
+        if (linkHeader.length() > 0) {
+            headers.set("Link", linkHeader.toString());
+        }
+        return ResponseEntity.ok().headers(headers);
     }
 
 

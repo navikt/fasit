@@ -10,14 +10,13 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 import no.nav.aura.envconfig.util.TestHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -32,8 +31,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringUnitTestConfig.class })
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional
 @Rollback
 public class JPAFasitRepositoryTest {
@@ -54,8 +52,8 @@ public class JPAFasitRepositoryTest {
     public void setup() throws Exception {
         String appName = "tsys";
 
-        application = (Application) repository.store(new Application(appName));
-        singleApplicationGroup = (ApplicationGroup) repository.store(new ApplicationGroup(appGroupWithOneApplication, application));
+        application = repository.store(new Application(appName));
+        singleApplicationGroup = repository.store(new ApplicationGroup(appGroupWithOneApplication, application));
 
         multiApplicationGroup = repository.store(new ApplicationGroup(appGroupWithMultipleApplications));
         multiApplicationGroup.addApplication(createApplication("myFirstApp"));
@@ -81,6 +79,15 @@ public class JPAFasitRepositoryTest {
         nodeTestLocal = TestHelper.assertAndGetSingle(t1.getNodes());
         repository.store(clusterOeraT);
     }
+    
+    @AfterEach
+    public void tearDown() {
+    	repository.delete(nodeTestLocal);
+    	repository.delete(clusterTestLocal);
+    	repository.delete(t1);
+    	repository.delete(singleApplicationGroup);
+		repository.delete(application);
+	}
 
     @Test
     public void findEnvironment() {
@@ -117,7 +124,7 @@ public class JPAFasitRepositoryTest {
 
     @Test
     public void verifyStorageResource() throws Exception {
-        Application myapp = (Application) repository.store(new Application("myApp"));
+        Application myapp = repository.store(new Application("myApp"));
 
         Scope scope = new Scope(EnvironmentClass.u);
         scope.domain(Domain.Devillo);
@@ -127,7 +134,7 @@ public class JPAFasitRepositoryTest {
         Resource res = new Resource("myResource", ResourceType.BaseUrl, scope);
         res.putPropertyAndValidate("url", "http://value");
         Resource stored = repository.store(res);
-        assertTrue(stored.getScope().getApplication() != null);
+        assertNotNull(stored.getScope().getApplication());
     }
 
     @Test
@@ -186,8 +193,7 @@ public class JPAFasitRepositoryTest {
         assertNotNull(environment);
         Set<Cluster> clusters = environment.getClusters();
         assertEquals(1, clusters.size());
-        Cluster cluster = clusters.iterator().next();
-        return cluster;
+        return clusters.iterator().next();
     }
 
     @Test
@@ -588,7 +594,7 @@ public class JPAFasitRepositoryTest {
 
     private Application createApplication(String applicationName) {
         Application entity = new Application(applicationName);
-        return (Application) repository.store(entity);
+        return repository.store(entity);
     }
 
     @Test
