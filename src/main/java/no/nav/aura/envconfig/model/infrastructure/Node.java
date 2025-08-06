@@ -6,7 +6,7 @@ import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

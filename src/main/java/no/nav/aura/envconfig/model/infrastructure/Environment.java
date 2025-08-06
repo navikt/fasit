@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
-import javax.persistence.*;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
 import java.util.Set;
 
 @SuppressWarnings("serial")

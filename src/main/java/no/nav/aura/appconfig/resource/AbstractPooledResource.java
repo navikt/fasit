@@ -1,7 +1,7 @@
 package no.nav.aura.appconfig.resource;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import no.nav.aura.appconfig.Namespaces;
 

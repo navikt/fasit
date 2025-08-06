@@ -2,7 +2,7 @@ package no.nav;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
