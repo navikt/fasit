@@ -20,7 +20,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<spring.security.version>5.1.10.RELEASE</spring.security.version>
 		<ojdbc.version>19.3.0.0</ojdbc.version>
-		<hibernate.version>5.4.3.Final</hibernate.version>
+		<hibernate.version>5.4.24.Final</hibernate.version>
 		<jetty.version>9.4.44.v20210927</jetty.version>
 		<kafka.version>2.0.0</kafka.version>
 		<protobuf.version>3.16.3</protobuf.version>
