@@ -11,8 +11,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import java.util.List;
 import java.util.Set;
 

@@ -7,8 +7,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.Collection;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hamcrest.Matchers;

@@ -12,7 +12,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;

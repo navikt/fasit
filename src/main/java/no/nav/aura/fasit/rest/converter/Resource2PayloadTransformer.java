@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.persistence.NonUniqueResultException;
+import jakarta.persistence.NonUniqueResultException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;

@@ -3,7 +3,7 @@ package no.nav.aura.fasit.repository;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;

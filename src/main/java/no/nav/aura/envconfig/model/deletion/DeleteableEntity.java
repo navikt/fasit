@@ -1,6 +1,6 @@
 package no.nav.aura.envconfig.model.deletion;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import no.nav.aura.envconfig.model.ModelEntity;
 

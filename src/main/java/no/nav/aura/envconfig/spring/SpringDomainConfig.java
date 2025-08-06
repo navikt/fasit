@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Properties;
 
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.Filter;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.Filter;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;

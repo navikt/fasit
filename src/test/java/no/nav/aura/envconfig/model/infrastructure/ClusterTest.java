@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.util.HashSet;
 
 import static org.hamcrest.MatcherAssert.assertThat;

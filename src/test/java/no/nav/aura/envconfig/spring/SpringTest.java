@@ -22,7 +22,7 @@ import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;

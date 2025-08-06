@@ -2,7 +2,7 @@ package no.nav.aura.fasit.rest.model;
 
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

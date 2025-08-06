@@ -30,9 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;

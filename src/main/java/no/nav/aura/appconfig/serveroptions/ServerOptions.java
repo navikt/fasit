@@ -5,10 +5,10 @@ import no.nav.aura.appconfig.Namespaces;
 import no.nav.aura.appconfig.jaxb.JaxbPropertySet;
 import no.nav.aura.appconfig.resource.*;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementRef;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

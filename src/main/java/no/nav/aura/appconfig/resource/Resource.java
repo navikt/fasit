@@ -1,8 +1,8 @@
 package no.nav.aura.appconfig.resource;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({Datasource.class, XmlDatasource.class, BaseUrl.class, Channel.class, Credential.class, ApplicationCertificate.class, QueueManager.class,

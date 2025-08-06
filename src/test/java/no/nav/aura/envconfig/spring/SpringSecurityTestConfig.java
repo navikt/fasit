@@ -3,8 +3,8 @@ package no.nav.aura.envconfig.spring;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
