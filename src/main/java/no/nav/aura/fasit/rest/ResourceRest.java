@@ -141,8 +141,8 @@ public class ResourceRest extends AbstractResourceRest {
      * @responseMessage 404 Resource not found with this id
      * @responseMessage 404 file not found with this name for the current resource
      */
-    @GetMapping(path = "/{resourceId}/file/{filename}", produces = "application/octet-stream")
-    public ResponseEntity<ByteArrayInputStream> getFile(@PathVariable(name ="resourceId") String resourceId, @PathVariable(name = "filename") String filename) {
+    @GetMapping(path = "/{resourceId}/file/{filename}")
+    public ResponseEntity<byte[]> getFile(@PathVariable(name ="resourceId") String resourceId, @PathVariable(name = "filename") String filename) {
         Resource resource = getResourceById(resourceId);
         FileEntity fileEntity = resource.getFiles().get(filename);
 
@@ -152,8 +152,9 @@ public class ResourceRest extends AbstractResourceRest {
 
         return ResponseEntity
                 .ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileEntity.getName() + "\"")
-                .body(new ByteArrayInputStream(fileEntity.getFileData()));
+                .body(fileEntity.getFileData());
     }
 
     /**
