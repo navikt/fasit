@@ -1,17 +1,17 @@
 package no.nav.aura.envconfig.rest.concurrentresttest;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Component;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 
-@RestController
-@RequestMapping("/conf/sleep")
+@Component
+@Path("/conf/sleep")
 public class SleepRestService {
 
-    @GetMapping
-    public String sleep( @RequestParam("milliseconds") Integer milliseconds){
+    @GET
+    public String sleep( @QueryParam("milliseconds") Integer milliseconds){
         try {
             Thread.sleep(milliseconds);
             return "I slept " + (double)milliseconds/1000 + " seconds, yay!";

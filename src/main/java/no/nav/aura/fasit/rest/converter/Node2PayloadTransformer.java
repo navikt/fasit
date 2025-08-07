@@ -3,13 +3,12 @@ package no.nav.aura.fasit.rest.converter;
 import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.rest.ClusterRest;
+import no.nav.aura.fasit.rest.NodesRest;
 import no.nav.aura.fasit.rest.model.Link;
 import no.nav.aura.fasit.rest.model.NodePayload;
 import no.nav.aura.fasit.rest.model.SecretPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
@@ -17,7 +16,6 @@ import java.util.Set;
 import static java.util.stream.Collectors.toSet;
 
 public class Node2PayloadTransformer extends ToPayloadTransformer<Node, NodePayload> {
-    private static final Logger log = LoggerFactory.getLogger(Node2PayloadTransformer.class);
 
     private NodeRepository nodeRepository;
     private URI baseUri;
@@ -47,16 +45,10 @@ public class Node2PayloadTransformer extends ToPayloadTransformer<Node, NodePayl
 
     @Override
     protected NodePayload transform(Node node) {
+        UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(NodesRest.class).path("{hostname}");
         NodePayload payload = new NodePayload();
-        payload.addLink("self", UriComponentsBuilder.fromUri(baseUri)
-                .path("/api/v2/nodes/{hostname}")
-                .buildAndExpand(node.getHostname())
-                .toUri());
-        
-        payload.addLink("revisions", UriComponentsBuilder.fromUri(baseUri)
-                .path("/api/v2/nodes/{hostname}/revisions")
-                .buildAndExpand(node.getHostname())
-                .toUri());
+        payload.addLink("self", uriBuilder.build(node.getHostname()));
+        payload.addLink("revisions", uriBuilder.clone().path("revisions").build(node.getHostname()));
         payload.username = node.getUsername();
         payload.hostname = node.getHostname();
         payload.type = node.getPlatformType();

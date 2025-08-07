@@ -7,11 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface ApplicationInstanceRepository extends JpaRepository<ApplicationInstance, Long>, JpaSpecificationExecutor<ApplicationInstance> {
 
     @Query("select a from ApplicationInstance a JOIN a.resourceReferences rr where rr.resource = :resource")

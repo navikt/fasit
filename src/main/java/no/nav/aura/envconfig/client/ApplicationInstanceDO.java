@@ -1,12 +1,10 @@
 package no.nav.aura.envconfig.client;
 
+import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.net.URI;
 import java.util.Date;
 import java.util.Set;
@@ -33,7 +31,7 @@ public class ApplicationInstanceDO {
     public ApplicationInstanceDO() {
     }
 
-    public ApplicationInstanceDO(String appName, String envName, UriComponentsBuilder uriBuilder) {
+    public ApplicationInstanceDO(String appName, String envName, UriBuilder uriBuilder) {
         this.ref = uriBuilder.path("environments/{env}/applications/{appname}").build(envName, appName);
         this.name = appName;
         this.envName = envName;

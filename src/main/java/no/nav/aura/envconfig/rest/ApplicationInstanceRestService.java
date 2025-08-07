@@ -10,6 +10,7 @@ import no.nav.aura.appconfig.Selftest;
 import no.nav.aura.appconfig.exposed.*;
 import no.nav.aura.appconfig.resource.EnvironmentDependentResource;
 import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.client.*;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -19,27 +20,25 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
 import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
+import no.nav.aura.integration.VeraRestClient;
+import no.nav.aura.sensu.SensuClient;
 import org.hibernate.envers.RevisionType;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.*;
 
@@ -55,14 +54,20 @@ import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 /**
  * API for applikasjonsinstances
  */
-@RestController
-@RequestMapping("/conf/environments/{environmentName}/applications")
+@Path("/conf/environments/{environmentName}/applications")
+@Component
 public class ApplicationInstanceRestService {
     @Inject
     private FasitRepository repo;
 
     @Inject
+    private SensuClient sensuClient;
+
+    @Inject
     private FasitKafkaProducer kafkaProducer;
+
+    @Context
+    private UriInfo uriInfo;
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceRestService.class);
 
@@ -76,31 +81,35 @@ public class ApplicationInstanceRestService {
         // For cglib and @transactional
     }
 
-    public ApplicationInstanceRestService(FasitRepository repo, FasitKafkaProducer kafkaProducer) {
+    public ApplicationInstanceRestService(FasitRepository repo, SensuClient sensuClient, FasitKafkaProducer kafkaProducer) {
         this.repo = repo;
+        this.sensuClient = sensuClient;
         this.kafkaProducer = kafkaProducer;
 
     }
 
-    @GetMapping(produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
-    public ResponseEntity<ApplicationInstanceListDO> getApplicationinstances(
-    		@PathVariable(name = "environmentName") final String envName) {
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public List<ApplicationInstanceDO> getApplicationinstances(@PathParam("environmentName") final String envName) {
         List<ApplicationInstanceDO> instances = new ArrayList<>();
         Environment environment = findEnvironment(envName);
 
         for (ApplicationInstance applicationInstance : environment.getApplicationInstances()) {
+            long startCreateDo = System.currentTimeMillis();
             ApplicationInstanceDO applicationInstanceDO = createApplicationDO(environment, applicationInstance);
             instances.add(applicationInstanceDO);
+            long stopCreateDo = System.currentTimeMillis();
+            long createDoTime = stopCreateDo - startCreateDo;
         }
-        ApplicationInstanceListDO response = new ApplicationInstanceListDO(instances);
-        return ResponseEntity.ok().body(response);
+
+        return instances;
 
     }
 
-    @GetMapping(value = "/{applicationName}", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
-    public ApplicationInstanceDO getApplicationinstance(
-    		@PathVariable(name = "environmentName") final String envName, 
-    		@PathVariable(name = "applicationName") final String appName) {
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Path("/{applicationName}")
+    public ApplicationInstanceDO getApplicationinstance(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance applicationInstance = findApplicationInstance(appName, environment);
         ApplicationInstanceDO applicationInstanceDO = createApplicationDO(environment, applicationInstance);
@@ -108,17 +117,16 @@ public class ApplicationInstanceRestService {
     }
 
     private ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance) {
-        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), UriComponentsBuilder.fromPath(""));
+        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriInfo.getBaseUriBuilder());
         appDO.setDeployedBy(instance.getUpdatedBy());
         DateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
             appDO.setLastDeployment(deployDate.toDate());
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
-        appDO.setAppConfigRef(UriComponentsBuilder.fromPath("/environments/{env}/applications/{appname}/appconfig")
-                					.buildAndExpand(environment.getName(), instance.getApplication().getName()).toUri());
+        appDO.setAppConfigRef(uriInfo.getBaseUriBuilder().path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));
         appDO.setVersion(instance.getVersion());
-        appDO.setCluster(createClusterDO(environment, instance.getCluster()));
+        appDO.setCluster(createClusterDO(uriInfo, environment, instance.getCluster()));
         appDO.setHttpsPort(instance.getHttpsPort());
         appDO.setLoadBalancerUrl(instance.getCluster().getLoadBalancerUrl());
 
@@ -138,22 +146,20 @@ public class ApplicationInstanceRestService {
      * @HTTP 404 Hvis applikasjonen ikke har noen definerte clustert i gitt miljø
      * @deprecated 21.3 2014 Bruk getApplicationInstance i stedet
      */
-    @GetMapping(value = "/{applicationName}/clusters", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
+    @GET
+    @Path("/{applicationName}/clusters")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     @Deprecated
-    public ResponseEntity<ClusterListDO> getClustersForApplication(
-    		@PathVariable(name = "environmentName") String envName, 
-    		@PathVariable(name = "applicationName") String appName) {
+    public ClusterDO[] getClustersForApplication(@PathParam("environmentName") String envName, @PathParam("applicationName") String appName) {
         Environment environment = findEnvironment(envName);
 
         ApplicationInstance instance = findApplicationInstance(appName, environment);
         Cluster cluster = instance.getCluster();
-        ClusterDO clusterDO = createClusterDO(environment, cluster);
-        List<ClusterDO> clusterList = Collections.singletonList(clusterDO);
-        ClusterListDO response = new ClusterListDO(clusterList);
-        return ResponseEntity.ok().body(response);
+        ClusterDO clusterDO = createClusterDO(uriInfo, environment, cluster);
+        return new ClusterDO[] { clusterDO };
     }
 
-    private ClusterDO createClusterDO(Environment environment, Cluster cluster) {
+    private ClusterDO createClusterDO(UriInfo uriInfo, Environment environment, Cluster cluster) {
         if (cluster == null) {
             return null;
         }
@@ -170,7 +176,7 @@ public class ApplicationInstanceRestService {
             nodeDO.setHostname(node.getHostname());
             nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orNull());
             nodeDO.setUsername(node.getUsername());
-            URI ref = UriComponentsBuilder.fromPath(SecretRestService.createPath(node.getPassword())).build().toUri();
+            URI ref = UriBuilder.fromUri(uriInfo.getBaseUri()).path(SecretRestService.createPath(node.getPassword())).build();
             nodeDO.setPasswordRef(ref);
             nodeDO.setDomain(node.getDomain().getFqn());
             nodeDO.setPlatformType(PlatformTypeDO.valueOf(node.getPlatformType().name()));
@@ -192,20 +198,25 @@ public class ApplicationInstanceRestService {
         return apps;
     }
 
-    @GetMapping(value = "/{applicationName}/appconfig", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
-    public String getAppConfig(@PathVariable(name = "environmentName") final String envName, @PathVariable(name = "applicationName") final String appName) {
+    @GET
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    @Path("{applicationName}/appconfig")
+    public String getAppConfig(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance applicationInstance = findApplicationInstance(appName, environment);
         return applicationInstance.getAppconfigXml();
     }
 
     @Deprecated
-    @PutMapping(path = "/{applicationName}", consumes = MediaType.APPLICATION_XML_VALUE)
-    public ResponseEntity<Object> registerDeployedApplication(@PathVariable(name ="environmentName") final String envName, @PathVariable(name = "applicationName") final String appName, @RequestBody final DeployedApplicationDO container) {
+    @PUT
+    @Path("/{applicationName}")
+    @Consumes(MediaType.APPLICATION_XML)
+    public void registerDeployedApplication(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName, final DeployedApplicationDO container) {
         if (!appName.equals(container.getAppconfig().getName())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                    "Path application name " + appName + " and application config name " + container.getAppconfig().getName() + " does not match");
+            throw new IllegalArgumentException("Path application name " + appName + " and application config name " + container.getAppconfig().getName() + " does not match");
         }
+
+        sensuClient.sendEvent("fasit.deprecatedAppInstanceService", Collections.emptyMap(), ImmutableMap.of("appName", appName, "envName", envName));
 
         Environment environment = findEnvironment(envName);
         ApplicationInstance appInstance = findApplicationInstance(appName, environment);
@@ -213,16 +224,11 @@ public class ApplicationInstanceRestService {
         Application application = container.getAppconfig();
 
         if (cluster.getNodes().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                    "Unable to register application " + appName + " with no nodes in environment " + envName);
+            throw new IllegalArgumentException("Unable to register application " + appName + " with no nodes in environment " + envName);
         }
 
         if (environment.getEnvClass() == EnvironmentClass.u && !cluster.getNodes().isEmpty()) {
-            cluster.setLoadBalancerUrl(UriComponentsBuilder.fromPath("")
-                    .host(cluster.getNodes().iterator().next().getHostname())
-                    .scheme("https")
-                    .port(cluster.getHttpsPortFromPlatformType())
-                    .build().toString());
+            cluster.setLoadBalancerUrl(UriBuilder.fromPath("").host(cluster.getNodes().iterator().next().getHostname()).scheme("https").port(cluster.getHttpsPortFromPlatformType()).build().toString());
         } else if (loadBalancerInfoIsDefinedInAppConfig(application) && environmentIsLoadBalanced(environment, appInstance)) {
             cluster.setLoadBalancerUrl(format("https://%s", LoadBalancerHostnameBuilder.create(appInstance.getDomain(), environment.getName())));
         }
@@ -244,8 +250,8 @@ public class ApplicationInstanceRestService {
         appInstance.setDeployDate(DateTime.now());
 
         ApplicationInstance savedAppInstance = repo.store(appInstance);
+        sensuClient.sendEvent("fasit.deployments", ImmutableMap.of("deployedApplication", appName, "targetEnvironment", envName, "targetEnvironmentClass", System.getProperty("environment.class", "u")), ImmutableMap.of("version", appInstance.getVersion()));
         kafkaProducer.publishDeploymentEvent(savedAppInstance, environment);
-        return ResponseEntity.noContent().build();
     }
 
     private String getSelftest(Application application) {
@@ -271,9 +277,11 @@ public class ApplicationInstanceRestService {
         return appconfig != null && appconfig.getLoadBalancer() != null && appconfig.getLoadBalancer().getContextRoots() != null;
     }
 
-    @DeleteMapping(path = "/{applicationName}", produces = { MediaType.APPLICATION_XML_VALUE })
+    @DELETE
+    @Produces({ MediaType.APPLICATION_XML })
+    @Path("/{applicationName}")
     @Transactional
-    public ResponseEntity<Void> undeployApplication(@PathVariable(name = "environmentName") final String envName, @PathVariable(name ="applicationName") final String appName) {
+    public void undeployApplication(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance instance = findApplicationInstance(appName, environment);
         Set<ResourceReference> resourceReferences = instance.getResourceReferences();
@@ -284,7 +292,6 @@ public class ApplicationInstanceRestService {
 
         instance.setVersion(null);
         repo.store(instance);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -299,14 +306,15 @@ public class ApplicationInstanceRestService {
      * 
      * @deprecated 18.3 2014
      */
-    @PostMapping(path = "/{app}/versions/{version}", consumes = MediaType.APPLICATION_XML_VALUE)
+    @POST
+    @Path("/{app}/versions/{version}")
+    @Consumes(MediaType.APPLICATION_XML)
     @Transactional
     @Deprecated
-    public ResponseEntity<Void> registerApplicationInstance(@PathVariable(name ="environmentName") final String envName, @PathVariable(name = "app") final String appName, @PathVariable(name = "version") final String version,
-            @RequestBody final DeployedApplicationDO container) {
+    public void registerApplicationInstance(@PathParam("environmentName") final String envName, @PathParam("app") final String appName, @PathParam("version") final String version,
+            final DeployedApplicationDO container) {
         container.setVersion(version);
         registerDeployedApplication(envName, appName, container);
-        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     /**
@@ -320,20 +328,17 @@ public class ApplicationInstanceRestService {
      *            xmlversjon av appconfig for applikasjonen eller null om applikasjonen blir avinstallert.
      * 
      */
-    @PutMapping(value = "/{applicationName}/verify", consumes = MediaType.APPLICATION_XML_VALUE)
+    @PUT
+    @Path("/{applicationName}/verify")
+    @Consumes(MediaType.APPLICATION_XML)
     @Transactional
-    public ResponseEntity<Void> verifyApplicationInstance(
-    		@PathVariable(name ="environmentName") final String envName, 
-    		@PathVariable(name = "applicationName") final String appName, 
-    		@RequestBody Application newApplication) {
+    public void verifyApplicationInstance(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName, Application newApplication) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance appInstance = findApplicationInstance(appName, environment);
         if (newApplication == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No application content provided in request");
-
+            throw new BadRequestException("No application content provided in request");
         }
         checkIfExposedServiceExistsForOtherApplications(environment, appInstance, newApplication);
-        return ResponseEntity.noContent().build();
     }
 
     private void checkIfExposedServiceExistsForOtherApplications(Environment environment, ApplicationInstance instance, Application newApplication) {
@@ -347,7 +352,7 @@ public class ApplicationInstanceRestService {
                 if (sameScope(environment, expectedDomain, resource)) {
                     ApplicationInstance applicationInstanceForExposedService = repo.findApplicationInstanceByExposedResourceId(resource.getID());
                     if (notSameApplication(newApplication, applicationInstanceForExposedService) && !(ResourceTypeDO.Queue.name().equals(resource.getType().name()))) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format(
+                        throw new BadRequestException(format(
                                 "The resource %s of type %s already exists in Fasit and is not exposed by application %s. A resource can not be registrered more than once in the same scope %s ",
                                 resource.getName(), resource.getType(), newApplication.getName(), resource.getScope()));
                     }
@@ -449,11 +454,8 @@ public class ApplicationInstanceRestService {
         no.nav.aura.envconfig.model.application.Application appInstance = repo.findApplicationByName(application.getName());
 
         int baseBootstrapPort = cluster.getBaseBootstrapPortFromPlatformType() + appInstance.getPortOffset();
-        String providerUrls = UriComponentsBuilder.fromPath("")
-				                .host(cluster.getNodes().iterator().next().getHostname())
-				                .scheme("iiop")
-				                .port(baseBootstrapPort)
-				                .build().toString();
+        String providerUrls = UriBuilder.fromPath("").host(cluster.getNodes().iterator().next().getHostname()).scheme("iiop").port(baseBootstrapPort).build().toString();
+
         for (ExposedEjb ejb : application.getExposedServices(ExposedEjb.class)) {
             ExposedServiceReference ejbEndpoint;
             if (existingResources.containsKey(ejb.getName())) {
@@ -493,10 +495,7 @@ public class ApplicationInstanceRestService {
             }
 
             Resource restServiceResource = restService.getResource();
-            restServiceResource.putPropertyAndValidate("url", UriComponentsBuilder.fromUriString(loadBalancerUrl)
-												                    .path(exposedRest.getPath())
-												                    .build()
-												                    .toString());
+            restServiceResource.putPropertyAndValidate("url", UriBuilder.fromUri(loadBalancerUrl).path(exposedRest.getPath()).build().toString());
             restServiceResource.putPropertyAndValidate("description", exposedRest.getDescription());
             restServiceResource.getScope().domain(instance.getCluster().getDomain());
 
@@ -530,10 +529,7 @@ public class ApplicationInstanceRestService {
                 urlService = new ExposedServiceReference(new Resource(exposedUrl.getName(), ResourceType.BaseUrl, environment.getScope()), null);
             }
             Resource urlResource = urlService.getResource();
-            urlResource.putPropertyAndValidate("url", UriComponentsBuilder.fromUriString(loadBalancerUrl)
-                    .path(exposedUrl.getPath())
-                    .build()
-                    .toString());
+            urlResource.putPropertyAndValidate("url", UriBuilder.fromUri(loadBalancerUrl).path(exposedUrl.getPath()).build().toString());
             urlResource.getScope().domain(calculateDomain(exposedUrl, instance));
 
             checkResolvedFutureResourceReferences(urlResource, environment);
@@ -564,20 +560,11 @@ public class ApplicationInstanceRestService {
                 webserviceResource.putPropertyAndValidate("securityToken", fromNullable(webService.getSecurityToken()).or(SecurityToken.NONE).name());
             }
 
-            webserviceResource.putPropertyAndValidate("endpointUrl", UriComponentsBuilder.fromUriString(loadBalancerUrl)
-                    .path(webService.getPath())
-                    .build()
-                    .toString());
+            webserviceResource.putPropertyAndValidate("endpointUrl", UriBuilder.fromUri(loadBalancerUrl).path(webService.getPath()).build().toString());
             if (!(webService.getWsdlArtifactId() == null)) {
                 webserviceResource.putPropertyAndValidate("wsdlUrl",
-                        UriComponentsBuilder.fromUriString("http://maven.adeo.no/nexus/content/groups/public/")
-                        		.path("/{groupId}/{artifactId}/{version}/{artifactId}-{version}.zip")
-                        		.buildAndExpand(webService.getWsdlGroupId().replaceAll("\\.", "/"),
-                        					webService.getWsdlArtifactId(),
-                        					webService.getWsdlVersion(),
-                        					webService.getWsdlArtifactId(),
-                        					webService.getWsdlVersion())
-                        		.toUriString());
+                        UriBuilder.fromUri("http://maven.adeo.no/nexus/content/groups/public").path(webService.getWsdlGroupId().replaceAll("\\.", "\\/")).path("{artifact}")
+                                .path("{version}").path("{artifact}-{version}.zip").build(webService.getWsdlArtifactId(), webService.getWsdlVersion()).toString());
             }
             webserviceResource.putPropertyAndValidate("description", webService.getDescription());
             webserviceResource.getScope().domain(calculateDomain(webService, instance));
@@ -640,7 +627,7 @@ public class ApplicationInstanceRestService {
     protected ApplicationInstance findApplicationInstance(final String appName, Environment environment) {
         ApplicationInstance appInstance = environment.findApplicationByName(appName);
         if (appInstance == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + appName + " is not defined in environment " + environment.getName());
+            throw new NotFoundException("Application " + appName + " is not defined in environment " + environment.getName());
         }
         return appInstance;
     }
@@ -648,7 +635,7 @@ public class ApplicationInstanceRestService {
     protected Environment findEnvironment(String envName) {
         Environment environment = repo.findEnvironmentBy(envName.toLowerCase());
         if (environment == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Environment " + envName + " not found");
+            throw new NotFoundException("Environment " + envName + " not found");
         }
         return environment;
     }

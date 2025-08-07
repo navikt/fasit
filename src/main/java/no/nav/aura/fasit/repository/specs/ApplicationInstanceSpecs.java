@@ -7,6 +7,7 @@ import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
@@ -42,7 +43,7 @@ public class ApplicationInstanceSpecs {
     }
 
     public static Specification<ApplicationInstance> findByEnvironmentAndApplication(final Environment environment, Application application) {
-        return Specification
+        return Specifications
                 .where(findByEnvironment(environment))
                 .and(findByApplication(application));
     }

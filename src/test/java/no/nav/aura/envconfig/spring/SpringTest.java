@@ -1,17 +1,16 @@
 package no.nav.aura.envconfig.spring;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.ModelEntity;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,15 +18,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.ldap.userdetails.LdapUserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-@SpringJUnitConfig(classes = {SpringUnitTestConfig.class, SpringSecurityTestConfig.class})
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.ModelEntity;
+
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { SpringUnitTestConfig.class, SpringSecurityTestConfig.class })
 @Transactional
 public abstract class SpringTest {
 
@@ -41,9 +45,6 @@ public abstract class SpringTest {
     protected FasitRepository unwrappedRepository;
 
     protected FasitRepository repository;
-    
-    @Inject 
-    private TestingAuthenticationProvider testingAuthProvider;
 
     @BeforeAll
     static public void setupSystemProperties() {
@@ -52,13 +53,6 @@ public abstract class SpringTest {
         System.setProperty("deployLog_v1.url", "http://somehost.com");
         System.setProperty("environment.name", "dev");
         System.setProperty("environment.class", "u");
-    }
-
-    
-    @Inject
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(testingAuthProvider);
-
     }
 
     @BeforeEach

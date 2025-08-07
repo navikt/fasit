@@ -10,7 +10,9 @@ import no.nav.aura.fasit.repository.specs.ApplicationInstanceSpecs;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
@@ -22,7 +24,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { SpringUnitTestConfig.class })
 @Transactional
 public class ApplicationInstanceRepositoryTest {
 

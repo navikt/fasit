@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+                        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+                        
+	<context:property-placeholder system-properties-mode="OVERRIDE" />
+
+	<security:authentication-manager alias="authenticationManager" >
+
+		<!--security:authentication-provider ref="ldapAuthProvider" /-->
+		<security:authentication-provider ref="testingAuthProvider"/>
+
+		<security:authentication-provider>
+			<security:user-service id="inMemoryUserDetails">
+				<security:user name="prodadmin" password="{noop}prodadmin" authorities="ROLE_USER, ROLE_OPERATIONS, ROLE_PROD_OPERATIONS" />
+				<security:user name="user" password="{noop}user" authorities="ROLE_USER" />
+				<security:user name="operation" password="{noop}operation" authorities="ROLE_OPERATIONS" />
+				<security:user name="superuser" password="{noop}superuser" authorities="ROLE_OPERATIONS, ROLE_SUPERUSER" />
+			</security:user-service>
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+	<aop:aspectj-autoproxy />
+
+
+	<bean id="ldapAuthProvider" class="org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider">
+		<constructor-arg value="${ldap.domain}" />
+		<constructor-arg value="${ldap.url}:389" />
+		<property name="authoritiesMapper" ref="grantedAuthoritiesMapper" />
+		<property name="userDetailsContextMapper" ref="myUserDetails"></property>
+		<property name="useAuthenticationRequestCredentials" value="true" />
+		<property name="convertSubErrorCodesToExceptions" value="true" />
+	</bean>
+
+	<bean id="testingAuthProvider" class="org.springframework.security.authentication.TestingAuthenticationProvider"/>
+
+	<bean id="myUserDetails" class="no.nav.aura.envconfig.spring.NAVLdapUserDetailsMapper"></bean>
+
+</beans>

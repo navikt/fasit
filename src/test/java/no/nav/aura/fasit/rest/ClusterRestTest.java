@@ -10,35 +10,20 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.rest.model.ClusterPayload;
 import no.nav.aura.fasit.rest.model.Link;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
 
-@TestInstance(Lifecycle.PER_CLASS)
 public class ClusterRestTest extends RestTest {
-	
-	@Inject
-	private ApplicationRepository applicationRepository;
-	
-	@Inject
-	private EnvironmentRepository environmentRepo;
-	
-	@Inject
-	private NodeRepository nodeRepository;
-	
 
     @BeforeAll
     @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
         Application tsys = applicationRepository.save(new Application("tsys"));
         Application gosys = applicationRepository.save(new Application("gosys"));
         Application fasit = applicationRepository.save(new Application("fasit"));
@@ -47,6 +32,7 @@ public class ClusterRestTest extends RestTest {
         Environment u1 = new Environment("u1", EnvironmentClass.u);
         Environment u2 = new Environment("u2", EnvironmentClass.u);
 
+        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
         Cluster cluster1 = new Cluster("cluster1", Domain.Devillo);
         cluster1.setLifeCycleStatus(LifeCycleStatus.STOPPED);
         Cluster cluster2 = new Cluster("cluster2", Domain.Devillo);
@@ -63,6 +49,7 @@ public class ClusterRestTest extends RestTest {
         cluster1.addApplication(gosys);
         cluster2.addApplication(fasit);
 
+        NodeRepository nodeRepository = jetty.getBean(NodeRepository.class);
         u1.addNode(cluster1, nodeRepository.save(new Node("node1.devillo.no", "user", "secret")));
         u1.addNode(cluster1, nodeRepository.save(new Node("node2.devillo.no", "user", "secret")));
         u1.addNode(cluster2, nodeRepository.save(new Node("node3.devillo.no", "user", "secret")));
@@ -74,12 +61,6 @@ public class ClusterRestTest extends RestTest {
 
         environmentRepo.save(u2);
     }
-    
-    @AfterAll
-    void tearDown() throws Exception {
-		cleanupEnvironments();
-		cleanupApplications();
-	}
 
     @Test
     public void findAllClusters() {
@@ -118,7 +99,6 @@ public class ClusterRestTest extends RestTest {
                 .when()
                 .get("/api/v2/environments/u1/clusters?status=stopped")
                 .then()
-                .log().all()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("$", hasSize(1))
@@ -156,7 +136,7 @@ public class ClusterRestTest extends RestTest {
     public void createEmptyCluster() {
         ClusterPayload cluster = new ClusterPayload("emptyCluster", Zone.FSS);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -180,7 +160,7 @@ public class ClusterRestTest extends RestTest {
         cluster.applications.add(new Link("app1"));
         cluster.nodes.add(new Link("node10.devillo.no"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -218,7 +198,7 @@ public class ClusterRestTest extends RestTest {
         cluster.nodes.add(new Link("node11.devillo.no"));
         cluster.applications.add(new Link("app3"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -239,7 +219,7 @@ public class ClusterRestTest extends RestTest {
         cluster.nodes.add(new Link("node12.devillo.no"));
         cluster.applications.add(new Link("app2"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -256,7 +236,7 @@ public class ClusterRestTest extends RestTest {
     public void updateClusterRename() {
         ClusterPayload cluster = new ClusterPayload("newNameCluster", Zone.FSS);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -283,7 +263,7 @@ public class ClusterRestTest extends RestTest {
         ClusterPayload cluster = new ClusterPayload("cluster1", Zone.FSS);
         cluster.nodes.add(new Link("unknown.devillo.no"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -298,7 +278,7 @@ public class ClusterRestTest extends RestTest {
         ClusterPayload cluster = new ClusterPayload("cluster1", Zone.FSS);
         cluster.nodes.add(new Link("node3.devillo.no"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -312,7 +292,7 @@ public class ClusterRestTest extends RestTest {
         ClusterPayload cluster = new ClusterPayload("cluster1", Zone.FSS);
         cluster.applications.add(new Link("unknown"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -327,20 +307,20 @@ public class ClusterRestTest extends RestTest {
         ClusterPayload cluster = new ClusterPayload("cluster1", Zone.FSS);
         cluster.applications.add(new Link("fasit"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
                 .put("/api/v2/environments/u1/clusters/cluster1")
                 .then()
                 .statusCode(400)
-                .body(containsString("Application fasit is already "));
+                .body(containsString("Application fasit is allready "));
     }
 
     @Test
     public void deleteCluster() {
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .when()
                 .delete("/api/v2/environments/u2/clusters/deleteCluster")
                 .then()

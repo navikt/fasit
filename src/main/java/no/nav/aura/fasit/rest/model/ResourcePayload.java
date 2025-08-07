@@ -6,9 +6,6 @@ import no.nav.aura.fasit.rest.SecretRest;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -27,11 +24,8 @@ public class ResourcePayload extends EntityPayload {
     public Map<String, SecretPayload> secrets = new HashMap<>();
     @Valid
     public Map<String, FilePayload> files = new HashMap<>();
-    @JsonProperty("lifecyclestatus")
     public LifeCycleStatus lifeCycleStatus;
-    @JsonProperty("exposedby")
     public UsedApplicationInstancePayload exposedBy;
-    @JsonProperty("usedbyapplications")
     public List<UsedApplicationInstancePayload> usedByApplications;
     public boolean dodgy;
 

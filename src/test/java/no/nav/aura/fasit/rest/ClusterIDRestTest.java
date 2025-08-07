@@ -9,38 +9,24 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.rest.model.ClusterPayload;
 import no.nav.aura.fasit.rest.model.Link;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
 
-@TestInstance(Lifecycle.PER_CLASS)
 public class ClusterIDRestTest extends RestTest {
 
     private static Long cluster1Id;
     private static Long cluster2Id;
     private static Long deleteClusterId;
-    
-    @Inject
-    private ApplicationRepository applicationRepository;
-    
-    @Inject
-    private EnvironmentRepository environmentRepo;
-    
-    @Inject
-    private NodeRepository nodeRepository;
 
     @BeforeAll
     @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
         Application tsys = applicationRepository.save(new Application("tsys"));
         Application gosys = applicationRepository.save(new Application("gosys"));
         Application fasit = applicationRepository.save(new Application("fasit"));
@@ -49,6 +35,7 @@ public class ClusterIDRestTest extends RestTest {
         Environment u1 = new Environment("u1", EnvironmentClass.u);
         Environment u2 = new Environment("u2", EnvironmentClass.u);
 
+        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
         Cluster cluster1 = new Cluster("cluster1", Domain.Devillo);
         Cluster cluster2 = new Cluster("cluster2", Domain.Devillo);
         cluster2.setLoadBalancerUrl("http://loadbalanced.com");
@@ -63,6 +50,7 @@ public class ClusterIDRestTest extends RestTest {
         cluster1.addApplication(gosys);
         cluster2.addApplication(fasit);
 
+        NodeRepository nodeRepository = jetty.getBean(NodeRepository.class);
         u1.addNode(cluster1, nodeRepository.save(new Node("node1.devillo.no", "user", "secret")));
         u1.addNode(cluster1, nodeRepository.save(new Node("node2.devillo.no", "user", "secret")));
         u1.addNode(cluster2, nodeRepository.save(new Node("node3.devillo.no", "user", "secret")));
@@ -79,11 +67,6 @@ public class ClusterIDRestTest extends RestTest {
         deleteClusterId = deleteCluster.getID();
     }
 
-    @AfterAll
-    void tearDown() throws Exception {
-		cleanupEnvironments();
-		cleanupApplications();
-	}
 
 
     @Test
@@ -137,7 +120,7 @@ public class ClusterIDRestTest extends RestTest {
         cluster.environment = "u2";
         cluster.applications.add(new Link("app3"));
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(cluster))
                 .contentType(ContentType.JSON)
                 .when()
@@ -154,7 +137,7 @@ public class ClusterIDRestTest extends RestTest {
     @Test
     public void deleteCluster() {
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .when()
                 .delete("/api/v2/clusters/" + deleteClusterId)
                 .then()

@@ -3,7 +3,7 @@ package no.nav.aura.jaxb;
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.appconfig.deprecated.Deprecations;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;

@@ -1,55 +1,10 @@
 package no.nav.aura.fasit.rest;
 
-import static java.lang.Long.parseLong;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
-import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.inject.Inject;
-import javax.validation.Valid;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
-import no.nav.aura.envconfig.model.infrastructure.Zone;
+import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.model.resource.FileEntity;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
@@ -66,10 +21,44 @@ import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
 import no.nav.aura.fasit.rest.model.ResourceTypePayload;
 import no.nav.aura.fasit.rest.model.RevisionPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-@RestController
-@RequestMapping(path = "/api/v2/resources")
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.Long.parseLong;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
+import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
+
+@Component
+
+@Path("api/v2/resources")
 public class ResourceRest extends AbstractResourceRest {
+
+
+    @Context
+    private UriInfo uriInfo;
 
     private final static Logger log = LoggerFactory.getLogger(ResourceRest.class);
 
@@ -90,8 +79,10 @@ public class ResourceRest extends AbstractResourceRest {
      *
      * @responseMessage 404 Resource not found with this id
      */
-    @GetMapping(path = "/{resourceId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResourcePayload getResource(@PathVariable(name = "resourceId") String resourceId) {
+    @GET
+    @Path("{resourceId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResourcePayload getResource(@PathParam("resourceId") String resourceId) {
         Resource resource = getResourceById(resourceId);
         Long currentRevision = revisionRepository.currentRevision(Resource.class, resource.getID());
         Resource2PayloadTransformer transformer = createTransformer(currentRevision);
@@ -104,17 +95,17 @@ public class ResourceRest extends AbstractResourceRest {
      *
      * @responseMessage 404 Resource not found with this id
      */
-    @GetMapping(path = "/{resourceId}/revisions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Path("{resourceId}/revisions")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<RevisionPayload<Resource>> Revisions(
-            @PathVariable(name = "resourceId") String resourceId) {
+            @PathParam("resourceId") String resourceId) {
 
         Resource resource = getResourceById(resourceId);
         List<FasitRevision<Resource>> revisions = revisionRepository.getRevisionsFor(Resource.class, resource.getID());
 
-        URI absPath = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
-
         List<RevisionPayload<Resource>> payload = revisions.stream()
-                .map(new Revision2PayloadTransformer<>(absPath))
+                .map(new Revision2PayloadTransformer<>(uriInfo.getAbsolutePath()))
                 .collect(toList());
         return payload;
     }
@@ -125,11 +116,13 @@ public class ResourceRest extends AbstractResourceRest {
      * @responseMessage 404 Node with resourceId not found
      * @responseMessage 404 Revision number not found
      */
-    @GetMapping(path = "/{resourceId}/revisions/{revision}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResourcePayload getResourceByRevision(@PathVariable(name = "resourceId") String resourceId, @PathVariable(name = "revision") Long revision) {
+    @GET
+    @Path("{resourceId}/revisions/{revision}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResourcePayload getResourceByRevision(@PathParam("resourceId") String resourceId, @PathParam("revision") Long revision) {
         Resource resource = getResourceById(resourceId);
         Optional<Resource> historicResource = revisionRepository.getRevisionEntry(Resource.class, resource.getID(), revision);
-        Resource oldResource = historicResource.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revison " + revision + " is not found for resource " + resourceId));
+        Resource oldResource = historicResource.orElseThrow(() -> new NotFoundException("Revison " + revision + " is not found for resource " + resourceId));
         Resource2PayloadTransformer transformer = createTransformer(revision);
         transformer.setShowUsage(true);
         return transformer.apply(oldResource);
@@ -141,19 +134,20 @@ public class ResourceRest extends AbstractResourceRest {
      * @responseMessage 404 Resource not found with this id
      * @responseMessage 404 file not found with this name for the current resource
      */
-    @GetMapping(path = "/{resourceId}/file/{filename}", produces = "application/octet-stream")
-    public ResponseEntity<ByteArrayInputStream> getFile(@PathVariable(name ="resourceId") String resourceId, @PathVariable(name = "filename") String filename) {
+    @GET
+    @Path("/{resourceId}/file/{filename}")
+    @Produces("application/octet-stream")
+    public Response getFile(@PathParam("resourceId") String resourceId, @PathParam("filename") String filename) {
         Resource resource = getResourceById(resourceId);
         FileEntity fileEntity = resource.getFiles().get(filename);
 
         if (fileEntity == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file found with name " + filename + " for resource " + resourceId);
+            throw new NotFoundException("No file found with name " + filename + " for resource " + resourceId);
         }
 
-        return ResponseEntity
-                .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileEntity.getName() + "\"")
-                .body(new ByteArrayInputStream(fileEntity.getFileData()));
+        Response.ResponseBuilder builder = Response.ok(new ByteArrayInputStream(fileEntity.getFileData()));
+        builder.header("Content-Disposition", "attachment; filename=\"" + fileEntity.getName() + "\"");
+        return builder.build();
     }
 
     /**
@@ -168,32 +162,25 @@ public class ResourceRest extends AbstractResourceRest {
      * @responseMessage 400 Application name in query param does not exist
      * @responseMessage 400 Zone query param has to be combined with environment or environment class to make sense as this is translated to a domain name
      */
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> findResources(
-            @RequestParam(name = "alias", required = false) String alias,
-            @RequestParam(name = "type", required = false) ResourceType type,
-            @RequestParam(name = "environmentclass", required = false) EnvironmentClass environmentClass,
-            @RequestParam(name = "environment", required = false) String environmentName,
-            @RequestParam(name = "zone", required = false) String zoneStr,
-            @RequestParam(name = "application", required = false) String applicationName,
-            @RequestParam(name = "status", required = false) String lifeCycleStatusStr,
-            @RequestParam(name = "usage", defaultValue = "false") Boolean showUsage,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "pr_page", defaultValue = "100") int pr_page) {
-        LifeCycleStatus lifeCycleStatus = null;
-        if (lifeCycleStatusStr != null) {
-            lifeCycleStatus = LifeCycleStatus.valueOf(lifeCycleStatusStr.toUpperCase());
-        }
-        Zone zone = null;
-        if (zoneStr != null) {
-        	zone = Zone.valueOf(zoneStr.toUpperCase());
-        }
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response findResources(
+            @QueryParam("alias") String alias,
+            @QueryParam("type") ResourceType type,
+            @QueryParam("environmentclass") EnvironmentClass environmentClass,
+            @QueryParam("environment") String environmentName,
+            @QueryParam("zone") Zone zone,
+            @QueryParam("application") String applicationName,
+            @QueryParam("status") LifeCycleStatus lifeCycleStatus,
+            @QueryParam("usage") @DefaultValue("false") Boolean showUsage,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("pr_page") @DefaultValue("100") int pr_page) {
         Optional<Environment> environment = validationHelpers.getOptionalEnvironment(environmentName);
         Optional<Application> application = validationHelpers.getOptionalApplication(applicationName);
         Optional<Domain> domain = validationHelpers.domainFromZone(environmentClass, environment, zone);
 
         Specification<Resource> spec = ResourceSpecs.findByLikeAlias(alias, type, environmentClass, environment, domain, application, lifeCycleStatus);
-        PageRequest pageRequest = PageRequest.of(page, pr_page);
+        PageRequest pageRequest = new PageRequest(page, pr_page);
 
         Page<Resource> resources;
         if (spec != null) {
@@ -207,15 +194,16 @@ public class ResourceRest extends AbstractResourceRest {
 
         List<ResourcePayload> resourcesPayload = resources.getContent().stream().map(transformer).collect(toList());
 
-        URI requestUri = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
-        return pagingResponseBuilder(resources, requestUri).body(resourcesPayload);
+        return pagingResponseBuilder(resources, uriInfo.getRequestUri()).entity(resourcesPayload).build();
     }
 
 
     /**
      * Shows supported resource types and the attributes for each type
      */
-    @GetMapping(path = "/types", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Path("types")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<ResourceTypePayload> getResoureTypes() {
         List<ResourceTypePayload> resoureTypes = new ArrayList<>();
 
@@ -230,8 +218,10 @@ public class ResourceRest extends AbstractResourceRest {
      *
      * @responeMessage 400 Resource type does not exist
      */
-    @GetMapping(path = "/types/{type}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResourceTypePayload getResoureTypes(@PathVariable(name = "type") ResourceType type) {
+    @GET
+    @Path("types/{type}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResourceTypePayload getResoureTypes(@PathParam("type") ResourceType type) {
         return new ResourceTypePayload(type);
     }
 
@@ -239,29 +229,31 @@ public class ResourceRest extends AbstractResourceRest {
     /**
      * TODO crate doc. Sometin bout ResourceType and properties to use. Link to resource type api
      */
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public ResponseEntity<Void> createResource(@Valid @RequestBody ResourcePayload payload) {
+    public Response createResource(@Valid ResourcePayload payload) {
         Resource resource = new Payload2ResourceTransformer(validationHelpers, null).apply(payload);
         checkAccess(resource);
         checkDuplicate(resource);
 
         Resource saved = resourceRepository.save(resource);
-        URI resourceUrl = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(valueOf(saved.getID()))
-                .toUri();
-        return ResponseEntity.created(resourceUrl).build();
+        URI resourceUrl = uriInfo.getAbsolutePathBuilder().path(valueOf(saved.getID())).build();
+        return Response.created(resourceUrl).build();
     }
 
-    @PutMapping(path = "/{resourceId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PUT
+    @Path("{resourceId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public ResourcePayload updateResource(@PathVariable(name = "resourceId") String resourceId, @Valid @RequestBody ResourcePayload payload) {
+    public ResourcePayload updateResource(@PathParam("resourceId") String resourceId, @Valid ResourcePayload payload) {
         Resource oldResource = getResourceById(resourceId);
         checkAccess(oldResource);
 
         if (oldResource.getType() != payload.type) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Change of resource type is not allowed. Delete this resource and create a new one");
+            throw new BadRequestException("Change of resource type is not allowed. Delete this resource and create a new one");
         }
 
         Resource updatedResource = new Payload2ResourceTransformer(validationHelpers, oldResource).apply(payload);
@@ -269,7 +261,7 @@ public class ResourceRest extends AbstractResourceRest {
         lifeCycleSupport.update(oldResource, payload);
         resourceRepository.save(updatedResource);
 
-        URI resourceUrl = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+        URI resourceUrl = uriInfo.getAbsolutePathBuilder().path(valueOf(updatedResource.getID())).build();
         return new Resource2PayloadTransformer(repo, applicationInstanceRepository, resourceUrl).apply(updatedResource);
     }
 
@@ -278,9 +270,10 @@ public class ResourceRest extends AbstractResourceRest {
      *
      * @responseMessage 404 Resource id does not exist
      */
-    @DeleteMapping(path = "/{resourceId}")
+    @DELETE
+    @Path("{resourceId}")
     @Transactional
-    public ResponseEntity<Void> deleteResource(@PathVariable(name = "resourceId") String resourceId) {
+    public void deleteResource(@PathParam("resourceId") String resourceId) {
         Resource resourceToDelete = getResourceById(resourceId);
         checkAccess(resourceToDelete);
         lifeCycleSupport.delete(resourceToDelete);
@@ -309,7 +302,7 @@ public class ResourceRest extends AbstractResourceRest {
         if (!deleted) {
             resourceRepository.delete(resourceToDelete);
         }
-        return ResponseEntity.noContent().build();
+
     }
 
 
@@ -326,14 +319,14 @@ public class ResourceRest extends AbstractResourceRest {
 
 
         if (filteredDuplicates.size() > 0) {
-        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            throw new BadRequestException(
                     format("Duplicate resource: \n" +
                             filteredDuplicates
                                     .stream()
                                     .map(r -> r.getID() + " " + r.getScope().getDisplayString())
                                     .collect(joining("\n"))));
         }
-        
+
     }
 
     // If no environment exist in resource scope, we want to filter out all duplicates that are scoped to specific environments.
@@ -353,7 +346,7 @@ public class ResourceRest extends AbstractResourceRest {
 
     private Resource getResourceById(String resourceId) {
         Resource resourceById = resourceRepository.findById(parseLong(resourceId)).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "No resource found with id " + resourceId)
+                new NotFoundException("No resource found with id " + resourceId)
         );
         return resourceById;
     }

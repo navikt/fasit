@@ -1,58 +1,18 @@
 package no.nav.aura.fasit.rest;
 
-import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
-import static com.xebialabs.restito.semantics.Action.contentType;
-import static com.xebialabs.restito.semantics.Action.ok;
-import static com.xebialabs.restito.semantics.Action.stringContent;
-import static io.restassured.RestAssured.get;
-import static io.restassured.RestAssured.given;
-import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
-import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
-import static no.nav.aura.envconfig.model.resource.ResourceType.BaseUrl;
-import static no.nav.aura.envconfig.model.resource.ResourceType.DataSource;
-import static no.nav.aura.envconfig.model.resource.ResourceType.OpenAm;
-import static no.nav.aura.envconfig.model.resource.ResourceType.Queue;
-import static no.nav.aura.envconfig.model.resource.ResourceType.RestService;
-import static no.nav.aura.envconfig.model.resource.ResourceType.WebserviceEndpoint;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.containsStringIgnoringCase;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-
-import java.net.URI;
-import java.util.Set;
-
-import javax.inject.Inject;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import com.xebialabs.restito.semantics.Condition;
 import com.xebialabs.restito.server.StubServer;
-
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Cluster;
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
-import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.resource.SecurityToken;
 import no.nav.aura.envconfig.rest.RestTest;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.fasit.repository.ApplicationRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
@@ -60,8 +20,20 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
 import no.nav.aura.fasit.rest.model.ScopePayload;
 import no.nav.aura.fasit.rest.model.SecretPayload;
+import org.junit.jupiter.api.*;
 
+import java.net.URI;
+import java.util.Set;
 
+import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
+import static com.xebialabs.restito.semantics.Action.*;
+import static io.restassured.RestAssured.get;
+import static io.restassured.RestAssured.given;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
+import static no.nav.aura.envconfig.model.resource.ResourceType.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
 public class ResourcesRestTest extends RestTest {
     private static Resource dbResource;
@@ -70,28 +42,25 @@ public class ResourcesRestTest extends RestTest {
     private static Resource exposedWs;
     private static Environment u1;
     private Resource deleteMe;
-    
-    @Inject
     private ApplicationRepository applicationRepository;
-    
-    @Inject
     private EnvironmentRepository environmentRepo;
-    
-    @Inject
     private ResourceRepository resourceRepo;
-    
+    private ApplicationInstanceRepository applicationInstanceRepository;
     private static StubServer vaultServer;
 
     @BeforeEach
     public void setup() {
+        resourceRepo = jetty.getBean(ResourceRepository.class);
+        applicationRepository = jetty.getBean(ApplicationRepository.class);
+        applicationInstanceRepository = jetty.getBean(ApplicationInstanceRepository.class);
         Application myapp = applicationRepository.save(new Application("myapp"));
         Application myOtherApp = applicationRepository.save(new Application("myOtherApp"));
 
+        environmentRepo = jetty.getBean(EnvironmentRepository.class);
         Application fasit = applicationRepository.save(new Application("fasit"));
 
         u1 = new Environment("u1", u);
-        Cluster clusterU1 = new Cluster(fasit.getName() + "Cluster", Domain.fromFqdn("devillo.no"));
-        u1.addCluster(clusterU1);
+        u1.addCluster(new Cluster(fasit.getName() + "Cluster", Domain.fromFqdn("devillo.no")));
         u1 = environmentRepo.saveAndFlush(u1);
 
         Environment t1 = new Environment("t1", t);
@@ -158,9 +127,12 @@ public class ResourcesRestTest extends RestTest {
 
     @AfterEach
     public void cleanup() {
-    	cleanupEnvironments();
-    	cleanupApplications();
-        cleanupResources();
+        ResourceRepository resourceRepo = jetty.getBean(ResourceRepository.class);
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
+        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
+        environmentRepo.deleteAll();
+        applicationRepository.deleteAll();
+        resourceRepo.deleteAll();
     }
 
     @BeforeAll
@@ -171,7 +143,7 @@ public class ResourcesRestTest extends RestTest {
     }
 
     @AfterAll
-    public void afterAll() {
+    public static void afterAll() {
         System.clearProperty("vault.url");
         System.clearProperty("vault.token");
         vaultServer.stop();
@@ -179,7 +151,7 @@ public class ResourcesRestTest extends RestTest {
 
     @Test
     public void findAllResources() {
-        System.out.println("dbResource = " + resourceRepo.findAll().size());
+        System.out.println("dbResource = " + jetty.getBean(ResourceRepository.class).findAll().size());
         given()
                 .when()
                 .get("/api/v2/resources/")
@@ -197,7 +169,6 @@ public class ResourcesRestTest extends RestTest {
                 .when()
                 .get("/api/v2/resources/" + dbResource.getID())
                 .then()
-                .log().all()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("alias", equalTo("myDB"))
@@ -272,7 +243,7 @@ public class ResourcesRestTest extends RestTest {
     public void findAlertedResources() {
         given()
                 .when()
-                .get("/api/v2/resources?status=ALERTED")
+                .get("/api/v2/resources?status=alerted")
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -336,7 +307,6 @@ public class ResourcesRestTest extends RestTest {
                 .when()
                 .get("/api/v2/resources?zone=fss")
                 .then()
-                .log().all()
                 .statusCode(400);
     }
 
@@ -344,7 +314,7 @@ public class ResourcesRestTest extends RestTest {
     public void findResourceByType() {
         given()
                 .when()
-                .get("/api/v2/resources?type=Queue")
+                .get("/api/v2/resources?type=queue")
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -354,6 +324,7 @@ public class ResourcesRestTest extends RestTest {
 
     @Test
     public void getRevisionsByLink() {
+        ResourceRepository resourceRepo = jetty.getBean(ResourceRepository.class);
         dbResource.setAlias("updatedAlias");
         resourceRepo.save(dbResource);
 
@@ -434,7 +405,7 @@ public class ResourcesRestTest extends RestTest {
 
         given()
                 .when()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .get(passwordRef)
                 .then()
                 .statusCode(200)
@@ -538,7 +509,7 @@ public class ResourcesRestTest extends RestTest {
                 .statusCode(200);
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .when()
                 .delete("/api/v2/resources/" + id)
                 .then()
@@ -573,7 +544,7 @@ public class ResourcesRestTest extends RestTest {
 
         registerDeployment(app);
         given()
-                .auth().preemptive()
+                .auth()
                 .basic("user", "user")
                 .when()
                 .delete("/api/v2/resources/" + newResourceId)
@@ -609,7 +580,7 @@ public class ResourcesRestTest extends RestTest {
         registerDeployment(app);
         registerDeployment(otherApp);
         given()
-                .auth().preemptive()
+                .auth()
                 .basic("user", "user")
                 .when()
                 .delete("/api/v2/resources/" + newResourceId)
@@ -677,7 +648,7 @@ public class ResourcesRestTest extends RestTest {
 
         given()
                 .when()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .get(secretPathBeforeUpdate)
                 .then()
                 .statusCode(200)
@@ -687,7 +658,7 @@ public class ResourcesRestTest extends RestTest {
 
     private Response createResource(ResourcePayload resource) {
         return given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(resource))
                 .contentType(ContentType.JSON)
                 .when()
@@ -696,7 +667,7 @@ public class ResourcesRestTest extends RestTest {
 
     private Response updateResource(ResourcePayload updatedPayload, Long resourceId) {
         return given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(updatedPayload))
                 .contentType(ContentType.JSON)
                 .pathParam("id", resourceId)

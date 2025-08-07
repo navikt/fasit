@@ -2,29 +2,34 @@ package no.nav.aura.envconfig.spring;
 
 import javax.sql.DataSource;
 
+import com.bettercloud.vault.Vault;
 import no.nav.aura.envconfig.util.InsideJobService;
 
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
-import no.nav.aura.fasit.rest.search.SearchRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
-
+import no.nav.aura.sensu.SensuClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import static org.mockito.Mockito.mock;
 
 @Configuration
 @EnableTransactionManagement
-@Import({ SpringDomainConfig.class, SearchRepository.class })
+@Import({ SpringDomainConfig.class })
 public class SpringUnitTestConfig {
 
     public SpringUnitTestConfig() {
         System.setProperty("fasit.encryptionkeys.username", "junit");
         System.setProperty("fasit.encryptionkeys.password", "password");
+    }
+
+    @Bean
+    public SensuClient sensuClient() {
+        return mock(SensuClient.class);
     }
 
     @Bean(name = "dataSource")

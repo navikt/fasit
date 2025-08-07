@@ -1,11 +1,11 @@
 package no.nav.aura.appconfig.artifact;
 
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 
+import org.junit.Test;
 
 public class ArtifactStartupOrderComparatorTest {
 
