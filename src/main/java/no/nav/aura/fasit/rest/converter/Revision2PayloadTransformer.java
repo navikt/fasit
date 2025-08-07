@@ -1,10 +1,7 @@
 package no.nav.aura.fasit.rest.converter;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.function.Function;
-
-import org.joda.time.DateTime;
 
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.ModelEntity;
@@ -23,7 +20,7 @@ public class Revision2PayloadTransformer<T extends ModelEntity> implements Funct
     @Override
     public RevisionPayload<T> apply(FasitRevision<T> from) {    
         RevisionPayload<T> to = new RevisionPayload<>();
-        to.timestamp = toJava8Time(from.getTimestamp());
+        to.timestamp = from.getTimestamp().toLocalDateTime();
         to.author = from.getAuthor();
         to.authorId = from.getAuthorId();
         to.message = from.getMessage();
@@ -38,13 +35,6 @@ public class Revision2PayloadTransformer<T extends ModelEntity> implements Funct
         to.addLink("entity", revisionUri);
 
         return to;
-    }
-
-    protected LocalDateTime toJava8Time(DateTime joda) {
-        if (joda == null) {
-            return null;
-        }
-        return joda.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
     }
 
 }

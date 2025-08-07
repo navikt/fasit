@@ -10,7 +10,6 @@ import no.nav.aura.fasit.repository.RevisionRepository;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.MissingResourcePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +20,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+
+import java.time.ZonedDateTime;
 
 public class Payload2ApplicationInstanceTransformer extends FromPayloadTransformer<ApplicationInstancePayload, ApplicationInstance> {
 
@@ -43,7 +44,7 @@ public class Payload2ApplicationInstanceTransformer extends FromPayloadTransform
         ApplicationInstance instance = existing.orElseThrow(() -> new IllegalArgumentException("Existing application instance can not be null"));
 
         // TODO ta dato med i payload?
-        instance.setDeployDate(DateTime.now());
+        instance.setDeployDate(ZonedDateTime.now());
         instance.setVersion(from.version);
 
         optional(from.selftest).ifPresent(p -> instance.setSelftestPagePath(p));

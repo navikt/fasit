@@ -178,7 +178,7 @@ public class SearchRepository {
                 Cluster cluster = ((ApplicationInstance) entity).getCluster();
                 resultPayload.detailedInfo.put("environment", getEnvironmentBy(cluster).getName());
             }
-            Optional.ofNullable(entity.getUpdated()).ifPresent(updated -> resultPayload.lastChange = updated.getMillis());
+            Optional.ofNullable(entity.getUpdated()).ifPresent(updated -> resultPayload.lastChange = updated.toInstant().toEpochMilli());
         }
         return resultPayload;
     }

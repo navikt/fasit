@@ -61,7 +61,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ApplicationInstanceResource.validateJson("<xml />");
         });
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
     @Test
@@ -69,7 +69,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", "{}");
         });
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyApplicationExists("-_-");
         });
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyEnvironmentExists("^_^");
         });
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
@@ -99,7 +99,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyNodesExist(Lists.newArrayList("bleep", "blaap", "bloop"));
         });
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class ApplicationInstanceResourceUnitTest {
         ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class, () -> {
             service.verifyApplicationIsDefinedInEnvironment("bop", "shoo");
         });
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class ApplicationInstanceResourceUnitTest {
             UsedResource nonexistentUsedResource = new UsedResource(1337, 69);
             service.verifyUsedResources(Lists.newArrayList(nonexistentUsedResource));
         });
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class ApplicationInstanceResourceUnitTest {
             ExposedResource exposedResourceLackingMandatoryFields = new ExposedResource(ResourceTypeDO.BaseUrl.name(), null, null);
             service.verifyExposedResources(Lists.newArrayList(exposedResourceLackingMandatoryFields));
         });
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
     @Test
@@ -141,7 +141,7 @@ public class ApplicationInstanceResourceUnitTest {
             ExposedResource exposedResourceWithNonexistentFields = new ExposedResource(ResourceTypeDO.BaseUrl.name(), "alias", ImmutableMap.of("url", "http://baseurl.com", "blapp", "setter"));
             service.verifyExposedResources(Lists.newArrayList(exposedResourceWithNonexistentFields));
         });
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
     @Test
@@ -150,7 +150,7 @@ public class ApplicationInstanceResourceUnitTest {
             ExposedResource exposedResourceWithNonexistentResourceType = new ExposedResource("nonexistentResourceType", null, null);
             service.verifyExposedResources(Lists.newArrayList(exposedResourceWithNonexistentResourceType));
         });
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 
     @Test
