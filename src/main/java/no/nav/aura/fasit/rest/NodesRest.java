@@ -22,13 +22,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -37,8 +49,8 @@ import java.util.stream.Collectors;
 import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
 import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
 
-@Component
-@Path("api/v2/nodes")
+@RestController
+@RequestMapping(path = "/api/v2/nodes")
 public class NodesRest {
 
     @Inject
@@ -59,11 +71,12 @@ public class NodesRest {
 
     private final static Logger log = LoggerFactory.getLogger(NodesRest.class);
 
-    @Context
-    private UriInfo uriInfo;
-    
-    public static URI nodeUrl(URI baseUri, String hostname){
-        return UriBuilder.fromUri(baseUri).path(NodesRest.class).path(NodesRest.class, "getNode").build(hostname);
+
+    public static URI nodeUrl(URI baseUri, String hostname) {
+        return UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/nodes/{hostname}")
+                .buildAndExpand(hostname)
+                .toUri();
     }
 
     public NodesRest() {
@@ -84,40 +97,40 @@ public class NodesRest {
      * find nodes by query params or list all nodes. Hostname query param supports like search
      * @responseType java.util.List<no.nav.aura.fasit.rest.model.NodePayload>
      * */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findNodes(
-            @QueryParam("environment") String environmentName,
-            @QueryParam("environmentclass") EnvironmentClass environmentClass,
-            @QueryParam("type") PlatformType type,
-            @QueryParam("hostname") String hostname,
-            @QueryParam("application") String application,
-            @QueryParam("status") LifeCycleStatus lifeCycleStatus,
-            @QueryParam("page") @DefaultValue("0") int page,
-            @QueryParam("pr_page") @DefaultValue("100") int pr_page) {
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findNodes(
+            @RequestParam(value = "environment", required = false) String environmentName,
+            @RequestParam(value = "environmentclass", required = false) EnvironmentClass environmentClass,
+            @RequestParam(value = "type", required = false) PlatformType type,
+            @RequestParam(value = "hostname", required = false) String hostname,
+            @RequestParam(value = "application", required = false) String application,
+            @RequestParam(value = "status", required = false) LifeCycleStatus lifeCycleStatus,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pr_page", defaultValue = "100") int pr_page) {
         long start = System.currentTimeMillis();
         Specification<Node> spec = NodeSpecs.find(environmentName, environmentClass, type, hostname, application, lifeCycleStatus);
-        PageRequest pageRequest = new PageRequest(page, pr_page);
+        PageRequest pageRequest = PageRequest.of(page, pr_page);
         Page<Node> nodes = null;
         if (spec != null) {
             nodes = nodeRepository.findAll(spec, pageRequest);
         } else
             nodes = nodeRepository.findAll(pageRequest);
 
-        Node2PayloadTransformer transformer = new Node2PayloadTransformer(nodeRepository, uriInfo.getBaseUri());
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        Node2PayloadTransformer transformer = new Node2PayloadTransformer(nodeRepository, baseUri);
+
         List<NodePayload> result = nodes.getContent().stream()
                 .map(transformer)
                 .collect(Collectors.toList());
         log.info("finding {} nodes time: {} ", nodes.getNumberOfElements(), (System.currentTimeMillis() - start));
-        return pagingResponseBuilder(nodes, uriInfo.getRequestUri()).entity(result).build();
+        URI requestUri = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+        return pagingResponseBuilder(nodes, requestUri).body(result);
     }
 
     /**
      * Returns a list of currently available node types
      * */
-    @GET
-    @Path("types")
-    @Produces(MediaType.APPLICATION_JSON)
+    @GetMapping(path = "/types", produces = MediaType.APPLICATION_JSON_VALUE)
     public PlatformType[] getNodeType() {
         return PlatformType.values();
     }
@@ -126,13 +139,12 @@ public class NodesRest {
      * find node by hostname
      * @responseMessage 404 Node with hostname not found
      * */
-    @GET
-    @Path("{hostname}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public NodePayload getNode(@PathParam("hostname") String hostname) {
+    @GetMapping(path = "/{hostname}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public NodePayload getNode(@PathVariable(name = "hostname") String hostname) {
         Node node = getNodeByHostname(hostname);
         Long currentRevision = revisionRepository.currentRevision(Node.class, node.getID());
-        return new Node2PayloadTransformer(nodeRepository, uriInfo.getBaseUri(), currentRevision).apply(node);
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return new Node2PayloadTransformer(nodeRepository, baseUri, currentRevision).apply(node);
     }
 
 
@@ -140,16 +152,16 @@ public class NodesRest {
      * show revision history for a given node
      * @responseMessage 404 Node with hostname not found
      * */
-    @GET
-    @Path("{hostname}/revisions")
-    @Produces(MediaType.APPLICATION_JSON)
+    @GetMapping(path = "/{hostname}/revisions", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RevisionPayload<Node>> getRevisions(
-            @PathParam("hostname") String hostname) {
+            @PathVariable(name = "hostname") String hostname) {
         Node node = getNodeByHostname(hostname);
         List<FasitRevision<Node>> revisions = revisionRepository.getRevisionsFor(Node.class, node.getID());
 
+        URI absPath = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+
         List<RevisionPayload<Node>> payload = revisions.stream()
-                .map(new Revision2PayloadTransformer<>(uriInfo.getAbsolutePath()))
+                .map(new Revision2PayloadTransformer<>(absPath))
                 .collect(Collectors.toList());
         return payload;
     }
@@ -159,14 +171,13 @@ public class NodesRest {
      * @responseMessage 404 Node with hostname not found
      * @responseMessage 404 Revision number not found
      * */
-    @GET
-    @Path("{hostname}/revisions/{revision}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public NodePayload getNodeByRevision(@PathParam("hostname") String hostname, @PathParam("revision") Long revision) {
+    @GetMapping(path = "/{hostname}/revisions/{revision}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public NodePayload getNodeByRevision(@PathVariable(name = "hostname") String hostname, @PathVariable(name = "revision") Long revision) {
         Node node = getNodeByHostname(hostname);
         Optional<Node> historicNode = revisionRepository.getRevisionEntry(Node.class, node.getID(), revision);
-        Node oldNode = historicNode.orElseThrow(() -> new NotFoundException("Revison " + revision + " is not found for node " + hostname));
-        return new Node2PayloadTransformer(nodeRepository, uriInfo.getBaseUri(), revision).apply(oldNode);
+        Node oldNode = historicNode.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revison " + revision + " is not found for node " + hostname));
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return new Node2PayloadTransformer(nodeRepository, baseUri, revision).apply(oldNode);
     }
 
 
@@ -178,16 +189,14 @@ public class NodesRest {
      * @responseMessage 403 Authenticated user does not have access to registering a node in this environment
      * @responseType no.nav.aura.fasit.rest.model.NodePayload
      * */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public Response createNode(@Valid NodePayload payload) {
+    public ResponseEntity<Void> createNode(@Valid @RequestBody NodePayload payload) {
         if (nodeRepository.findNodeByHostName(payload.hostname) != null) {
-            throw new BadRequestException("Node with hostname " + payload.hostname + " already exists in Fasit ");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Node with hostname " + payload.hostname + " already exists in Fasit");
         }
         if (payload.password == null){
-            throw new BadRequestException("password is required for creating a new node");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "password is required for creating a new node");
         }
 
         Environment environment = validationHelpers.getEnvironment(payload.environment);
@@ -205,8 +214,11 @@ public class NodesRest {
 
         environment.addNode(node);
         environmentRepository.save(environment);
-        URI nodeUrl = uriInfo.getAbsolutePathBuilder().path(payload.hostname).build();
-        return Response.created(nodeUrl).build();
+        URI nodeUrl = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{hostname}")
+                .buildAndExpand(payload.hostname)
+                .toUri();
+        return ResponseEntity.created(nodeUrl).build();
     }
 
     private void createOrUpdateCluster( NodePayload payload, Environment environment, Node node, Link clusterLink) {
@@ -219,7 +231,7 @@ public class NodesRest {
             if (cluster.getApplications().stream().noneMatch(app -> app.getName().equalsIgnoreCase(appName))) {
                 Application application = applicationRepository.findByNameIgnoreCase(appName);
                 if (application == null) {
-                    throw new BadRequestException("Application " + appName + " does not exist in Fasit");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application " + appName + " does not exist in Fasit");
                 }
                 cluster.addApplication(application);
             }
@@ -233,14 +245,11 @@ public class NodesRest {
      * @responseMessage 404 Hostname does not exist
      * @responseMessage 403 Authenticated user does not have access to updating a node in this environment
      * */
-    @PUT
-    @Path("{hostname}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @PutMapping(path = "/{hostname}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public NodePayload updateNode(@PathParam("hostname") String hostname, @Valid NodePayload payload) {
+    public NodePayload updateNode(@PathVariable("hostname") String hostname, @Valid @RequestBody NodePayload payload) {
         if (!hostname.equals(payload.hostname)) {
-            throw new BadRequestException("Hostname in payload and in path must be equal. Got " + payload.hostname + " and " + hostname);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hostname in payload and in path must be equal. Got " + payload.hostname + " and " + hostname);
         }
         Node node = getNodeByHostname(hostname);
         checkAccess(node);
@@ -250,7 +259,8 @@ public class NodesRest {
         log.info("updated node {}", hostname);
         nodeRepository.save(updatedNode);
 
-        return new Node2PayloadTransformer(nodeRepository, uriInfo.getBaseUri()).apply(updatedNode);
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return new Node2PayloadTransformer(nodeRepository, baseUri).apply(updatedNode);
     }
 
     /**
@@ -259,11 +269,9 @@ public class NodesRest {
      * @responseMessage 403 Authenticated user does not have access to registering a node in this environment
      *
      * */
-    @DELETE
-    @Path("{hostname}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @DeleteMapping(path = "/{hostname}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public void deleteNode(@PathParam("hostname") String hostname) {
+    public ResponseEntity<Void> deleteNode(@PathVariable(name = "hostname") String hostname) {
         Node node = getNodeByHostname(hostname);
         checkAccess(node);
         Environment environment = nodeRepository.findEnvironment(node);
@@ -275,6 +283,7 @@ public class NodesRest {
         lifeCycleSupport.delete(node);
         log.info("deleted node {}", hostname);
         nodeRepository.delete(node);
+        return ResponseEntity.noContent().build();
     }
 
     private Node getNodeByHostname(String hostname) {
@@ -282,7 +291,7 @@ public class NodesRest {
         if (node != null) {
             return node;
         }
-        throw new NotFoundException("Node with hostname " + hostname + " does not exist in Fasit");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Node with hostname " + hostname + " does not exist in Fasit");
     }
 
     private Cluster createCluster(Link clusterLink, NodePayload payload, Environment environment) {

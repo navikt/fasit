@@ -10,20 +10,29 @@ import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.Effect;
+import no.nav.aura.fasit.client.model.AppConfig;
+import no.nav.aura.fasit.client.model.AppConfig.Format;
 import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.client.model.UsedResource;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
-import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.xml.XmlPath.from;
-import static javax.ws.rs.core.Response.Status.OK;
 import static no.nav.aura.envconfig.model.resource.ResourceType.BaseUrl;
 import static no.nav.aura.envconfig.rest.JaxbHelper.marshal;
 import static no.nav.aura.envconfig.util.TestHelper.assertAndGetSingle;
@@ -33,12 +42,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SuppressWarnings("serial")
+@TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationInstanceUrlTest extends RestTest {
+	private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceUrlTest.class);
     private static Application app;
     private static Environment env;
 
     @BeforeAll
-    public static void setup() throws Exception {
+    public void setup() throws Exception {
         env = new Environment("test", EnvironmentClass.u);
         Cluster cluster = new Cluster("myCluster", Domain.Devillo);
         cluster.setLoadBalancerUrl("https://mylb.adeo.no");
@@ -60,18 +71,26 @@ public class ApplicationInstanceUrlTest extends RestTest {
         env.addNode(wasCluster, wasNode);
         env = repository.store(env);
     }
+    
+    @AfterAll
+    public void tearDown() {
+		cleanupEnvironments();
+        cleanupApplicationGroup();
+		cleanupApplications();
+    }
+		
 
     @Test
     public void applicationInstanceGetServices_shouldBeCaseInsensitive() throws Exception {
-        expect().statusCode(OK.getStatusCode()).body(containsString("wasapp")).when().get("/conf/environments/test/applications");
-        expect().statusCode(OK.getStatusCode()).body(containsString("wasapp")).when().get("/conf/environments/tEsT/applications");
-        expect().statusCode(OK.getStatusCode()).when().get("/conf/environments/test/applications/app");
-        expect().statusCode(OK.getStatusCode()).when().get("/conf/environments/test/applications/APP");
+        expect().statusCode(HttpStatus.OK.value()).body(containsString("wasapp")).when().get("/conf/environments/test/applications");
+        expect().statusCode(HttpStatus.OK.value()).body(containsString("wasapp")).when().get("/conf/environments/tEsT/applications");
+        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments/test/applications/app");
+        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments/test/applications/APP");
     }
 
     @Test
     public void legacyGetClusters() {
-        String xml = expect().defaultParser(Parser.XML).statusCode(OK.getStatusCode())
+        String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value())
                 .when().get("/conf/environments/test/applications/app/clusters").asString();
         XmlPath path = from(xml);
         assertEquals(1, path.getInt("collection.cluster.size()"), "clusters");
@@ -85,7 +104,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
     @Test
     public void getApplicationInstance() {
-        String xml = expect().defaultParser(Parser.XML).statusCode(OK.getStatusCode())
+        String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value())
                 .when().get("/conf/environments/test/applications/app").asString();
         XmlPath path = from(xml);
         assertEquals("app", path.getString("application.name"), "app name");
@@ -102,7 +121,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
     @Test
     public void getWasApplication() {
-        String xml = expect().defaultParser(Parser.XML).statusCode(OK.getStatusCode())
+        String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value())
                 .when().get("/conf/environments/test/applications/wasapp").asString();
         XmlPath path = from(xml);
         assertEquals("myWasCluster", path.getString("application.cluster.name"), "cluster name");
@@ -112,13 +131,13 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
     @Test
     public void envNotFound() {
-        expect().statusCode(Status.NOT_FOUND.getStatusCode())
+        expect().statusCode(HttpStatus.NOT_FOUND.value())
                 .when().get("/conf/environments/unknownName/applications/app");
     }
 
     @Test
     public void appNotFound() {
-        expect().statusCode(Status.NOT_FOUND.getStatusCode())
+        expect().statusCode(HttpStatus.NOT_FOUND.value())
                 .when().get("/conf/environments/test/applications/unknown");
     }
 
@@ -131,10 +150,10 @@ public class ApplicationInstanceUrlTest extends RestTest {
                 .queryParam("entityStoreComment", "Application app deployed to envionment test")
                 .header("x-onbehalfof", "otheruser")
                 .contentType(ContentType.XML)
-                .expect().body(equalTo("")).statusCode(Status.NO_CONTENT.getStatusCode())
+                .expect().body(equalTo("")).statusCode(HttpStatus.NO_CONTENT.value())
                 .when().put("/conf/environments/test/applications/app");
 
-        testBean.perform(new Effect() {
+        insideJobService.perform(new Effect() {
             public void perform() {
                 final Application application = repository.findApplicationByName("app");
                 ApplicationInstance applicationInstance = assertAndGetSingle(repository.findApplicationInstancesBy(application));
@@ -154,15 +173,14 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
         byte[] payload = getAppConfig("/payloads/registerapplicationinstance-min.json");
         given().auth().preemptive().basic("prodadmin", "prodadmin")
-                .request().body(payload)
+                .body(payload)
                 .queryParam("entityStoreComment", "Application app deployed to envionment test")
                 .header("x-onbehalfof", "otheruser")
-                .contentType(ContentType.JSON)
-                .expect().statusCode(Status.CREATED.getStatusCode())
-
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+		        .expect().statusCode(HttpStatus.CREATED.value())
                 .when().post("/conf/v1/applicationinstances");
 
-        testBean.perform(new Effect() {
+        insideJobService.perform(new Effect() {
             public void perform() {
                 final Application application = repository.findApplicationByName("app");
                 ApplicationInstance applicationInstance = assertAndGetSingle(repository.findApplicationInstancesBy(application));
@@ -182,16 +200,16 @@ public class ApplicationInstanceUrlTest extends RestTest {
         given()
                 .request().body(getAppConfig("app-config.xml"))
                 .contentType(ContentType.XML)
-                .expect().statusCode(Status.NO_CONTENT.getStatusCode())
+                .expect().statusCode(HttpStatus.NO_CONTENT.value())
                 .when().put("/conf/environments/test/applications/app/verify");
     }
 
     @Test
     public void verifyApplicationAuthenticated() throws Exception {
         given().auth().preemptive().basic("prodadmin", "prodadmin")
-                .request().body(getAppConfig("app-config.xml"))
+                .body(getAppConfig("app-config.xml"))
                 .contentType(ContentType.XML)
-                .expect().statusCode(Status.NO_CONTENT.getStatusCode())
+                .expect().statusCode(HttpStatus.NO_CONTENT.value())
                 .when().put("/conf/environments/test/applications/app/verify");
     }
 
@@ -199,7 +217,7 @@ public class ApplicationInstanceUrlTest extends RestTest {
     public void undeployApplicationInstance() {
         final Application application = app;
 
-        testBean.perform(new Effect() {
+        insideJobService.perform(new Effect() {
             public void perform() {
                 ApplicationInstance appInstance = assertAndGetSingle(repository.findApplicationInstancesBy(application));
                 appInstance.setVersion("1.0");
@@ -209,10 +227,10 @@ public class ApplicationInstanceUrlTest extends RestTest {
 
         given().auth().preemptive().basic("prodadmin", "prodadmin")
                 .queryParam("entityStoreComment", "undeployed app")
-                .expect().body(equalTo("")).statusCode(Status.NO_CONTENT.getStatusCode())
+                .expect().body(equalTo("")).statusCode(HttpStatus.NO_CONTENT.value())
                 .when().delete("/conf/environments/test/applications/app");
 
-        testBean.perform(new Effect() {
+        insideJobService.perform(new Effect() {
             public void perform() {
                 ApplicationInstance applicationInstance = assertAndGetSingle(repository.findApplicationInstancesBy(application));
                 assertNull(applicationInstance.getVersion(), "Version");
@@ -250,14 +268,17 @@ public class ApplicationInstanceUrlTest extends RestTest {
         payload.getNodes().add(node.getHostname());
         payload.addUsedResources(new UsedResource(resource1.getID(), getHeadrevision(resource1).getRevision()));
         payload.addUsedResources(new UsedResource(resource2.getID(), getHeadrevision(resource2).getRevision()));
+        payload.setSelftest("/selftest");
+        payload.setAppConfig(new AppConfig(Format.xml,getAppConfig("app-config.xml").toString()));
 
         given().auth().preemptive().basic("prodadmin", "prodadmin")
-                .request().body(payload.toJson())
-                .contentType(ContentType.JSON)
-                .expect().statusCode(Status.CREATED.getStatusCode())
+                .body(payload.toJson())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .log().all()
+                .expect().statusCode(HttpStatus.CREATED.value())
                 .when().post("/conf/v1/applicationinstances");
 
-        testBean.perform(new Effect() {
+        insideJobService.perform(new Effect() {
             public void perform() {
                 ApplicationInstance applicationInstance = repository.findApplicationInstancesBy(app).iterator().next();
                 for (ResourceReference resourceReference : applicationInstance.getResourceReferences()) {
@@ -270,7 +291,13 @@ public class ApplicationInstanceUrlTest extends RestTest {
     }
 
     private byte[] getAppConfig(String appConfigFileName) throws IOException {
-        return IOUtils.toByteArray(getClass().getResourceAsStream(appConfigFileName));
+        try (InputStream is = getClass().getResourceAsStream(appConfigFileName)) {
+            if (is == null) {
+                throw new IOException("Resource not found: " + appConfigFileName);
+            }
+            return IOUtils.toByteArray(is);
+        }
+//        return IOUtils.toByteArray(getClass().getResourceAsStream(appConfigFileName));
     }
 
     private byte[] createDeployedApplicationDO(String appconfigFileName, String version) throws JAXBException {

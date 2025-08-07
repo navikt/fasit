@@ -1,26 +1,34 @@
 package no.nav.aura.fasit.rest.converter;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static no.nav.aura.envconfig.model.resource.PropertyField.Type.ENUM;
+import static no.nav.aura.envconfig.model.resource.PropertyField.Type.SECRET;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.RegexValidator;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.resource.FileEntity;
 import no.nav.aura.envconfig.model.resource.PropertyField;
+import no.nav.aura.envconfig.model.resource.PropertyField.ValidationType;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
 import no.nav.aura.fasit.rest.model.ScopePayload;
-import org.apache.commons.validator.routines.EmailValidator;
-import org.apache.commons.validator.routines.RegexValidator;
-
-import javax.ws.rs.BadRequestException;
-import java.io.ByteArrayInputStream;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static java.lang.String.format;
-import static java.util.stream.Collectors.*;
-import static no.nav.aura.envconfig.model.resource.PropertyField.Type.ENUM;
-import static no.nav.aura.envconfig.model.resource.PropertyField.Type.SECRET;
-import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType;
 
 public class Payload2ResourceTransformer extends FromPayloadTransformer<ResourcePayload, Resource> {
 
@@ -113,7 +121,7 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         validationMessages.addAll(validateRequiredProps("secrets", payload.type.getFieldsBy(SECRET), payload.secrets.keySet()));
 
         if (!validationMessages.isEmpty()) {
-            throw new BadRequestException(join(validationMessages, "\n"));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, join(validationMessages, "\n"));
         }
     }
 
@@ -156,9 +164,9 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         }
 
         if (!valid) {
-            throw new BadRequestException(format("Invalid format for property %s: %s. Property must match %s format",
-                    resourcePropertyField.getName(),
-                    propToValidate, validationType));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("Invalid format for property %s: %s. Property must match %s format",
+					resourcePropertyField.getName(),
+					propToValidate, validationType));
         }
     }
 
@@ -166,8 +174,8 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
     private void validateEnum(PropertyField resourcePropertyField, String property) {
         List<String> validEnumValues = resourcePropertyField.getValues().stream().map(String::toLowerCase).collect(toList());
         if (!validEnumValues.contains(property.toLowerCase())) {
-            throw new BadRequestException(format("Invalid enum value for %s. Use one of [%s]",
-                    resourcePropertyField.getName().toLowerCase(), join(validEnumValues, ", ")));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("Invalid enum value for %s. Use one of [%s]",
+					resourcePropertyField.getName().toLowerCase(), join(validEnumValues, ", ")));
         }
     }
 
@@ -177,7 +185,7 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         RegexValidator regexValidator = new RegexValidator(validationPattern);
 
         if (!regexValidator.isValid(propToValidate)) {
-            throw new BadRequestException(format("property %s: %s does not match pattern %s", propertyKey, propToValidate, validationPattern));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("property %s: %s does not match pattern %s", propertyKey, propToValidate, validationPattern));
         }
     }
 
