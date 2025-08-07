@@ -1,15 +1,22 @@
 package no.nav.aura.envconfig.model;
 
-import com.google.common.base.Optional;
-import no.nav.aura.envconfig.spring.User;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Type;
-import org.joda.time.DateTime;
 
-import jakarta.persistence.*;
-import java.io.Serializable;
+import com.google.common.base.Optional;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import no.nav.aura.envconfig.spring.User;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
@@ -20,11 +27,9 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
     @Column(name = "entid")
     private Long id;
 
-    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    private DateTime created;
+    private ZonedDateTime created;
 
-    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    private DateTime updated;
+    private ZonedDateTime updated;
 
     private String updatedBy;
 
@@ -50,19 +55,19 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
         return id == null;
     }
 
-    public DateTime getCreated() {
+    public ZonedDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(DateTime created) {
+    public void setCreated(ZonedDateTime created) {
         this.created = created;
     }
 
-    public DateTime getUpdated() {
+    public ZonedDateTime getUpdated() {
         return updated;
     }
 
-    public void setUpdated(DateTime updated) {
+    public void setUpdated(ZonedDateTime updated) {
         this.updated = updated;
     }
 
@@ -77,7 +82,7 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
     @PrePersist
     @PreUpdate
     protected void onMerge() {
-        DateTime now = DateTime.now();
+    	ZonedDateTime now = ZonedDateTime.now();
 
         if (isNew()) {
             setCreated(now);

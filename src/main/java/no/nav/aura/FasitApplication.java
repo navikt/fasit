@@ -3,11 +3,12 @@ package no.nav.aura;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -42,8 +43,8 @@ public class FasitApplication {
         ds.setUrl(url);
         ds.setUsername(username);
         ds.setPassword(password);
-        ds.setMaxWait(20000);
-        System.out.println("using database " + ds.getUsername() + "@" + ds.getUrl());
+        ds.setMaxWait(Duration.ofMillis(20000));
+        System.out.println("using database " + ds.getUserName() + "@" + ds.getUrl());
         FlywayUtil.migrateFlyway(ds);
         return ds;
     }

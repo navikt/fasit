@@ -91,15 +91,15 @@ public class SpringSecurityTestConfig {
                 		.disable())
                 .authorizeRequests(requests -> requests
                 		.dispatcherTypeMatchers(DispatcherType.REQUEST, DispatcherType.ERROR).permitAll() // allow access to error dispatcher and drop redirects
-                        .antMatchers("/conf/secrets/**").authenticated()
-                        .antMatchers("/api/v2/secrets/**").authenticated()
-                        .antMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
-                        .antMatchers(HttpMethod.GET, "/conf/**").permitAll()
-                        .antMatchers("/conf/**").authenticated()
-                        .antMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
-                        .antMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
-                        .antMatchers("/api/v2/**").authenticated()
-                        .antMatchers("/api/**").permitAll())	
+                        .requestMatchers("/conf/secrets/**").authenticated()
+                        .requestMatchers("/api/v2/secrets/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/conf/**").permitAll()
+                        .requestMatchers("/conf/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
+                        .requestMatchers("/api/v2/**").authenticated()
+                        .requestMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
                 		.authenticationEntryPoint(restEntryPoint))
                 .formLogin(login -> login
