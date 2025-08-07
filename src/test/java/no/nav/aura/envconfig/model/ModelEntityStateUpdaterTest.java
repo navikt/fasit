@@ -2,11 +2,12 @@ package no.nav.aura.envconfig.model;
 
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.spring.SpringTest;
-import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.ZonedDateTime;
 
 public class ModelEntityStateUpdaterTest extends SpringTest {
 
@@ -18,9 +19,9 @@ public class ModelEntityStateUpdaterTest extends SpringTest {
         Application application = store(new Application("Test"), PRODADMIN);
         Thread.sleep(5);
         assertEquals("prodadmin (prodadmin)", application.getUpdatedBy());
-        DateTime oneMinuteAgo = DateTime.now().minusMinutes(1);
+        ZonedDateTime oneMinuteAgo = ZonedDateTime.now().minusMinutes(1);
         assertTrue(application.getCreated().isAfter(oneMinuteAgo));
-        assertTrue(application.getCreated().isBeforeNow());
+        assertTrue(application.getCreated().isBefore(ZonedDateTime.now()));
         assertEquals(application.getCreated(), application.getUpdated());
     }
 
@@ -41,6 +42,6 @@ public class ModelEntityStateUpdaterTest extends SpringTest {
         assertEquals("prodadmin (prodadmin)", application.getUpdatedBy());
         assertEquals(original.getCreated(), application.getCreated());
         assertTrue(application.getUpdated().isAfter(application.getCreated()));
-        assertTrue(application.getUpdated().isBefore(DateTime.now()));
+        assertTrue(application.getUpdated().isBefore(ZonedDateTime.now()));
     }
 }

@@ -9,11 +9,11 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
 import no.nav.aura.fasit.rest.model.Link;
 import no.nav.aura.fasit.rest.model.PortPayload;
-import org.joda.time.DateTime;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -157,9 +157,9 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             payload.id = resource.getID();
             payload.scope = Resource2PayloadTransformer.transform(resource.getScope());
             payload.type = resource.getType();
-            DateTime updated = resource.getUpdated();
+            ZonedDateTime updated = resource.getUpdated();
             if(updated != null ) {
-                payload.lastChange = updated.getMillis();
+                payload.lastChange = updated.toInstant().toEpochMilli();
             }
 
             payload.lastUpdateBy = resource.getUpdatedBy();
@@ -182,7 +182,7 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
         payload.scope = Resource2PayloadTransformer.transform(exposedResource.getScope());
         payload.type = exposedResource.getType();
         payload.revision = exposed.getRevision();
-        payload.lastChange = exposedResource.getUpdated().getMillis();
+        payload.lastChange = exposedResource.getUpdated().toInstant().toEpochMilli();
         payload.lastUpdateBy = exposedResource.getUpdatedBy();
         payload.ref = UriComponentsBuilder.fromUri(baseUri)
 						.path("/api/v2/resources/{resourceId}")

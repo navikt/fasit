@@ -26,7 +26,7 @@ import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 import no.nav.aura.envconfig.util.FlywayUtil;
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;

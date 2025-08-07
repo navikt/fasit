@@ -18,7 +18,6 @@ public class EntityCommentBindingFilter implements Filter {
 
     private UserLookup userLookup;
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         userLookup = WebApplicationContextUtils.getRequiredWebApplicationContext(filterConfig.getServletContext()).getBean(UserLookup.class);

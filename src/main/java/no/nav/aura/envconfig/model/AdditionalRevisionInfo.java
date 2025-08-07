@@ -6,12 +6,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
-import org.joda.time.DateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @SuppressWarnings("serial")
@@ -60,8 +60,8 @@ public class AdditionalRevisionInfo<T extends ModelEntity> implements Serializab
         this.author = author;
     }
 
-    public DateTime getTimestamp() {
-        return new DateTime(timestamp);
+    public ZonedDateTime getTimestamp() {
+        return timestamp.toInstant().atZone(ZonedDateTime.now().getZone());
     }
 
     public long getRevision() {

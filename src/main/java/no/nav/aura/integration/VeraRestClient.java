@@ -53,7 +53,7 @@ public class VeraRestClient {
                 log.info("Notified VERA of {} with info {} at endpoint {}", deploymentMode, requestBody, url);
             } else {
                 log.warn("Unable to update VERA, got response {} {}", 
-                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase());
+                        response.getStatusCode().value(), response.getStatusCode().toString());
             }
         } catch (Exception e) {
             if (retries < MAX_RETRIES) {

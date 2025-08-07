@@ -21,7 +21,6 @@ import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.integration.FasitKafkaProducer;
 import org.hibernate.envers.RevisionType;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -41,6 +40,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.inject.Inject;
 import java.net.URI;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static com.google.common.base.Optional.fromNullable;
@@ -110,9 +110,9 @@ public class ApplicationInstanceRestService {
     private ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance) {
         ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), UriComponentsBuilder.fromPath(""));
         appDO.setDeployedBy(instance.getUpdatedBy());
-        DateTime deployDate = instance.getDeployDate();
+        ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toDate());
+            appDO.setLastDeployment(deployDate.toLocalDate());
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(UriComponentsBuilder.fromPath("/environments/{env}/applications/{appname}/appconfig")
@@ -241,7 +241,7 @@ public class ApplicationInstanceRestService {
         }
 
         appInstance.setAppconfigXml(application.asXml());
-        appInstance.setDeployDate(DateTime.now());
+        appInstance.setDeployDate(ZonedDateTime.now());
 
         ApplicationInstance savedAppInstance = repo.store(appInstance);
         kafkaProducer.publishDeploymentEvent(savedAppInstance, environment);

@@ -4,6 +4,7 @@ import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +16,6 @@ import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -135,9 +135,9 @@ public class ApplicationInstanceResource {
     protected ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance, UriComponentsBuilder uriBuilder) {
         ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriBuilder);
         appDO.setDeployedBy(instance.getUpdatedBy());
-        DateTime deployDate = instance.getDeployDate();
+        ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toDate());
+            appDO.setLastDeployment(deployDate.toLocalDate());
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(uriBuilder.path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));
@@ -250,7 +250,7 @@ public class ApplicationInstanceResource {
         applicationInstance.setResourceReferences(createResourceReferences(usedResources, missingResources, exposedResources));
         applicationInstance.setExposedServices(createExposedResources(applicationName, environmentName, exposedResources));
 
-        applicationInstance.setDeployDate(DateTime.now());
+        applicationInstance.setDeployDate(ZonedDateTime.now());
         applicationInstance.setVersion(version);
         applicationInstance.setSelftestPagePath(payload.getSelftest());
 

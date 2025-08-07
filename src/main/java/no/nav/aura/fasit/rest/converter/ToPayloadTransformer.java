@@ -4,9 +4,7 @@ import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.fasit.rest.model.EntityPayload;
-import org.joda.time.DateTime;
 
-import java.time.LocalDateTime;
 import java.util.function.Function;
 
 abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends EntityPayload> implements Function<T, R> {
@@ -17,8 +15,8 @@ abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends Entity
     @Override
     public R apply(T from) {
         R to = transform(from);
-        to.created = toJava8Time(from.getCreated());
-        to.updated = toJava8Time(from.getUpdated());
+        to.created = from.getCreated().toLocalDateTime();
+        to.updated = from.getUpdated().toLocalDateTime();
         to.id = from.getID();
         to.lifecycle.status = from.getLifeCycleStatus();
 
@@ -29,13 +27,6 @@ abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends Entity
             to.accessControl.adGroups = accessControl.getAdGroupsAsList();
         }
         return to;
-    }
-
-    private LocalDateTime toJava8Time(DateTime joda) {
-        if (joda == null) {
-            return null;
-        }
-        return joda.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
     }
 
 }

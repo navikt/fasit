@@ -8,6 +8,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Set;
 
@@ -19,7 +20,7 @@ public class ApplicationInstanceDO {
     private URI ref;
     private String name;
     private String version;
-    private Date lastDeployment;
+    private LocalDate lastDeployment;
     private String deployedBy;
     private String selftestPagePath;
     private URI appConfigRef;
@@ -47,7 +48,7 @@ public class ApplicationInstanceDO {
         return version;
     }
 
-    public Date getLastDeployment() {
+    public LocalDate getLastDeployment() {
         return lastDeployment;
     }
 
@@ -91,7 +92,7 @@ public class ApplicationInstanceDO {
         this.selftestPagePath = selftestPagePath;
     }
 
-    public void setLastDeployment(Date lastDeployment) {
+    public void setLastDeployment(LocalDate lastDeployment) {
         this.lastDeployment = lastDeployment;
     }
 

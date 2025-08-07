@@ -19,6 +19,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
@@ -485,7 +486,7 @@ public class FasitRestClient {
     }
 
     private <T> void checkResponse(ResponseEntity<?> response, URI requestUrl) {
-        HttpStatus status = response.getStatusCode();
+        HttpStatusCode status = response.getStatusCode();
         if (status == HttpStatus.FORBIDDEN) {
             throw new SecurityException("Access forbidden to " + requestUrl);
         }

@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import no.nav.aura.envconfig.model.ModelEntity;
 
 import org.hibernate.envers.Audited;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
