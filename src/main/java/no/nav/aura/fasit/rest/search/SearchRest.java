@@ -1,27 +1,26 @@
 package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
+
+import java.net.URI;
 import java.util.Set;
 
 /**
  * Api søk i fasit.
  */
-@Component
-@Path("/api/v1/search")
+@RestController
+@RequestMapping("/api/v1/search")
 public class SearchRest {
 
     @Inject
     private SearchRepository searchRepository;
-
-    @Context
-    private UriInfo uriInfo;
 
     /**
      * Søker i henholdsvis miljø, applikasjonsinstans, node, ressurs, cluster, innhold i ressurser, innhold i appconfig
@@ -31,12 +30,12 @@ public class SearchRest {
      * @param type Filtrerer søkeresultatet på angitt type.
      *
      */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @GetMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public Set<SearchResultPayload> search(
-            @QueryParam("q") String query,
-            @QueryParam("maxcount") @DefaultValue("100") Integer maxCount,
-            @QueryParam("type") @DefaultValue("ALL") SearchResultType type) {
-        return searchRepository.search(query, maxCount, type, uriInfo.getBaseUri());
+    		@RequestParam(name = "q") String query,
+    		@RequestParam(name ="maxcount", defaultValue = "100") Integer maxCount,
+    		@RequestParam(name = "type", defaultValue = "ALL") SearchResultType type) {
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return searchRepository.search(query, maxCount, type, baseUri);
     }
 }

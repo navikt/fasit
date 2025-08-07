@@ -1,19 +1,19 @@
 package no.nav.aura.envconfig.rest;
 
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 
 /** Unngå notfound execption når restapi brukes med browser */
-@Path("/conf/favicon.ico")
-@Component
+@RestController
+@RequestMapping(path = "/conf/favicon.ico")
 public class FaviconRestService {
 
     /**
      * Dummytjeneste for å unngå notfound når restapi brukes av en browser
      */
-    @GET
+    @GetMapping
     public void favico() {
     }
 }

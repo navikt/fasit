@@ -1,5 +1,37 @@
 package no.nav.aura.envconfig.rest;
 
+import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.exception.RevisionDoesNotExistException;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -10,123 +42,107 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.gson.Gson;
+
 import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.client.*;
+import no.nav.aura.envconfig.client.ApplicationInstanceDO;
+import no.nav.aura.envconfig.client.ClusterDO;
+import no.nav.aura.envconfig.client.NodeDO;
+import no.nav.aura.envconfig.client.PlatformTypeDO;
+import no.nav.aura.envconfig.client.ResourceDO;
 import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.Reference;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.Tuple;
-import no.nav.aura.fasit.client.model.*;
+import no.nav.aura.fasit.client.model.AppConfig;
+import no.nav.aura.fasit.client.model.ExposedResource;
+import no.nav.aura.fasit.client.model.MissingResource;
+import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
+import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
-import no.nav.aura.integration.VeraRestClient;
-import no.nav.aura.sensu.SensuClient;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.exception.RevisionDoesNotExistException;
 
-import javax.ws.rs.BadRequestException;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.io.IOException;
-import java.net.URI;
-import java.util.*;
-
-import static java.lang.String.format;
-import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
-
-@Component
-@Path("/conf/")
+@RestController
+@RequestMapping(path = "/conf")
 public class ApplicationInstanceResource {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceResource.class);
+    
     private FasitKafkaProducer fasitKafkaProducer;
     private FasitRepository repository;
     private ApplicationInstanceRepository instanceRepository;
-    private SensuClient sensuClient;
 
-    @Context
-    private UriInfo uriInfo;
 
     protected ApplicationInstanceResource() {
         // For cglib and @transactional
     }
 
     @Inject
-    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer) {
+    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, FasitKafkaProducer fasitKafkaProducer) {
         this.repository = repository;
         this.instanceRepository = instanceRepository;
-        this.sensuClient = sensuClient;
         this.fasitKafkaProducer = fasitKafkaProducer;
     }
 
-    @POST
-    @Consumes(value = "application/json")
-    @Path("/v1/applicationinstances")
-    public Response registerApplicationInstance(final String payload) {
-        String schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
-        Gson gson = new Gson();
-        RegisterApplicationInstancePayload applicationInstancePayload = gson.fromJson(schemaValidatedJson, RegisterApplicationInstancePayload.class);
-        ApplicationInstance applicationInstance = register(applicationInstancePayload);
-        sensuClient.sendEvent("fasit.jsonSchemaAppInstanceService.post", Collections.emptyMap(),
-                ImmutableMap.of(
-                        "appName", applicationInstancePayload.getApplication(),
-                        "envName", applicationInstancePayload.getEnvironment()));
-        return Response.created(URI.create("/v1/applicationinstances/" + applicationInstance.getID())).entity(applicationInstance.toString()).build();
+    @PostMapping(path = "/v1/applicationinstances", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> registerApplicationInstance(@RequestBody String payload) {
+    	String schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+        	RegisterApplicationInstancePayload applicationInstancePayload = objectMapper.readValue(schemaValidatedJson, RegisterApplicationInstancePayload.class);
+        	ApplicationInstance applicationInstance = register(applicationInstancePayload);
+        	return ResponseEntity.created(URI.create("/v1/applicationinstances/" + applicationInstance.getID())).body(applicationInstance.toString());
+        } catch (JsonProcessingException e) {
+			log.error("Unable to parse payload", e);
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error deserializing payload: " + e.getMessage(), e);
+        }
     }
 
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/environments/{environmentName}/applications/{applicationName}/full")
-    public ApplicationInstanceDO getApplicationInstanceWithResources(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
-        sensuClient.sendEvent("fasit.jsonSchemaAppInstanceService.get", Collections.emptyMap(),
-                ImmutableMap.of(
-                        "appName", appName,
-                        "envName", envName));
+    @GetMapping(path = "/v1/environments/{environmentName}/applications/{applicationName}/full", produces = "application/json")
+    public ApplicationInstanceDO getApplicationInstanceWithResources(
+    		@PathVariable("environmentName") final String envName, 
+    		@PathVariable("applicationName") final String appName,
+    		UriComponentsBuilder uriBuilder) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance instance = findApplicationInstance(appName, environment);
-        ApplicationInstanceDO appDO = createApplicationDO(environment, instance);
+        ApplicationInstanceDO appDO = createApplicationDO(environment, instance, uriBuilder);
 
         appDO.setExposedServices(getResourceFromReference(instance.getExposedServices()));
         appDO.setUsedResources(getResourceFromReference(instance.getResourceReferences()));
         return appDO;
     }
 
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/environments/{environmentName}/applications/{applicationName}")
-    public ApplicationInstanceDO getApplicationInstance(@PathParam("environmentName") final String envName, @PathParam("applicationName") final String appName) {
+    @GetMapping(path = "/v1/environments/{environmentName}/applications/{applicationName}", produces = "application/json")
+    public ApplicationInstanceDO getApplicationInstance(
+    		@PathVariable("environmentName") final String envName, 
+    		@PathVariable("applicationName") final String appName, 
+    		UriComponentsBuilder uriBuilder) {
         Environment environment = findEnvironment(envName);
         ApplicationInstance instance = findApplicationInstance(appName, environment);
-        return createApplicationDO(environment, instance);
+        return createApplicationDO(environment, instance, uriBuilder);
     }
 
-    protected ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance) {
-        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriInfo.getBaseUriBuilder());
+    protected ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance, UriComponentsBuilder uriBuilder) {
+        ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriBuilder);
         appDO.setDeployedBy(instance.getUpdatedBy());
         DateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
             appDO.setLastDeployment(deployDate.toDate());
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
-        appDO.setAppConfigRef(uriInfo.getBaseUriBuilder().path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));
+        appDO.setAppConfigRef(uriBuilder.path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));
         appDO.setVersion(instance.getVersion());
-        appDO.setCluster(createClusterDO(uriInfo, environment, instance.getCluster()));
+        appDO.setCluster(createClusterDO(uriBuilder, environment, instance.getCluster()));
         appDO.setHttpsPort(instance.getHttpsPort());
         appDO.setLoadBalancerUrl(instance.getCluster().getLoadBalancerUrl());
         return appDO;
@@ -158,7 +174,7 @@ public class ApplicationInstanceResource {
         };
     }
 
-    private ClusterDO createClusterDO(UriInfo uriInfo, Environment environment, Cluster cluster) {
+    private ClusterDO createClusterDO(UriComponentsBuilder uriBuilder, Environment environment, Cluster cluster) {
         if (cluster == null) {
             return null;
         }
@@ -175,7 +191,7 @@ public class ApplicationInstanceResource {
             nodeDO.setHostname(node.getHostname());
             nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orNull());
             nodeDO.setUsername(node.getUsername());
-            URI ref = UriBuilder.fromUri(uriInfo.getBaseUri()).path(SecretRestService.createPath(node.getPassword())).build();
+            URI ref = uriBuilder.path(SecretRestService.createPath(node.getPassword())).build().toUri();
             nodeDO.setPasswordRef(ref);
             nodeDO.setDomain(node.getDomain().getFqn());
             nodeDO.setPlatformType(PlatformTypeDO.valueOf(node.getPlatformType().name()));
@@ -197,7 +213,7 @@ public class ApplicationInstanceResource {
     protected ApplicationInstance findApplicationInstance(final String appName, Environment environment) {
         ApplicationInstance appInstance = environment.findApplicationByName(appName);
         if (appInstance == null) {
-            throw new NotFoundException("Application " + appName + " is not defined in environment " + environment.getName());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + appName + " is not defined in environment " + environment.getName());
         }
         return appInstance;
     }
@@ -205,7 +221,7 @@ public class ApplicationInstanceResource {
     protected Environment findEnvironment(String envName) {
         Environment environment = repository.findEnvironmentBy(envName.toLowerCase());
         if (environment == null) {
-            throw new NotFoundException("Environment " + envName + " not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Environment " + envName + " not found");
         }
         return environment;
     }
@@ -246,14 +262,9 @@ public class ApplicationInstanceResource {
 
         applicationInstance = repository.store(applicationInstance);
 
-        sensuClient.sendEvent("fasit.deployments",
-                ImmutableMap.of("deployedApplication", applicationName,
-                        "targetEnvironment", environmentName),
-                ImmutableMap.of("version", version));
-
         fasitKafkaProducer.publishDeploymentEvent(applicationInstance, findEnvironment(environmentName));
 
-        log.debug(format("Registered new application instance of application %s with version %s to environment %s", applicationName, version, environmentName));
+        log.debug("Registered new application instance of application {} with version {} to environment {}", applicationName, version, environmentName);
         return applicationInstance;
 
     }
@@ -264,14 +275,14 @@ public class ApplicationInstanceResource {
         try {
             ProcessingReport validation = validator.validate(JsonLoader.fromResource(schemaPath), JsonLoader.fromString(validateJson(string)));
             if (!validation.isSuccess()) {
-                throw new BadRequestException("Input did not pass schema-validation. " + validation.toString());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Input did not pass schema-validation. " + validation.toString());
             }
         } catch (ProcessingException e) {
             log.error("Invalid JSON Schema", e);
-            throw new InternalServerErrorException("UGHHH, internal error. Please stay calm.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
         } catch (IOException e) {
             log.error("Unable get JSON Schema", e);
-            throw new InternalServerErrorException("UGHHH, internal error. Please stay calm.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
         }
 
         return string;
@@ -282,7 +293,7 @@ public class ApplicationInstanceResource {
             new ObjectMapper().readValue(string, Map.class);
             return string;
         } catch (IOException e) {
-            throw new BadRequestException("Unable to understand input payload. Is your JSON valid? Reason: " + e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to understand input payload. Is your JSON valid? Reason: " + e.getMessage(), e);
         }
     }
 
@@ -295,27 +306,29 @@ public class ApplicationInstanceResource {
 
     protected void verifyApplicationExists(String applicationName) {
         if (null == repository.findApplicationByName(applicationName)) {
-            throw new NotFoundException("Application " + applicationName + " was not found in Fasit");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + applicationName + " was not found in Fasit");
         }
     }
 
     public void verifyEnvironmentExists(String environmentName) {
         if (null == repository.findEnvironmentBy(environmentName)) {
-            throw new NotFoundException("Environment " + environmentName + " was not found in Fasit");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Environment " + environmentName + " was not found in Fasit");
         }
     }
 
     public void verifyNodesExist(List<String> nodes) {
         for (String hostname : nodes) {
+            log.warn("Verifying if node exists: {}", hostname);
             if (null == repository.findNodeBy(hostname)) {
-                throw new NotFoundException("Node with hostname " + hostname + " was not found in Fasit");
+                log.warn("Node does not exists: {}", hostname);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Node with hostname " + hostname + " was not found in Fasit");
             }
         }
     }
 
     protected void verifyApplicationIsDefinedInEnvironment(String applicationName, String environmentName) {
         if (null == instanceRepository.findInstanceOfApplicationInEnvironment(applicationName, environmentName)) {
-            throw new NotFoundException("Application " + applicationName + " has not been mapped to a cluster in environment " + environmentName);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + applicationName + " has not been mapped to a cluster in environment " + environmentName);
         }
     }
 
@@ -325,10 +338,10 @@ public class ApplicationInstanceResource {
                 repository.getRevision(Resource.class, usedResource.getId(), usedResource.getRevision());
             } catch (Exception e) {
                 if (e instanceof RevisionDoesNotExistException) {
-                    throw new NotFoundException("Unable to find the used resource with id " + usedResource.getId() + " and revision " + usedResource.getRevision() + ". Message: " + e.getMessage(), e);
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find the used resource with id " + usedResource.getId() + " and revision " + usedResource.getRevision() + ". Message: " + e.getMessage(), e);
                 } else {
                     log.error("Unable to verify used resource", e);
-                    throw new InternalServerErrorException("Unable to verify used resource, something bad happened internally :(");
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to verify used resource, something bad happened internally :(");
                 }
             }
         }
@@ -339,8 +352,8 @@ public class ApplicationInstanceResource {
             final String typeName = exposedResource.getType();
 
             if (!ResourceType.resourceTypeWithNameExists(typeName)) {
-                throw new BadRequestException("Exposed resource " + exposedResource + " has an unknown resource type " + typeName + ".\n Valid types are: "
-                        + Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exposed resource " + exposedResource + " has an unknown resource type " + typeName + ".\n Valid types are: "
+						+ Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
             }
             ResourceType resourceType = ResourceType.getResourceTypeFromName(exposedResource.getType());
             verifyOnlyExistingFieldsAreProvided(exposedResource);
@@ -355,17 +368,17 @@ public class ApplicationInstanceResource {
     private void verifyResourceExists(ExposedResource exposedResource) {
         ResourceType resourceType = ResourceType.getResourceTypeFromName(exposedResource.getType());
         if (exposedResource.getId() == null) {
-            throw new BadRequestException("Exposed resource " + exposedResource + " is missing required property id");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exposed resource " + exposedResource + " is missing required property id");
         }
         Resource found = repository.getById(Resource.class, exposedResource.getId());
         if (found == null) {
-            throw new BadRequestException("Exposed resource " + exposedResource + " is not found in Fasit with id " + exposedResource.getId());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exposed resource " + exposedResource + " is not found in Fasit with id " + exposedResource.getId());
         }
         if (found.getType() != resourceType) {
-            throw new BadRequestException("Exposed resource " + exposedResource + " is stored in Fasit with other resourceType " + found.getType());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exposed resource " + exposedResource + " is stored in Fasit with other resourceType " + found.getType());
         }
         if (!found.getAlias().equalsIgnoreCase(exposedResource.getAlias())) {
-            throw new BadRequestException("Exposed resource " + exposedResource + " is stored in Fasit with other alias " + found.getAlias());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exposed resource " + exposedResource + " is stored in Fasit with other alias " + found.getAlias());
         }
 
     }
@@ -376,8 +389,8 @@ public class ApplicationInstanceResource {
         List<String> mandatoryFields = ResourceType.getMandatoryFieldsFor(resourceType);
         for (String mandatoryField : mandatoryFields) {
             if (!exposedResource.getProperties().containsKey(mandatoryField)) {
-                throw new BadRequestException("Mandatory field " + mandatoryField + " was not found for exposed resource " + exposedResource + ". \n Mandatory fields are: "
-                        + Joiner.on(", ").join(mandatoryFields));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mandatory field " + mandatoryField + " was not found for exposed resource " + exposedResource + ". \n Mandatory fields are: "
+						+ Joiner.on(", ").join(mandatoryFields));
             }
         }
     }
@@ -388,8 +401,8 @@ public class ApplicationInstanceResource {
 
         for (String property : exposedResource.getProperties().keySet()) {
             if (!allFields.contains(property)) {
-                throw new BadRequestException("Provided property field " + property + " is not a valid field for exposed resource " + exposedResource + ". \n Valid fields are: "
-                        + Joiner.on(", ").join(allFields));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provided property field " + property + " is not a valid field for exposed resource " + exposedResource + ". \n Valid fields are: "
+						+ Joiner.on(", ").join(allFields));
             }
         }
     }
@@ -399,8 +412,8 @@ public class ApplicationInstanceResource {
             String typeName = missingResource.getType().name();
 
             if (!ResourceType.resourceTypeWithNameExists(typeName)) {
-                throw new BadRequestException("Missing resource with alias " + missingResource.getAlias() + " has an unknown resource type " + typeName + ".\n Valid types are: "
-                        + Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing resource with alias " + missingResource.getAlias() + " has an unknown resource type " + typeName + ".\n Valid types are: "
+						+ Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
             }
         }
     }
@@ -509,7 +522,7 @@ public class ApplicationInstanceResource {
                 log.debug("Checking scope of found resource: {}", foundResource);
                 if (scope.equals(foundResource.getScope())) {
                     log.error("Found exposed resource {}:{} in scope not exposed by this application", foundResource);
-                    throw new BadRequestException(String.format("Found exposed resource %s:%s in scope %s not exposed by this application", resourceType, alias, scope));
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Found exposed resource %s:%s in scope %s not exposed by this application", resourceType, alias, scope));
                 }
             }
         }

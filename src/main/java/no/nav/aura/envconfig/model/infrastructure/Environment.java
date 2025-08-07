@@ -11,6 +11,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.Audited;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
@@ -129,6 +130,7 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
         return null;
     }
 
+    @Transactional
     public Set<ApplicationInstance> getApplicationInstances() {
         Set<ApplicationInstance> apps = Sets.newHashSet();
         for (Cluster cluster : getClusters()) {

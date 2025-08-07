@@ -1,105 +1,113 @@
 package no.nav.aura.envconfig.client;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-
 import no.nav.aura.envconfig.client.rest.PropertyElement;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.protocol.HttpContext;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URI;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
 
 public class FasitRestClientTest {
 
-    private HttpClient httpMock;
+    private RestTemplate restTemplateMock;
     private FasitRestClient client;
+    private ResponseEntity responseMock;
 
+    
     @BeforeEach
     public void setUp() {
-        httpMock = Mockito.mock(HttpClient.class);
+        restTemplateMock = Mockito.mock(RestTemplate.class);
         client = new FasitRestClient("http://someserver.com", "user", "password");
-        client.setHttpClient(httpMock);
+        client.setRestTemplate(restTemplateMock);
+        responseMock = Mockito.mock(ResponseEntity.class);
+        when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
+        when(responseMock.getStatusCodeValue()).thenReturn(200);
+        when(responseMock.getHeaders()).thenReturn(org.springframework.http.HttpHeaders.EMPTY);
+        when(responseMock.hasBody()).thenReturn(true);
     }
-
+    
     @Test
     public void testGetApplicationInfo() throws Exception {
-        HttpResponse response = prepareResponse(200,
-                "<application><appConfigArtifactId>myapp</appConfigArtifactId>" +
-                        "<appConfigGroupId>no.nav.aura.test</appConfigGroupId>" +
-                        "<name>myapp</name></application>");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
-        client.getApplicationInfo("myapp");
+        ApplicationDO applicationDO = new ApplicationDO();
+        applicationDO.setName("myapp");
+        applicationDO.setAppConfigArtifactId("myapp");
+        applicationDO.setAppConfigGroupId("no.nav.aura.test");
+        when(responseMock.getBody()).thenReturn(applicationDO);
+
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ApplicationDO.class))).thenReturn(responseMock);
+        ApplicationDO result = client.getApplicationInfo("myapp");
+        assertEquals(applicationDO, result);
     }
 
     @Test
     public void testGetNodeCount() throws Exception {
-        HttpResponse response = prepareResponse(200,
-                "<application>" +
-                        "<cluster>" +
-                        "<baseUrl>https://d26wasl00002.test.local</baseUrl>" +
-                        "<domain>test.local</domain>" +
-                        "<environmentClass>t</environmentClass>" +
-                        "<environmentName>t5</environmentName>" +
-                        "<name>bpm</name>" +
-                        "<nodes>" +
-                        "<hostname>d26wasl00002.test.local</hostname>" +
-                        "<username>deployer</username><domain>test.local</domain>" +
-                        "<passwordRef>http://e34apsl00156.devillo.no:8080/conf/secrets/secret-6</passwordRef>" +
-                        "</nodes><type>WAS</type>" +
-                        "<nodes>" +
-                        "<hostname>d26wasl00003.test.local</hostname>" +
-                        "<username>deployer</username><domain>test.local</domain>" +
-                        "<passwordRef>http://e34apsl00156.devillo.no:8080/conf/secrets/secret-6</passwordRef>" +
-                        "</nodes><type>WAS</type></cluster></application>");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+    	
+        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("bpm", "t5", UriComponentsBuilder.fromHttpUrl("http://someserver.com"));
+												
+        ClusterDO clusterDO = new ClusterDO();
+        clusterDO.setEnvironmentClass("t");
+        clusterDO.setEnvironmentName("t5");
+        clusterDO.setName("bpmCluster");
+        clusterDO.addNode(new NodeDO("d26wasl00002.test.local", PlatformTypeDO.WAS));
+        clusterDO.addNode(new NodeDO("d26wasl00003.test.local", PlatformTypeDO.WAS));
+        applicationInstanceDO.setCluster(clusterDO);
+        
+        when(responseMock.getBody()).thenReturn(applicationInstanceDO);
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ApplicationInstanceDO.class)))
+            .thenReturn(responseMock);
+        
         assertEquals(2, client.getNodeCount("t5", "bpm"));
     }
 
     @Test
     public void testGetApplicatInstance() throws Exception {
-        HttpResponse response = prepareResponse(200,
-                "<application>" +
-                        "<cluster>" +
-                        "<baseUrl>https://e34jbsl00390.devillo.no:8443</baseUrl>" +
-                        "<domain>devillo.no</domain>" +
-                        "<environmentClass>u</environmentClass>" +
-                        "<environmentName>tpr-u1</environmentName>" +
-                        "<name>autodeployCluster</name>" +
-                        "<nodes>" +
-                        "<hostname>e34jbsl00390.devillo.no</hostname>" +
-                        "<username>deployer</username><domain>devillo.no</domain>" +
-                        "<passwordRef>http://e34apsl00156.devillo.no:8080/conf/secrets/secret-6</passwordRef>" +
-                        "</nodes><type>jboss</type></cluster></application>");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
-        client.getApplicationInstance("u1", "myapp");
+        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("myapp", "u1", UriComponentsBuilder.fromHttpUrl("http://someserver.com"));
+        ClusterDO clusterDO = new ClusterDO();
+        clusterDO.setEnvironmentClass("u");
+        clusterDO.setEnvironmentName("u1");
+        clusterDO.setName("myappCluster");
+        clusterDO.addNode(new NodeDO("myapp.node1.com", PlatformTypeDO.WAS));
+        clusterDO.addNode(new NodeDO("myapp.node2.com", PlatformTypeDO.WAS));
+        applicationInstanceDO.setCluster(clusterDO);
+        
+        when(responseMock.getBody()).thenReturn(applicationInstanceDO);
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ApplicationInstanceDO.class)))
+            .thenReturn(responseMock);
+                
+        ApplicationInstanceDO response =  client.getApplicationInstance("u1", "myapp");
+        assertEquals(applicationInstanceDO, response);
+        assertEquals("myappCluster", response.getCluster().getName());
     }
 
     @Test
     public void testGetResourceProperties() throws Exception {
-        HttpResponse response = prepareResponse(200,
-                "<resource>" +
-                        "<type>BaseUrl</type>" +
-                        "<id>123</id>" +
-                        "<alias>myUrl</alias>" +
-                        "<environmentClass>u</environmentClass>" +
-                        "<property name=\"url\" type=\"STRING\">" +
-                        "<value>http://myUrl</value>" +
-                        "</property>" +
-                        "</resource>");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+        ResourceElement resourceElement = new ResourceElement(ResourceTypeDO.BaseUrl, "myUrl");
+        resourceElement.setId(123L);
+        resourceElement.setEnvironmentClass("u");
+        resourceElement.addProperty(new PropertyElement("url", "http://myUrl"));
+
+        when(responseMock.getBody()).thenReturn(resourceElement);
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ResourceElement.class)))
+            .thenReturn(responseMock);
         ResourceElement resource = client.getResource("u1", "alias", ResourceTypeDO.DataSource, DomainDO.Devillo, "myapp");
         assertEquals("myUrl", resource.getAlias());
         assertEquals(Long.valueOf(123), resource.getId());
@@ -114,28 +122,52 @@ public class FasitRestClientTest {
 
     @Test
     public void test() throws Exception {
-        HttpResponse response = prepareResponse(404,
-                "No resource with id 123 found");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+        when(responseMock.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
+        when(responseMock.getStatusCodeValue()).thenReturn(404);
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ResourceElement.class)))
+            .thenReturn(responseMock);
         try {
             ResourceElement resource = client.getResourceById(123);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            client.getResourceById(123);
+        });
+        
+        // Optionally verify the exception message
+        assertEquals("Not found http://someserver.com/resources/123", exception.getMessage());
     }
 
     @Test
     public void testFile() throws Exception {
-        HttpResponse response = prepareResponse(200, "myfile.txt");
-        when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
-        client.getFile(URI.create("http://someserver.com"));
+    	String expectedContent = "myfile.txt";
+        byte[] fileContent = expectedContent.getBytes();
+        ResponseEntity<byte[]> mockResponse = new ResponseEntity<>(fileContent, HttpStatus.OK);
+
+        
+		when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
+		when(responseMock.getStatusCodeValue()).thenReturn(200);
+		when(responseMock.hasBody()).thenReturn(true);
+		when(responseMock.getBody()).thenReturn(mockResponse);
+        when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), 
+                eq(byte[].class)))
+                .thenReturn(mockResponse);
+        
+        InputStream result= client.getFile(URI.create("http://someserver.com"));
+        StringWriter stringWriter = new StringWriter();
+        IOUtils.copy(result, stringWriter);
+        assertEquals(expectedContent, stringWriter.toString());
+        verify(restTemplateMock).exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(byte[].class));
     }
 
     @Test
     public void testUnautorized() throws Exception {
         Assertions.assertThrows(SecurityException.class, () -> {
-            HttpResponse response = prepareResponse(401, "");
-            when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+            when(responseMock.getStatusCode()).thenReturn(HttpStatus.UNAUTHORIZED);
+            when(responseMock.getStatusCodeValue()).thenReturn(401);
+            when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
+                .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));
         });
     }
@@ -143,8 +175,10 @@ public class FasitRestClientTest {
     @Test
     public void testForbidden() throws Exception {
         Assertions.assertThrows(SecurityException.class, () -> {
-            HttpResponse response = prepareResponse(403, "");
-            when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+            when(responseMock.getStatusCode()).thenReturn(HttpStatus.FORBIDDEN);
+            when(responseMock.getStatusCodeValue()).thenReturn(403);
+            when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
+                .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));
         });
     }
@@ -152,20 +186,12 @@ public class FasitRestClientTest {
     @Test
     public void testNotFound() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            HttpResponse response = prepareResponse(404, "");
-            when(httpMock.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(response);
+            when(responseMock.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
+            when(responseMock.getStatusCodeValue()).thenReturn(404);
+            when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
+                .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));
         });
     }
 
-    private HttpResponse prepareResponse(int expectedResponseStatus, String expectedResponseBody) {
-        HttpResponse response = new BasicHttpResponse(new ProtocolVersion("HTTP", 1, 1), expectedResponseStatus, null);
-        try {
-            response.setEntity(new StringEntity(expectedResponseBody));
-            response.setHeader("Content-type", "application/xml");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
-        }
-        return response;
-    }
 }

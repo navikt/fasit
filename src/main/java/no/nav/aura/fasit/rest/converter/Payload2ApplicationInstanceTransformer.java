@@ -1,6 +1,5 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
 import no.nav.aura.envconfig.model.infrastructure.Port;
@@ -56,9 +55,6 @@ public class Payload2ApplicationInstanceTransformer extends FromPayloadTransform
 
         instance.setExposedServices(transformExposed(from.exposedresources));
 
-        // TODO
-        log.debug("Received loadbalancerurl {}, No place to put it yet", from.loadbalancerurl);
-
         Set<Port> ports = transformPorts(from.nodes);
         instance.setPorts(ports);
 
@@ -75,7 +71,7 @@ public class Payload2ApplicationInstanceTransformer extends FromPayloadTransform
     private Set<ExposedServiceReference> transformExposed(Set<ResourceRefPayload> exposedServices) {
         return exposedServices.stream()
                 .map(new revisionNumberEnricher())
-                .map(resourceRef -> new ExposedServiceReference(resourceRepository.getOne(resourceRef.id), resourceRef.revision))
+                .map(resourceRef -> new ExposedServiceReference(resourceRepository.getReferenceById(resourceRef.id), resourceRef.revision))
                 .collect(toSet());
     }
 
@@ -94,7 +90,7 @@ public class Payload2ApplicationInstanceTransformer extends FromPayloadTransform
         return resourceRefs.stream()
                 .map(new revisionNumberEnricher())
                 .map(resourceRef -> {
-                    Resource one = resourceRepository.getOne(resourceRef.id);
+                    Resource one = resourceRepository.getReferenceById(resourceRef.id);
                     return new ResourceReference(one, resourceRef.revision);
                 })
                 .collect(toSet());

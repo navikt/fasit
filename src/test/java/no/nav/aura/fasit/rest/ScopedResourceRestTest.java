@@ -1,5 +1,18 @@
 package no.nav.aura.fasit.rest;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.startsWith;
+
+import javax.inject.Inject;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.springframework.transaction.annotation.Transactional;
+
 import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
@@ -12,25 +25,22 @@ import no.nav.aura.envconfig.rest.RestTest;
 import no.nav.aura.fasit.repository.ApplicationRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
-
+@TestInstance(Lifecycle.PER_CLASS)
 public class ScopedResourceRestTest extends RestTest {
 
-    private static ResourceRepository resourceRepo;
+	@Inject
+    private ResourceRepository resourceRepo;
+	
+	@Inject
+	private EnvironmentRepository environmentRepo;
+	
+	@Inject
+	private ApplicationRepository applicationRepository;
 
     @BeforeAll
     @Transactional
-    public static void setUp() throws Exception {
-        resourceRepo = jetty.getBean(ResourceRepository.class);
-        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
-        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
-
+    public void setUp() throws Exception {
         Application app = applicationRepository.save(new Application("app"));
         applicationRepository.save(new Application("otherapp"));
         Environment env = environmentRepo.save(new Environment("env", EnvironmentClass.t));
@@ -59,6 +69,13 @@ public class ScopedResourceRestTest extends RestTest {
         Resource duplicateResource2 = new Resource("duplicate", ResourceType.BaseUrl, new Scope(EnvironmentClass.t));
         duplicateResource2.putProperty("url", "duplicate");
         resourceRepo.save(duplicateResource2);
+    }
+    
+    @AfterAll
+    void tearDown() {
+		cleanupEnvironments();
+		cleanupApplications();
+		cleanupResources();
     }
 
     @Test

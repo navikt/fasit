@@ -1,29 +1,28 @@
 package no.nav.aura.envconfig.rest.concurrentresttest;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import no.nav.aura.envconfig.rest.RestTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-import no.nav.aura.envconfig.rest.RestTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ConcurrentRestClientApiTest extends RestTest {
 
-    private no.nav.aura.envconfig.rest.concurrentresttest.FasitRestClientWithSleep client;
+    private FasitRestClientWithSleep client;
 
     @BeforeEach
     public void setUpData() {
-        client = new no.nav.aura.envconfig.rest.concurrentresttest.FasitRestClientWithSleep("http://localhost:" + jetty.getPort() + "/conf", "admin", "admin");
+        client = new FasitRestClientWithSleep("http://localhost:1337/conf", "prodadmin", "prodadmin");
     }
-
+    
     @Test
     public void calling_service_once_should_be_trivial() {
         try {
@@ -46,8 +45,8 @@ public class ConcurrentRestClientApiTest extends RestTest {
 
     @Test
     public void calling_service_multithreaded_should_not_choke_it() throws InterruptedException {
-        final Map<String, Exception> exceptionMap = new HashMap();
-        List<Thread> threads = new ArrayList();
+        final Map<String, Exception> exceptionMap = new HashMap<>();
+        List<Thread> threads = new ArrayList<>();
         for (int i = 10; i > 0; i--) {
             final int milliseconds = i;
             Thread t = new Thread(new Runnable() {

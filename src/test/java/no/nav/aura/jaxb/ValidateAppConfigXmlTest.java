@@ -1,41 +1,37 @@
 package no.nav.aura.jaxb;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.Collection;
+import no.nav.aura.appconfig.Application;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import java.util.Arrays;
+import java.util.Collection;
 
-import no.nav.aura.appconfig.Application;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.xml.sax.SAXParseException;
-
-@RunWith(Parameterized.class)
 public class ValidateAppConfigXmlTest {
 
     private String fileName;
 
-    public ValidateAppConfigXmlTest(String filename) {
+    public void initValidateAppConfigXmlTest(String filename) {
         this.fileName = filename;
     }
 
-    @Parameters
     public static Collection<Object[]> data() {
         Object[][] data = new Object[][] { { "app-config.xml" }, { "app-config-min.xml" }, { "app-config-max.xml" } };
         return Arrays.asList(data);
     }
 
-    @Test
-    public void validateWithXsd() throws Exception {
+    @MethodSource("data")
+    @ParameterizedTest
+    public void validateWithXsd(String filename) throws Exception {
+        initValidateAppConfigXmlTest(filename);
         SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
         Schema xsd = schemaFactory.newSchema(new StreamSource(getClass().getResourceAsStream("/appconfig.xsd")));
         Validator validator = xsd.newValidator();
@@ -48,10 +44,12 @@ public class ValidateAppConfigXmlTest {
 
     }
 
-    @Test
-    public void parse() throws Exception {
+    @MethodSource("data")
+    @ParameterizedTest
+    public void parse(String filename) throws Exception {
+        initValidateAppConfigXmlTest(filename);
         Application app = Application.instance(getClass().getResourceAsStream("/" + fileName));
-        assertNotNull("application for file " + fileName, app);
+        assertNotNull(app, "application for file " + fileName);
     }
 
 }

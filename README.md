@@ -5,7 +5,7 @@
 App for handeling environment specific configuration on Aura platform. 
 
 # Development
-To start app on local machine, run FasitJettyRunner.
+To start app on local machine, run StandaloneFasitJettyRunner.
 
 # Contact 
 For external contact of:

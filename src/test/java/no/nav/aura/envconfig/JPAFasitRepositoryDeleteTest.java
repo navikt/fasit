@@ -15,10 +15,8 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import no.nav.aura.envconfig.model.ModelEntity;
@@ -38,8 +36,7 @@ import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringUnitTestConfig.class })
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional
 @Rollback
 public class JPAFasitRepositoryDeleteTest {

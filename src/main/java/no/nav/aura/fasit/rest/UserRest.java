@@ -1,25 +1,18 @@
 package no.nav.aura.fasit.rest;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import org.springframework.stereotype.Component;
-
 import no.nav.aura.envconfig.spring.User;
 
-@Component
-@Path("api/v2/currentuser")
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v2/currentuser")
 public class UserRest {
     
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public User currentUser(){
      return User.getCurrentUser();    
     }
-    
-    
-
 }
-

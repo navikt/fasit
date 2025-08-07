@@ -13,15 +13,11 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
-import no.nav.aura.integration.VeraRestClient;
-import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
 import java.util.Set;
 
 import static com.google.common.collect.Iterables.any;
@@ -38,7 +34,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
     @BeforeEach
     public void setup() throws Exception {
-        service = new ApplicationInstanceRestService(repository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceRestService(repository, mock(FasitKafkaProducer.class));
         env = new Environment("test", EnvironmentClass.t);
         Cluster cluster = new Cluster("myCluster", Domain.TestLocal);
         cluster.setLoadBalancerUrl(loadBalancer);
