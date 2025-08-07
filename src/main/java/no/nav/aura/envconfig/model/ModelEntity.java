@@ -16,7 +16,7 @@ import java.io.Serializable;
 public abstract class ModelEntity implements Serializable, Identifiable, Nameable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue()
     @Column(name = "entid")
     private Long id;
 

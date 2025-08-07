@@ -10,71 +10,52 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.rest.model.Link;
 import no.nav.aura.fasit.rest.model.NodePayload;
 import no.nav.aura.fasit.rest.model.SecretPayload;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@TestInstance(Lifecycle.PER_CLASS)
 public class NodesRestTest extends RestTest {
 
-    private static final Logger log = LoggerFactory.getLogger(NodesRestTest.class);
-    @Inject
-    private ApplicationRepository applicationRepository;
-
-	@Inject
-	private EnvironmentRepository environmentRepo;
 
     @BeforeAll
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
 
+        EnvironmentRepository envRepo = jetty.getBean(EnvironmentRepository.class);
         Environment u1 = new Environment("u1", EnvironmentClass.u);
 
         Cluster cluster = u1.addCluster(new Cluster("junit", Domain.Devillo));
         u1.addNode(cluster, new Node("test.devillo.no", "user", "secret"));
         u1.addNode(cluster, new Node("deleteme.devillo.no", "user", "secret"));
         u1.addNode(cluster, new Node("changeme.devillo.no", "junit", "secret"));
-        u1 = environmentRepo.save(u1);
+        u1 = envRepo.save(u1);
 
         Environment ipEnv = new Environment("ipEnv", EnvironmentClass.t);
         Node nodeWithIp = new Node("1.2.3.4", "somethin", "", ipEnv.getEnvClass(), PlatformType.JBOSS);
         nodeWithIp.setLifeCycleStatus(LifeCycleStatus.ALERTED);
         ipEnv.addNode(nodeWithIp);
-        environmentRepo.save(ipEnv);
+        envRepo.save(ipEnv);
 
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
         Application app1 = applicationRepository.save(new Application("app1"));
 
         Environment u2 = new Environment("u2", EnvironmentClass.u);
         Cluster cluster2 = u2.addCluster(new Cluster("cluster2", Domain.Devillo));
         u2.addNode(cluster2, new Node("anotherNode.devillo.no", "user", "secret"));
-        u2 = environmentRepo.save(u2);
+        u2 = envRepo.save(u2);
         cluster2.addApplication(app1);
-        environmentRepo.save(u2);
+        envRepo.save(u2);
     }
-    
-    @AfterAll
-    public void tearDown() {
-		cleanupEnvironments();
-		cleanupApplications();
-	}
 
     @Test
     public void findAllNodesReturnsJson() {
-        log.info("findAllNodesReturnsJson");
         given()
                 .when()
                 .get("/api/v2/nodes")
                 .then()
-                .contentType(ContentType.JSON)
                 .statusCode(200)
+                .contentType(ContentType.JSON)
                 .body("hostname", hasItems("test.devillo.no"));
     }
 
@@ -119,8 +100,10 @@ public class NodesRestTest extends RestTest {
 
     @Test
     public void nodeCanBeMappedToMoreThanOneCluster() {
+        EnvironmentRepository envRepo = jetty.getBean(EnvironmentRepository.class);
         Environment dev = new Environment("dev", EnvironmentClass.u);
 
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
         Application app1Cluster1 = applicationRepository.save(new Application("app1Cluster1"));
         Application app2Cluster1 = applicationRepository.save(new Application("app2Cluster1"));
         Application app1Cluster2 = applicationRepository.save(new Application("app1Cluster2"));
@@ -133,13 +116,13 @@ public class NodesRestTest extends RestTest {
         Cluster cluster2 = dev.addCluster(new Cluster("cluster2", Domain.Devillo));
         dev.addNode(cluster2, aNode);
 
-        environmentRepo.save(dev);
+        envRepo.save(dev);
 
         cluster1.addApplication(app1Cluster1);
         cluster1.addApplication(app2Cluster1);
         cluster2.addApplication(app1Cluster2);
 
-        environmentRepo.save(dev);
+        envRepo.save(dev);
 
         given()
                 .when()
@@ -212,7 +195,7 @@ public class NodesRestTest extends RestTest {
                 .statusCode(200);
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .when()
                 .delete("/api/v2/nodes/deleteme.devillo.no")
                 .then()
@@ -248,7 +231,7 @@ public class NodesRestTest extends RestTest {
         newNode.password = SecretPayload.withValue("password");
         newNode.applications.add("app1");
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(newNode))
                 .contentType(ContentType.JSON)
                 .when()
@@ -275,7 +258,7 @@ public class NodesRestTest extends RestTest {
         newNode.password = SecretPayload.withValue("password");
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(newNode))
                 .contentType(ContentType.JSON)
                 .when()
@@ -303,7 +286,7 @@ public class NodesRestTest extends RestTest {
         newNode.password = SecretPayload.withValue("password");
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(newNode))
                 .contentType(ContentType.JSON)
                 .when()
@@ -328,7 +311,7 @@ public class NodesRestTest extends RestTest {
         NodePayload newNode = new NodePayload("created4.devillo.no", EnvironmentClass.u, "u1", PlatformType.JBOSS);
         newNode.password = SecretPayload.withValue("password");
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(newNode))
                 .contentType(ContentType.JSON)
                 .when()
@@ -382,7 +365,7 @@ public class NodesRestTest extends RestTest {
         NodePayload payload = new NodePayload("changeme.devillo.no", EnvironmentClass.u, "u1", PlatformType.JBOSS);
         payload.lifecycle.status = LifeCycleStatus.STOPPED;
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(payload))
                 .contentType(ContentType.JSON)
                 .when()
@@ -405,7 +388,7 @@ public class NodesRestTest extends RestTest {
         NodePayload payload = new NodePayload("changeme.devillo.no", EnvironmentClass.u, "u1", PlatformType.JBOSS);
         payload.lifecycle.status = LifeCycleStatus.RUNNING;
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(payload))
                 .contentType(ContentType.JSON)
                 .when()
@@ -419,7 +402,7 @@ public class NodesRestTest extends RestTest {
         NodePayload payload = new NodePayload("changeme.devillo.no", EnvironmentClass.u, "u1", PlatformType.JBOSS);
         payload.username = "newUser";
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(payload))
                 .header("x-comment", "this is a comment")
                 .header("x-onbehalfof", "someone")
@@ -435,6 +418,7 @@ public class NodesRestTest extends RestTest {
                 .get("/api/v2/nodes/changeme.devillo.no/revisions")
                 .then()
                 .body("message", hasItem("this is a comment"))
+//            .log().body()
                 .body("onbehalfof.id", hasItem("someone"))
                 .statusCode(200);
     }

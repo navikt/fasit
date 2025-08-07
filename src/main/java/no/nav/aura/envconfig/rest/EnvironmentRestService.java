@@ -1,34 +1,33 @@
 package no.nav.aura.envconfig.rest;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
+import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.EnvironmentDO;
-import no.nav.aura.envconfig.client.EnvironmentListDO;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import javax.ws.rs.NotFoundException;
+import org.springframework.stereotype.Component;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * API for å håndtere infrastuktur og miljøer
  */
-@RestController
-@RequestMapping(path = "/conf/environments")
+@Path("/conf/environments")
+@Component
 public class EnvironmentRestService {
-    @Autowired
+
+    @Inject
     private FasitRepository repo;
+
+    @Context
+    private UriInfo uriInfo;
 
     public EnvironmentRestService() {
     }
@@ -46,17 +45,15 @@ public class EnvironmentRestService {
      * 
      */
 
-    @GetMapping(produces = {
-            MediaType.APPLICATION_XML_VALUE, 
-            MediaType.APPLICATION_JSON_VALUE
-    })
-    public EnvironmentListDO getEnvironments(@RequestParam(name = "envClass", required = false) String envClass) {
-        List<EnvironmentDO> environments = new ArrayList<>();
+    @GET
+    @Path("/")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public Set<EnvironmentDO> getEnvironments(@QueryParam("envClass") String envClass) {
+        Set<EnvironmentDO> environments = Sets.newHashSet();
         for (Environment environment : getEnvironmentsWithScope(envClass)) {
-            environments.add(new EnvironmentDO(environment.getName(), environment.getEnvClass().toString(), ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri()));
+            environments.add(new EnvironmentDO(environment.getName(), environment.getEnvClass().toString(), uriInfo.getBaseUriBuilder()));
         }
-        EnvironmentListDO environmentList = new EnvironmentListDO(environments);
-        return environmentList;
+        return environments;
     }
 
     private Collection<Environment> getEnvironmentsWithScope(String envClass) {
@@ -76,21 +73,25 @@ public class EnvironmentRestService {
      * 
      */
 
-    @GetMapping(path = "/{environmentName}", produces = {
-            MediaType.APPLICATION_XML_VALUE, 
-            MediaType.APPLICATION_JSON_VALUE
-    })
-    public EnvironmentDO getEnvironment(@PathVariable(name = "environmentName") String environmentName) {
+    @GET
+    @Path("/{environmentName}")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public EnvironmentDO getEnvironment(@PathParam("environmentName") String environmentName) {
         Environment environment = findEnvironment(environmentName);
-        return new EnvironmentDO(environment.getName(), environment.getEnvClass().toString(), ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri());
+        return new EnvironmentDO(environment.getName(), environment.getEnvClass().toString(), uriInfo.getBaseUriBuilder());
 
     }
 
     private Environment findEnvironment(String envName) {
         Environment environment = repo.findEnvironmentBy(envName.toLowerCase());
         if (environment == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Environment " + envName + " not found");
+            throw new NotFoundException("Environment " + envName + " not found");
         }
         return environment;
     }
+
+    public void setUriInfo(UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
+    }
+
 }

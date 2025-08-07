@@ -18,11 +18,9 @@ import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
 import no.nav.aura.envconfig.model.ModelEntity;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 
 import static java.util.stream.Collectors.*;
 
-@Component
 public class RevisionRepository {
     
     @PersistenceContext

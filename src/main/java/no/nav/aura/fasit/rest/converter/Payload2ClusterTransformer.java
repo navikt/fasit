@@ -7,9 +7,8 @@ import no.nav.aura.fasit.rest.model.ClusterPayload;
 import no.nav.aura.fasit.rest.model.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
+import javax.ws.rs.BadRequestException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,10 +54,10 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
         for (String applicationName : newApps) {
             Application application = applicationRepository.findByNameIgnoreCase(applicationName);
             if (application == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application " + applicationName + " is not found in Fasit");
+                throw new BadRequestException("Application " + applicationName + " is not found in Fasit");
             }
             if (appsInEnvironmentNotInCluster.contains(applicationName)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application " + applicationName + " is already mapped to another cluster in " + environment.getName());
+                throw new BadRequestException("Application " + applicationName + " is allready mapped to another cluster in " + environment.getName());
             }
             if(!appsInCluster.contains(applicationName)){
                 log.debug("Adding new application {} to cluster {} in {}", applicationName, cluster.getName(), environment.getName());
@@ -92,7 +91,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
         for (String hostname : newNodes) {
             Optional<Node> nodeInEnvironment = environment.getNodes().stream().filter(n -> n.getHostname().equalsIgnoreCase(hostname)).findFirst();
             if (!nodeInEnvironment.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Host " + hostname + " is not in environment " + environment.getName());
+                throw new BadRequestException("Host " + hostname + " is not in environment " + environment.getName());
             }
             if(!nodesInCluster.contains(hostname)){
                 log.debug("Adding new node {} to cluster {} in {}", hostname, cluster.getName(), environment.getName());

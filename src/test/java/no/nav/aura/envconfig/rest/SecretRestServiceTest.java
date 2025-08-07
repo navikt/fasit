@@ -13,35 +13,28 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 
+import javax.ws.rs.core.Response.Status;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
+import static javax.ws.rs.core.Response.Status.OK;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static no.nav.aura.envconfig.ApplicationRole.*;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SecretRestServiceTest extends RestTest {
-    private final static Logger log = LoggerFactory.getLogger(SecretRestServiceTest.class);
+public class SecretRestServiceTest extends no.nav.aura.envconfig.rest.RestTest {
 
-    @AfterAll
-    void tearDown() {
-    	cleanupResources();
-	}
-
-    @Test
+	@Test
 	public void testGetSecretOnNode() {
 		Secret secret = createNodeSecret(EnvironmentClass.u);
 
-		given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.OK.value()).body(Matchers.equalTo("passu"))
+		given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.OK.getStatusCode()).body(Matchers.equalTo("passu"))
 				.when().get(SecretRestService.createPath(secret));
 	}
 
@@ -62,14 +55,14 @@ public class SecretRestServiceTest extends RestTest {
 	public void testGetSecretOnResource() {
 		Secret secret = createResourceSecret(EnvironmentClass.u);
 
-		given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.OK.value()).body(Matchers.equalTo("passu"))
+		given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.OK.getStatusCode()).body(Matchers.equalTo("passu"))
 				.when().get(SecretRestService.createPath(secret));
 	}
 
 	@Test
 	public void testGetSecretOnResourceNotAllowed() {
 		Secret secret = createResourceSecret(EnvironmentClass.t);
-		given().auth().preemptive().basic("user", "user").expect().statusCode(HttpStatus.UNAUTHORIZED.value()).when()
+		given().auth().basic("user", "user").expect().statusCode(Status.UNAUTHORIZED.getStatusCode()).when()
 				.get(SecretRestService.createPath(secret));
 	}
 
@@ -101,36 +94,36 @@ public class SecretRestServiceTest extends RestTest {
 	
 	@Test
 	public void checkAccess(){
-		assertAccess(ROLE_ANONYMOUS, u, HttpStatus.UNAUTHORIZED);
-		assertAccess(ROLE_ANONYMOUS, t, HttpStatus.UNAUTHORIZED);
-		assertAccess(ROLE_ANONYMOUS, q, HttpStatus.UNAUTHORIZED);
-		assertAccess(ROLE_ANONYMOUS, p, HttpStatus.UNAUTHORIZED);
+		assertAccess(ROLE_ANONYMOUS, u, UNAUTHORIZED);
+		assertAccess(ROLE_ANONYMOUS, t, UNAUTHORIZED);
+		assertAccess(ROLE_ANONYMOUS, q, UNAUTHORIZED);
+		assertAccess(ROLE_ANONYMOUS, p, UNAUTHORIZED);
 
-		assertAccess(ROLE_USER, u, HttpStatus.OK);
-		assertAccess(ROLE_USER, t, HttpStatus.UNAUTHORIZED);
-		assertAccess(ROLE_USER, q, HttpStatus.UNAUTHORIZED);
-		assertAccess(ROLE_USER, p, HttpStatus.UNAUTHORIZED);
+		assertAccess(ROLE_USER, u, OK);
+		assertAccess(ROLE_USER, t, UNAUTHORIZED);
+		assertAccess(ROLE_USER, q, UNAUTHORIZED);
+		assertAccess(ROLE_USER, p, UNAUTHORIZED);
 		
-		assertAccess(ROLE_OPERATIONS, u, HttpStatus.OK);
-		assertAccess(ROLE_OPERATIONS, t, HttpStatus.OK);
-		assertAccess(ROLE_OPERATIONS, q, HttpStatus.OK);
-		assertAccess(ROLE_OPERATIONS, p, HttpStatus.UNAUTHORIZED);
+		assertAccess(ROLE_OPERATIONS, u, OK);
+		assertAccess(ROLE_OPERATIONS, t, OK);
+		assertAccess(ROLE_OPERATIONS, q, OK);
+		assertAccess(ROLE_OPERATIONS, p, UNAUTHORIZED);
 		
-		assertAccess(ROLE_PROD_OPERATIONS, u, HttpStatus.OK);
-		assertAccess(ROLE_PROD_OPERATIONS, t, HttpStatus.OK);
-		assertAccess(ROLE_PROD_OPERATIONS, q, HttpStatus.OK);
-		assertAccess(ROLE_PROD_OPERATIONS, p, HttpStatus.OK);
+		assertAccess(ROLE_PROD_OPERATIONS, u, OK);
+		assertAccess(ROLE_PROD_OPERATIONS, t, OK);
+		assertAccess(ROLE_PROD_OPERATIONS, q, OK);
+		assertAccess(ROLE_PROD_OPERATIONS, p, OK);
 		
 
 		
 	}
 
-	private void assertAccess(ApplicationRole role, EnvironmentClass envClass, HttpStatus expectedStatus) {
+	private void assertAccess(ApplicationRole role, EnvironmentClass envClass, Status expectedStatus) {
 		Secret secret = createNodeSecret(envClass);
 		Response response = auth(role).expect().when().get(SecretRestService.createPath(secret));
 		int statusCode = response.getStatusCode();
-		assertEquals(expectedStatus.value(), response.getStatusCode(), "statusCode for role " + role  + " in environment "+ envClass);
-		if (statusCode == HttpStatus.OK.value()) {
+		assertEquals(expectedStatus.getStatusCode(), response.getStatusCode(), "statusCode for role " + role  + " in environment "+ envClass);
+		if (statusCode == OK.getStatusCode()) {
 			assertEquals("pass" + envClass, response.getBody().asString());
 		}
 	}
@@ -146,7 +139,7 @@ public class SecretRestServiceTest extends RestTest {
 		if (pair == null) {
 			return given();
 		}
-		return given().auth().preemptive().basic(pair.left, pair.right);
+		return given().auth().basic(pair.left, pair.right);
 	}
 
 	
@@ -159,7 +152,7 @@ public class SecretRestServiceTest extends RestTest {
 	}
 
 	private void assert404Error(String uri, String contains) {
-		given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.NOT_FOUND.value())
+		given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.NOT_FOUND.getStatusCode())
 				.body(Matchers.containsString(contains)).when().get(uri);
 	}
 

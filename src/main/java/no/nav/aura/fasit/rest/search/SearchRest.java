@@ -1,26 +1,27 @@
 package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-
-import java.net.URI;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 import java.util.Set;
 
 /**
  * Api søk i fasit.
  */
-@RestController
-@RequestMapping("/api/v1/search")
+@Component
+@Path("/api/v1/search")
 public class SearchRest {
 
     @Inject
     private SearchRepository searchRepository;
+
+    @Context
+    private UriInfo uriInfo;
 
     /**
      * Søker i henholdsvis miljø, applikasjonsinstans, node, ressurs, cluster, innhold i ressurser, innhold i appconfig
@@ -30,12 +31,12 @@ public class SearchRest {
      * @param type Filtrerer søkeresultatet på angitt type.
      *
      */
-    @GetMapping(produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Set<SearchResultPayload> search(
-    		@RequestParam(name = "q") String query,
-    		@RequestParam(name ="maxcount", defaultValue = "100") Integer maxCount,
-    		@RequestParam(name = "type", defaultValue = "ALL") SearchResultType type) {
-        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
-        return searchRepository.search(query, maxCount, type, baseUri);
+            @QueryParam("q") String query,
+            @QueryParam("maxcount") @DefaultValue("100") Integer maxCount,
+            @QueryParam("type") @DefaultValue("ALL") SearchResultType type) {
+        return searchRepository.search(query, maxCount, type, uriInfo.getBaseUri());
     }
 }

@@ -1,67 +1,85 @@
 package no.nav.aura.envconfig.rest;
 
+import static no.nav.aura.envconfig.rest.util.Converters.toEnumOrNull;
+import static no.nav.aura.envconfig.rest.util.Converters.toPlatformType;
+import static no.nav.aura.envconfig.rest.util.Converters.toPlatformTypeDO;
+import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
+import no.nav.aura.envconfig.client.LifeCycleStatusDO;
+import no.nav.aura.envconfig.client.NodeDO;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.fasit.repository.NodeRepository;
+
+import no.nav.aura.integration.VeraRestClient;
+import org.apache.commons.lang3.StringUtils;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.client.LifeCycleStatusDO;
-import no.nav.aura.envconfig.client.NodeDO;
-import no.nav.aura.envconfig.client.NodeListDO;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.fasit.repository.NodeRepository;
-import no.nav.aura.integration.VeraRestClient;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
-import java.util.*;
-
-import static no.nav.aura.envconfig.rest.util.Converters.*;
-import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
-
-@RestController
-@RequestMapping(path = "/conf/nodes")
+@Path("/conf/nodes")
+@Component
 public class NodesRestService {
 
     private static final Logger logger = LoggerFactory.getLogger(NodesRestService.class);
 
+    private FasitRepository repo;
+    private NodeRepository nodeRepository;
 
-    private final FasitRepository repo;
-    private final NodeRepository nodeRepository;
-    private final VeraRestClient vera;
-    
+    @Inject
+    VeraRestClient vera;
+
+    @Context
+    UriInfo uriInfo;
+
     protected NodesRestService() {
-		this.repo = null;
-		this.nodeRepository = null;
-		this.vera = null;
         // For cglib transactions
     }
 
@@ -72,20 +90,21 @@ public class NodesRestService {
         this.vera = vera;
     }
 
-    @GetMapping(produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
-    public NodeListDO searchForNodes(
-    		@RequestParam(name = "envName", required = false) String environmentName,
-    		@RequestParam(name = "envClass", required = false) String environmentClass,
-    		@RequestParam(name = "domain", required = false) String domain,
-    		@RequestParam(name = "platformType", required = false) String platformType) {
-    	logger.info("Searching for nodes with envName={}, envClass={}, domain={}, platformType={}", environmentName, environmentClass, domain, platformType);
+    @GET
+    @Path("/")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public NodeDO[] searchForNodes(
+            @QueryParam("envName") String environmentName,
+            @QueryParam("envClass") String environmentClass,
+            @QueryParam("domain") String domain,
+            @QueryParam("platformType") String platformType, @Context UriInfo uriInfo) {
         List<Node> nodes = null;
         if (environmentName != null && !environmentName.isEmpty()) {
             nodes = nodeRepository.findNodesByEnvironmentName(environmentName);
         } else if (environmentClass != null) {
             EnvironmentClass envClass = toEnumOrNull(EnvironmentClass.class, environmentClass);
             if (envClass == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is not a valid envClass", environmentClass));
+                throw new BadRequestException(String.format("%s is not a valid envClass", environmentClass));
             }
             nodes = nodeRepository.findNodesByEnvironmentClass(envClass);
         }
@@ -96,11 +115,9 @@ public class NodesRestService {
         List<NodeDO> nodeDOs = new ArrayList<>();
 
         for (Node node : filteredNodes) {
-            nodeDOs.add(createNodeDO(node));
+            nodeDOs.add(createNodeDO(uriInfo, node));
         }
-        NodeListDO nodeListDO = new NodeListDO(nodeDOs);
-//        return nodeDOs.toArray(new NodeDO[0]);
-        return nodeListDO;
+        return nodeDOs.toArray(new NodeDO[0]);
     }
 
     private ImmutableList<Node> filterNodeList(Iterable<Node> nodes, String domainStr, String platformTypeStr) {
@@ -112,7 +129,7 @@ public class NodesRestService {
         if (platformTypeStr != null && !platformTypeStr.isEmpty()) {
             final PlatformType platformType = toEnumOrNull(PlatformType.class, platformTypeStr);
             if (platformType == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is an invalid platformtype, use %s", platformTypeStr, EnumSet.allOf(PlatformType.class)));
+                throw new BadRequestException(String.format("%s is an invalid platformtype, use %s", platformTypeStr, EnumSet.allOf(PlatformType.class)));
             }
             filteredNodes = applyFilter(filteredNodes, platformTypeFilter(platformType));
         }
@@ -149,15 +166,15 @@ public class NodesRestService {
      * 
      * @HTTP 404 hvis host ikke finnes i fasit
      */
-    @GetMapping(path = "/{hostname}", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
-    public NodeDO getNode(@PathVariable(name = "hostname") String hostname) {
-    	logger.info("Getting node with hostname: {}", hostname);
+    @GET
+    @Path("/{hostname}")
+    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
+    public NodeDO getNode(@PathParam("hostname") String hostname, @Context UriInfo uriInfo) {
         Node node = nodeRepository.findNodeByHostName(hostname);
         if (node == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Node with hostname " + hostname + " not found");
+            throw new NotFoundException("Node with hostname " + hostname + " not found");
         }
-        logger.warn("Found nodes: " + node.getName());
-        return createNodeDO(node);
+        return createNodeDO(uriInfo, node);
     }
 
     /**
@@ -167,15 +184,16 @@ public class NodesRestService {
      * 
      * @HTTP 404 hvis host ikke finnes i fasit
      */
+    @DELETE
     @Transactional
-    @DeleteMapping(path = "/{hostname}")
-    public ResponseEntity<Void>  deleteNode(@PathVariable(name = "hostname") String hostname) {
+    @Path("/{hostname}")
+    public void deleteNode(@PathParam("hostname") String hostname) {
         DeleteableEntity deleteme = findNodeOrNodeAwareResourceByName(hostname);
         Optional<Cluster> cluster = findCluster(deleteme);
         repo.delete(deleteme);
         deleteClusterIfEmpty(cluster);
         logger.info("deleted node {}", hostname);
-        return ResponseEntity.noContent().build();
+
     }
 
     private DeleteableEntity findNodeOrNodeAwareResourceByName(String hostname) {
@@ -193,7 +211,7 @@ public class NodesRestService {
             }
         }
 
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Node with hostname " + hostname + " not found");
+        throw new NotFoundException("Node with hostname " + hostname + " not found");
     }
 
     private Optional<Cluster> findCluster(DeleteableEntity deleteme) {
@@ -224,13 +242,13 @@ public class NodesRestService {
      * 
      * @HTTP 404 hvis host ikke finnes i fasit
      */
+    @POST
     @Transactional
-    @PostMapping(path = "/{hostname}", consumes = MediaType.APPLICATION_XML_VALUE)
-    public ResponseEntity<Void> updateNode(
-    		@PathVariable(name = "hostname") String hostname,
-    		@RequestBody NodeDO nodeDO) {
+    @Consumes(MediaType.APPLICATION_XML)
+    @Path("/{hostname}")
+    public Response updateNode(@PathParam("hostname") String hostname, final NodeDO nodeDO) {
         if (nodeDO.getStatus() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Required property status in node is not set or is illegal");
+            throw new BadRequestException("Required property status in node is not set or is illegal");
         }
         DeleteableEntity updateMe = findNodeOrNodeAwareResourceByName(hostname);
         if (LifeCycleStatusDO.STOPPED == nodeDO.getStatus()) {
@@ -245,20 +263,18 @@ public class NodesRestService {
             logger.info("Starting node {}", hostname);
         }
 
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .replacePath("/conf/nodes/{hostname}")
-                .buildAndExpand(hostname)
-                .toUri();
-                
-            return ResponseEntity.created(location).build();
+        return Response.created(uriInfo.getBaseUriBuilder().clone().path(NodesRestService.class, "getNode").build(hostname)).build();
     }
 
+    @PUT
     @Transactional
-    @PutMapping(consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    public NodeDO registerNode(@RequestBody NodeDO nodeDO) {
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public NodeDO registerNode(final NodeDO nodeDO) {
         String envName = nodeDO.getEnvironmentName();
+
         if (nodeDO.getDomain() == null || envName == null || StringUtils.isEmpty(nodeDO.getApplicationMappingName())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Domain, environmentName and applicationMappingName mandatory");
+            throw new IllegalArgumentException("Domain, environmentName and applicationMappingName mandatory");
         }
         Domain domain = Domain.fromFqdn(nodeDO.getDomain().getFqn());
         final Environment environment = getEnvironment(envName);
@@ -272,13 +288,13 @@ public class NodesRestService {
 
         repo.store(environment);
 
-        return createNodeDO(nodeRepository.findNodeByHostName(nodeDO.getHostname()));
+        return createNodeDO(uriInfo, nodeRepository.findNodeByHostName(nodeDO.getHostname()));
     }
 
     private Node createNode(NodeDO nodeDO, Domain domain) {
         String hostname = nodeDO.getHostname();
         if (nodeRepository.findNodeByHostName(hostname) != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Node " + hostname + " already exists in Fasit, hostname must be unique");
+            throw new BadRequestException("Node " + hostname + " already exists in Fasit, hostname must be unique");
         }
 
         Node node = new Node(hostname, nodeDO.getUsername(), nodeDO.getPassword());
@@ -288,7 +304,7 @@ public class NodesRestService {
         }
 
         if (node.getDomain() != domain) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hostname " + node.getHostname() + " does not match domain name " + domain);
+            throw new IllegalArgumentException("Hostname " + node.getHostname() + " does not match domain name " + domain);
         }
         return node;
     }
@@ -297,17 +313,17 @@ public class NodesRestService {
         if (isApplicationGroup(applicationMappingName)) {
             ApplicationGroup applicationGroup = repo.findApplicationGroupByName(applicationMappingName);
             if (applicationGroup.getApplications().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Applicationgroup " + applicationMappingName + " contains no applications");
+                throw new IllegalArgumentException("Applicationgroup " + applicationMappingName + " contains no applications");
             }
             ApplicationInstance firstAppInstance = environment.findApplicationByName(applicationGroup.getApplications().iterator().next().getName());
             if (firstAppInstance != null) {
                 Cluster cluster = firstAppInstance.getCluster();
                 if (!cluster.getDomain().equals(domain)) {
-                	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-							String.format("Cluster already exists in a different domain. " +
-									"Existing cluster: %s in %s New cluster in %s." +
-									" Fix this by manually deleting the cluster created in the wrong domain in Fasit",
-									cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
+                    throw new IllegalArgumentException(
+                            String.format("Cluster already exists in a different domain. " +
+                                    "Existing cluster: %s in %s New cluster in %s." +
+                                    " Fix this by manually deleting the cluster created in the wrong domain in Fasit",
+                                    cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
                 }
                 return cluster;
 
@@ -324,7 +340,7 @@ public class NodesRestService {
             Application application = repo.findApplicationByName(applicationMappingName);
 
             if (application == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application " + applicationMappingName + " does not exist in Fasit");
+                throw new BadRequestException("Application " + applicationMappingName + " does not exist in Fasit");
             }
 
             return createClusterForApplication(environment, application, domain);
@@ -362,23 +378,17 @@ public class NodesRestService {
     public Environment getEnvironment(String envName) {
         Environment environment = repo.findEnvironmentBy(envName.toLowerCase());
         if (environment == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Environment " + envName + " not found");
+            throw new BadRequestException(String.format("Environment %s does not exist in Fasit, unable to register node", envName));
         }
         return environment;
     }
 
-    public NodeDO createNodeDO(Node node) {
+    public NodeDO createNodeDO(UriInfo uriInfo, Node node) {
         NodeDO nodeDO = new NodeDO();
-        nodeDO.setRef(ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/conf/nodes/{hostname}")
-                .buildAndExpand(node.getHostname())
-                .toUri());
+        nodeDO.setRef(uriInfo.getBaseUriBuilder().clone().path(NodesRestService.class).path(NodesRestService.class, "getNode").build(node.getHostname()));
         nodeDO.setHostname(node.getHostname());
         nodeDO.setUsername(node.getUsername());
-        URI ref = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path(SecretRestService.createPath(node.getPassword()))
-                .build()
-                .toUri();
+        URI ref = UriBuilder.fromUri(uriInfo.getBaseUri()).path(SecretRestService.createPath(node.getPassword())).build();
         nodeDO.setPasswordRef(ref);
         nodeDO.setDomain(findDomainOrNull(node));
         nodeDO.setPlatformType(toPlatformTypeDO(node.getPlatformType()));
@@ -434,6 +444,10 @@ public class NodesRestService {
             logger.info(e.getMessage());
             return null;
         }
+    }
+
+    public void setUriInfo(UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
     }
 
 }

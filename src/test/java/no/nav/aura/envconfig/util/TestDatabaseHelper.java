@@ -14,14 +14,16 @@ import javax.sql.DataSource;
 import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 public abstract class TestDatabaseHelper {
 
@@ -49,7 +51,6 @@ public abstract class TestDatabaseHelper {
     public static DataSource createDataSource(String type, String url, String username, String password) {
         if ("h2".equalsIgnoreCase(type)) {
             System.setProperty("useH2", "true");
-            System.setProperty("envconfDB.dbtype", "h2");
             BasicDataSource ds = new BasicDataSource();
             ds.setUrl(url);
             ds.setUsername(username);
@@ -95,13 +96,11 @@ public abstract class TestDatabaseHelper {
 
     private static void updateDatabaseSchema(DataSource dataSource, boolean annihilate, String... locations) {
         if (annihilate) {
-        	Flyway flyway = Flyway.configure()
-                    .dataSource(dataSource)
-                    .locations(locations)
-                    .validateOnMigrate(false)
-                    .load();
-        	flyway.clean();
-            MigrateResult result = flyway.migrate();
+            Flyway flyway = new Flyway();
+            flyway.setDataSource(dataSource);
+            flyway.setLocations(locations);
+            flyway.setValidateOnMigrate(false);
+            flyway.clean();
         }
 
         // Skip migrations if in-memory/H2, our scripts are not compatible

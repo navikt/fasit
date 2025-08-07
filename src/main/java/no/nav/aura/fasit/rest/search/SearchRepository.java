@@ -7,18 +7,18 @@ import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.fasit.rest.*;
 import no.nav.aura.fasit.rest.model.LifecyclePayload;
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
-
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.*;
 
@@ -184,36 +184,22 @@ public class SearchRepository {
     }
 
     private URI generateLink(URI baseUri, SearchResultType searchResultType, DeleteableEntity entity) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUri(baseUri);
-
         switch (searchResultType) {
             case APPLICATION:
-                return builder.path("/api/v2/applications/{name}")
-                        .buildAndExpand(entity.getName())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getApplication").build(entity.getName());
             case NODE:
-                return builder.path("/api/v2/nodes/{name}")
-                        .buildAndExpand(entity.getName())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(NodesRest.class).path(NodesRest.class, "getNode").build(entity.getName());
             case APPCONFIG:
             case INSTANCE:
-                return builder.path("/api/v2/applicationinstances/{id}")
-                        .buildAndExpand(entity.getID())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getApplicationInstance").build(entity.getID());
             case RESOURCE:
-                return builder.path("/api/v2/resources/{id}")
-                        .buildAndExpand(entity.getID())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(ResourceRest.class).path(ResourceRest.class, "getResource").build(entity.getID());
             case ENVIRONMENT:
-                return builder.path("/api/v2/environments/{name}")
-                        .buildAndExpand(entity.getName())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(EnvironmentRest.class).path(EnvironmentRest.class, "getEnvironment").build(entity.getName());
             case CLUSTER:
                 Cluster cluster = (Cluster) entity;
                 String environment = getEnvironmentBy(cluster).getName();
-                return builder.path("/api/v2/environments/{env}/clusters/{name}")
-                        .buildAndExpand(environment, cluster.getName())
-                        .toUri();
+                return UriBuilder.fromUri(baseUri).path(ClusterRest.class).path(ClusterRest.class, "getCluster").build(environment, cluster.getName());
         }
         return baseUri;
     }

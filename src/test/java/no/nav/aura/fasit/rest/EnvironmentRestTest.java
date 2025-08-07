@@ -1,20 +1,5 @@
 package no.nav.aura.fasit.rest;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasSize;
-
-import javax.inject.Inject;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.springframework.transaction.annotation.Transactional;
-
 import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
@@ -22,16 +7,19 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.rest.RestTest;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.rest.model.EnvironmentPayload;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
-@TestInstance(Lifecycle.PER_CLASS)
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+
 public class EnvironmentRestTest extends RestTest {
-	
-	@Inject
-		private EnvironmentRepository environmentRepo;
 
     @BeforeAll
     @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
+        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
         environmentRepo.save(new Environment("u1", EnvironmentClass.u));
         environmentRepo.save(new Environment("deleteme", EnvironmentClass.u));
         environmentRepo.save(new Environment("changeme", EnvironmentClass.u));
@@ -41,11 +29,6 @@ public class EnvironmentRestTest extends RestTest {
         environmentRepo.save(new Environment("t1", EnvironmentClass.t));
         environmentRepo.save(new Environment("t2", EnvironmentClass.t));
     }
-    
-    @AfterAll
-    void tearDown() throws Exception {
-		cleanupEnvironments();
-	}
 
     @Test
     public void findAllEnvironments() {
@@ -77,7 +60,6 @@ public class EnvironmentRestTest extends RestTest {
                 .when()
                 .get("/api/v2/environments/t1")
                 .then()
-                .log().all()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("name", equalTo("t1"))
@@ -97,10 +79,10 @@ public class EnvironmentRestTest extends RestTest {
     }
 
     @Test
-    public void createNewEnvironmentWithPayload() {
+    public void createNewEnvironment() {
         EnvironmentPayload environment = new EnvironmentPayload("newEnv", EnvironmentClass.u);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -109,25 +91,12 @@ public class EnvironmentRestTest extends RestTest {
                 .statusCode(201)
                 .header("location", containsString("environments/newEnv"));
     }
-    @Test
-    public void createNewEnvironmentWithJson() {
-        String json = "{ \"name\": \"newEnvJson\", \"environmentclass\": \"u\" }";
-        given()
-                .auth().preemptive().basic("user", "user")
-                .body(json)
-                .contentType(ContentType.JSON)
-                .when()
-                .post("/api/v2/environments")
-                .then()
-                .log().all()
-                .statusCode(201)
-                .header("location", containsString("environments/newEnv"));
-    }
+
     @Test
     public void createDuplicateEnvironment() {
         EnvironmentPayload environment = new EnvironmentPayload("u1", EnvironmentClass.u);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -141,7 +110,7 @@ public class EnvironmentRestTest extends RestTest {
     public void createEnvironmentNoAccess() {
         EnvironmentPayload environment = new EnvironmentPayload("noaccess", EnvironmentClass.q);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -154,7 +123,7 @@ public class EnvironmentRestTest extends RestTest {
     public void renameEnvironment() {
         EnvironmentPayload environment = new EnvironmentPayload("newname", EnvironmentClass.u);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -170,7 +139,7 @@ public class EnvironmentRestTest extends RestTest {
         EnvironmentPayload environment = new EnvironmentPayload("u1", EnvironmentClass.u);
         environment.lifecycle.status = LifeCycleStatus.STOPPED;
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -184,7 +153,7 @@ public class EnvironmentRestTest extends RestTest {
     public void changeEnvironmentClassShouldBeIllegal() {
         EnvironmentPayload environment = new EnvironmentPayload("u1", EnvironmentClass.t);
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(environment))
                 .contentType(ContentType.JSON)
                 .when()
@@ -197,7 +166,7 @@ public class EnvironmentRestTest extends RestTest {
     @Test
     public void deleteEnvironment() {
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .contentType(ContentType.JSON)
                 .when()
                 .delete("/api/v2/environments/deleteme")

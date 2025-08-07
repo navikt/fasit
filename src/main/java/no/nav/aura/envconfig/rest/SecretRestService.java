@@ -1,33 +1,33 @@
 package no.nav.aura.envconfig.rest;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.spring.User;
 import no.nav.aura.fasit.conf.security.RestRoles;
+
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import javax.persistence.NoResultException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * API for å hente ut hemmeligheter(feks passord) fra databasen
  */
-@RestController
-@RequestMapping(path = "/conf/secrets")
+@Component
+@Path("/conf/secrets")
 public class SecretRestService {
 
     private final FasitRepository repo;
     
     private final static Logger log = LoggerFactory.getLogger(SecretRestService.class);
 
+    @Autowired
     public SecretRestService(FasitRepository repo) {
         this.repo = repo;
     }
@@ -41,10 +41,9 @@ public class SecretRestService {
      * @HTTP 401 Ved manglende tilgang
      * @HTTP 404 ved manglende resultat
      */
-    @GetMapping(path = "/{id:.+}", produces = "text/plain")
-    public ResponseEntity<String> get(
-    		@PathVariable("id") String combinedId, 
-    		@RequestHeader(name = "showsecret", required = false, defaultValue = "false") boolean showSecret) {
+    @GET
+    @Path("/{id : .+}")
+    public Response get(@PathParam("id") String combinedId, @HeaderParam("showsecret") boolean showSecret) {
         if (!showSecret) {
             log.info("Missing header param for user {}", User.getCurrentUser().getIdentity());
             // return
@@ -52,41 +51,32 @@ public class SecretRestService {
         }
 
         if (!combinedId.startsWith("secret-")) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find secret for id " + combinedId);
+            throw new NotFoundException("Unable to find secret for id " + combinedId);
         }
         String[] parts = combinedId.split("-");
         if (parts[1].startsWith("vault/")) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-					.body("This endpoint is not yet implemented for Vault secrets. Please check back later.");
+            return Response.ok("TODO: this endpoint will eventually support Vault secrets.", MediaType.TEXT_PLAIN_TYPE).build();
         } else {
             if (!combinedId.matches("secret-[0-9]+")) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find secret for id " + combinedId);
-
+                throw new NotFoundException("Unable to find secret for id " + combinedId);
             }
             Long id = Long.valueOf(parts[1]);
             String password;
             String type = parts[0];
             if ("secret".equals(type)) {
-            	try {
-            		Secret secret = repo.getById(Secret.class, id);
-            		checkAccess(secret);
-            		password = secret.getClearTextString();
-            	} catch (NoResultException e) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find secret for id " + combinedId);
-
-				} 
-            	
+                Secret secret = repo.getById(Secret.class, id);
+                checkAccess(secret);
+                password = secret.getClearTextString();
             } else {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unpossible " + combinedId);
+                throw new BadRequestException("Unpossible " + combinedId);
             }
-            return ResponseEntity.ok(password);
+            return Response.ok(password, MediaType.TEXT_PLAIN_TYPE).build();
         }
     }
 
     private void checkAccess(Secret secret) {
         if (!RestRoles.hasViewPasswordAccess(secret)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, 
-                    "No access to secret with id " + secret.getID() + " for user " + User.getCurrentUser().getIdentity());
+            throw new NotAuthorizedException("No access to secret with id " + secret.getID() + " for user " + User.getCurrentUser().getIdentity());
         }
     }
 

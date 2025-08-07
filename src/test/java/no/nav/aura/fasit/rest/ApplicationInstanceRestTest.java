@@ -14,25 +14,18 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.PortPayload.PortType;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
 import java.net.URI;
 
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationInstanceRestTest extends RestTest {
-	private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceRestTest.class);
+
     private static ApplicationInstance fasit_u1;
     private static ApplicationInstance deleteme_u1;
 
@@ -40,22 +33,11 @@ public class ApplicationInstanceRestTest extends RestTest {
     private static Resource r2;
     private static Resource r3;
     private static Resource exposedResource;
-    
-    @Inject
-    private ApplicationRepository applicationRepository;
-    
-    @Inject
-    private ApplicationInstanceRepository appInstanceRepository;
-    
-    @Inject
-    private ResourceRepository resourceRepository;
-    
-    @Inject
-    private EnvironmentRepository environmentRepo;
 
     @BeforeAll
     @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
+        ApplicationRepository applicationRepository = jetty.getBean(ApplicationRepository.class);
         Application tsys = applicationRepository.save(new Application("tsys"));
         Application gosys = applicationRepository.save(new Application("gosys"));
         Application fasit = applicationRepository.save(new Application("fasit"));
@@ -73,10 +55,13 @@ public class ApplicationInstanceRestTest extends RestTest {
         addCluster(q1, tsys, gosys, fasit);
         addCluster(t2, gosys, fasit);
 
+        ApplicationInstanceRepository appInstanceRepository = jetty.getBean(ApplicationInstanceRepository.class);
         fasit_u1 = appInstanceRepository.findInstanceOfApplicationInEnvironment("fasit", "u1");
         fasit_u1.setLifeCycleStatus(LifeCycleStatus.ALERTED);
         appInstanceRepository.save(fasit_u1);
         deleteme_u1 = appInstanceRepository.findInstanceOfApplicationInEnvironment("deleteme", "u1");
+
+        ResourceRepository resourceRepository = jetty.getBean(ResourceRepository.class);
 
         exposedResource = new Resource("anExposedResource", ResourceType.RestService, new Scope(EnvironmentClass.u));
         exposedResource.putProperty("url", "http://anExposedUrl.no");
@@ -88,14 +73,6 @@ public class ApplicationInstanceRestTest extends RestTest {
         r2 = resourceRepository.save(resource("r2"));
         r3 = resourceRepository.save(resource("r3"));
     }
-    
-    @AfterAll
-    @Transactional
-    void tearDown() throws Exception {
-    	cleanupEnvironments();
-    	cleanupResources();
-    	cleanupApplications();
-	}
 
 
     private static Resource resource(String alias) {
@@ -104,7 +81,8 @@ public class ApplicationInstanceRestTest extends RestTest {
         return resource;
     }
 
-    private void addCluster(Environment environment, Application... apps) {
+    private static void addCluster(Environment environment, Application... apps) {
+        EnvironmentRepository environmentRepo = jetty.getBean(EnvironmentRepository.class);
         Domain domain = Domain.getByEnvironmentClass(environment.getEnvClass()).get(0);
         Cluster clusterTestLocal = new Cluster(apps[0].getName() + "Cluster", domain);
 
@@ -330,7 +308,7 @@ public class ApplicationInstanceRestTest extends RestTest {
         app.appconfig = new ApplicationInstancePayload.AppconfigPayload("<xml>fin xml </xml>");
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
@@ -369,7 +347,7 @@ public class ApplicationInstanceRestTest extends RestTest {
         firstAppInstance.exposedresources.add(new ApplicationInstancePayload.ResourceRefPayload(exposedResource.getID()));
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(firstAppInstance))
                 .contentType(ContentType.JSON)
                 .when()
@@ -383,7 +361,7 @@ public class ApplicationInstanceRestTest extends RestTest {
         secondAppInstance.exposedresources.add(new ApplicationInstancePayload.ResourceRefPayload(exposedResource.getID()));
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(secondAppInstance))
                 .contentType(ContentType.JSON)
                 .when()
@@ -398,7 +376,7 @@ public class ApplicationInstanceRestTest extends RestTest {
         ApplicationInstancePayload app = new ApplicationInstancePayload("fasit", "u1");
         app.version = "1.2";
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .pathParam("id", fasit_u1.getID())
@@ -417,13 +395,13 @@ public class ApplicationInstanceRestTest extends RestTest {
         app.version = "1.2";
         app.clusterName = "nais";
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
                 .post("/api/v2/applicationinstances/")
                 .then()
-                // .log().all()
+                // .log().body()
                 .statusCode(200)
                 .body("version", equalTo("1.2"))
                 .body("application", equalTo("fasit"));
@@ -469,7 +447,7 @@ public class ApplicationInstanceRestTest extends RestTest {
         app.nodes.add(new ApplicationInstancePayload.NodeRefPayload("host1", 9023, PortType.https));
 
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
@@ -481,7 +459,7 @@ public class ApplicationInstanceRestTest extends RestTest {
     @Test
     public void deleteApplicationInstance() {
         given()
-                .auth().preemptive().basic("user", "user")
+                .auth().basic("user", "user")
                 .contentType(ContentType.JSON)
                 .pathParam("id", deleteme_u1.getID())
                 .when()

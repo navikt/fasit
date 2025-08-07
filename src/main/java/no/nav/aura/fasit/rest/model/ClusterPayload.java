@@ -1,26 +1,21 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.Zone;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.HashSet;
-import java.util.Set;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Zone;
 
 public class ClusterPayload extends EntityPayload {
     @NotNull(message="clustername is required")
-    @JsonProperty("clustername")
     public String clusterName;
     @NotNull(message="zone is required")
     public Zone zone;
     public String environment;
-    @JsonProperty("environmentclass")
     public EnvironmentClass environmentClass;
-    @JsonProperty("loadbalancerurl")
     public String loadBalancerUrl;
     @Valid
     public Set<Link> nodes;

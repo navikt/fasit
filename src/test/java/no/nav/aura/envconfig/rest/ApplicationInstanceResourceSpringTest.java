@@ -12,8 +12,9 @@ import no.nav.aura.fasit.client.model.ExposedResource;
 import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
+import no.nav.aura.integration.VeraRestClient;
+import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,9 +41,11 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
     private Node node;
 
+
+
     @BeforeEach
     public void setUp() {
-        service = new ApplicationInstanceResource(repository, instanceRepository, mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
         
         env = repository.store(new Environment("env", EnvironmentClass.p));
         node = repository.store(new Node("hostname.adeo.no", "bleep", "bloop"));
@@ -56,13 +59,6 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
         repository.store(env);
     }
-    
-    @AfterEach
-    public void tearDown() {
-    	repository.delete(node);
-		repository.delete(env);
-		repository.delete(app);
-	}
 
     private ApplicationInstance getAppInstance() {
         return instanceRepository.findInstanceOfApplicationInEnvironment(app.getName(), env.getName());

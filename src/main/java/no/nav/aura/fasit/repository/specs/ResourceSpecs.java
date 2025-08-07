@@ -8,6 +8,7 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
 
 public class ResourceSpecs {
 
-    private Specification<Resource> specs = null;
+    private Specifications<Resource> specs = null;
 
     public static Specification<Resource> findByLikeAlias(
             final String alias,
