@@ -2,12 +2,11 @@ package no.nav.aura.envconfig.model;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import com.google.common.base.Optional;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -112,7 +111,7 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
 
     @SuppressWarnings("unchecked")
     public <T extends ModelEntity> ModelEntityIdentifier<T, ?> getIdentifier() {
-        return new ModelEntityIdentifier<>((Class<T>) this.getClass(), Optional.of(id), Optional.<Long> absent());
+        return new ModelEntityIdentifier<>((Class<T>) this.getClass(), Optional.of(id), Optional.empty());
     }
 
 }

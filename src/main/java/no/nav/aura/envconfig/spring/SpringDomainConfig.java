@@ -67,6 +67,7 @@ public class SpringDomainConfig {
         jpaProperties.setProperty("hibernate.cache.use_second_level_cache", "true");
         jpaProperties.setProperty("hibernate.cache.use_query_cache", "true");
         jpaProperties.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.jcache.JCacheRegionFactory");
+        jpaProperties.setProperty("hibernate.javax.cache.provider", "org.ehcache.jsr107.EhcacheCachingProvider");
         jpaProperties.setProperty("hibernate.search.default.directory_provider", "filesystem");
         jpaProperties.setProperty("hibernate.search.default.indexBase", "./lucene");
         jpaProperties.setProperty("hibernate.id.new_generator_mappings", "false");

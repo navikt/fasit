@@ -2,14 +2,13 @@ package no.nav.aura.envconfig.spring;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 
 import no.nav.aura.envconfig.ApplicationRole;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.core.GrantedAuthority;
-
-import com.google.common.collect.Sets;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,7 +44,7 @@ public class AuthoritiesMapperTest {
         ));
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 2, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
     }
 
     @Test
@@ -56,7 +55,7 @@ public class AuthoritiesMapperTest {
 
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 3, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_PROD_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_PROD_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
     }
 
     @Test
@@ -66,7 +65,7 @@ public class AuthoritiesMapperTest {
 
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 1, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_USER)), "Missing expected role");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_USER)), "Missing expected role");
     }
 
     @Test
@@ -74,7 +73,7 @@ public class AuthoritiesMapperTest {
         AuthoritiesMapper mapper = new AuthoritiesMapper(new MockEnvironment());
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 1, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_USER)), "Missing expected role");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_USER)), "Missing expected role");
     }
 
     @Test
@@ -85,7 +84,7 @@ public class AuthoritiesMapperTest {
 
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 2, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected role");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected role");
     }
 
     @Test
@@ -96,6 +95,6 @@ public class AuthoritiesMapperTest {
 
         applicationRoles = mapper.mapAuthorities(authorities);
         assertTrue(applicationRoles.size() == 3, "Incorrect role count");
-        assertTrue(applicationRoles.containsAll(Sets.newHashSet(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_PROD_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
+        assertTrue(applicationRoles.containsAll(Set.of(ApplicationRole.ROLE_OPERATIONS, ApplicationRole.ROLE_PROD_OPERATIONS, ApplicationRole.ROLE_USER)), "Missing expected roles");
     }
 }

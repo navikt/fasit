@@ -20,7 +20,7 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<!--<spring.security.version>5.1.10.RELEASE</spring.security.version>-->
 		<ojdbc.version>19.3.0.0</ojdbc.version>
-		<hibernate.version>7.0.0.Final</hibernate.version>
+		<hibernate.version>7.0.9.Final</hibernate.version>
 		<!--<jetty.version>9.4.44.v20210927</jetty.version>-->
 		<kafka.version>2.6.3</kafka.version>
 		<protobuf.version>3.16.3</protobuf.version>
@@ -139,24 +139,24 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
+			<!--<exclusions>
 				<exclusion>
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
 				</exclusion>
-			</exclusions>
+			</exclusions>-->
 		</dependency>
 
 		<dependency>
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-jcache</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
+			<!--<exclusions>
 				<exclusion>
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
 				</exclusion>
-			</exclusions>
+			</exclusions>-->
 		</dependency>
 
 		<dependency>
@@ -169,17 +169,22 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-envers</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
+			<!--<exclusions>
 				<exclusion>
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
 				</exclusion>
-			</exclusions>
+			</exclusions>-->
 		</dependency>
 		<dependency>
-			<groupId>org.jadira.usertype</groupId>
-			<artifactId>usertype.core</artifactId>
-			<version>6.0.1.GA</version>
+		    <groupId>org.hibernate.orm</groupId>
+		    <artifactId>hibernate-community-dialects</artifactId>
+		    <version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.logging</groupId>
+		    <artifactId>jboss-logging</artifactId>
+		    <version>3.6.1.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
@@ -224,16 +229,10 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
-		<dependency>
-			<groupId>com.github.java-json-tools</groupId>
-			<artifactId>json-schema-validator</artifactId>
-			<version>2.2.14</version>
-			  <exclusions>
-			    <exclusion>
-			      <groupId>joda-time</groupId>
-			      <artifactId>joda-time</artifactId>
-			    </exclusion>
-			  </exclusions>
+    	<dependency>
+		  <groupId>com.networknt</groupId>
+		  <artifactId>json-schema-validator</artifactId>
+		  <version>1.5.6</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.glassfish</groupId>
@@ -251,6 +250,11 @@
 		    <artifactId>jakarta.servlet-api</artifactId>
 		    <version>6.1.0</version>
 		    <scope>provided</scope>
+		</dependency>
+		<dependency>
+		    <groupId>jakarta.persistence</groupId>
+		    <artifactId>jakarta.persistence-api</artifactId>
+		    <version>3.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>

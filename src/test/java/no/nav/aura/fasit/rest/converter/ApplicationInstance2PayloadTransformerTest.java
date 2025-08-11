@@ -1,6 +1,5 @@
 package no.nav.aura.fasit.rest.converter;
 
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.*;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
@@ -88,7 +87,7 @@ public class ApplicationInstance2PayloadTransformerTest {
 
     @Test
     public void transformsPortsToNodeRefs() {
-        Set<Port> ports = Sets.newHashSet(new Port("host1", 1, "https"), new Port("host1", 2, "http"), new Port("host2", 3, "https"));
+        Set<Port> ports = Set.of(new Port("host1", 1, "https"), new Port("host1", 2, "http"), new Port("host2", 3, "https"));
         Set<NodeRefPayload> nodeRefPayloads = transformer.toNodeRefs(ports);
         assertThat("set contains two elements", nodeRefPayloads.size(), is(2));
 
@@ -99,7 +98,7 @@ public class ApplicationInstance2PayloadTransformerTest {
     @Test
     public void failsWithInvalidPortType() {
         Assertions.assertThrows(RuntimeException.class, () -> {
-            Set<Port> ports = Sets.newHashSet(new Port("host1", 1, "invalid_port_type"));
+            Set<Port> ports = Set.of(new Port("host1", 1, "invalid_port_type"));
             transformer.toNodeRefs(ports);
         });
     }

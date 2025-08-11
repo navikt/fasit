@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.toList;
 import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
 import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;

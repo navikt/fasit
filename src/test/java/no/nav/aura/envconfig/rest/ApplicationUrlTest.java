@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.collect.Lists;
 import io.restassured.parsing.Parser;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
@@ -19,6 +18,9 @@ import static io.restassured.path.xml.XmlPath.from;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 @TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationUrlTest extends RestTest {
     private ApplicationGroup myAppGroup;
@@ -32,7 +34,7 @@ public class ApplicationUrlTest extends RestTest {
         Application app = repository.store(new Application(appName, "myApp-appconfig", "no.nav.myApp"));
         Application app2 = repository.store(new Application("mySecondApp", "myApp-appconfig", "no.nav.myApp"));
         myAppGroup = repository.store(
-                new ApplicationGroup("myAppGroup", Lists.newArrayList(app, app2)));
+                new ApplicationGroup("myAppGroup", new ArrayList<>(Arrays.asList(app, app2))));
 
         cluster.addApplication(app);
         cluster.addApplication(app2);

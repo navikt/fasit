@@ -4,6 +4,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Set;
+
 import no.nav.aura.envconfig.ApplicationRole;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.google.common.collect.Sets;
 
 public class UserTest extends SpringTest {
 
@@ -19,7 +21,7 @@ public class UserTest extends SpringTest {
 
     @BeforeEach
     public void setup() {
-        Authentication auth = createAuthentication("user", "user", Sets.newHashSet(ApplicationRole.ROLE_USER), Sets.newHashSet("Gruppe69", "Gruppe96"));
+        Authentication auth = createAuthentication("user", "user", Set.of(ApplicationRole.ROLE_USER), Set.of("Gruppe69", "Gruppe96"));
         SecurityContextHolder.getContext().setAuthentication(auth);
         user = User.getCurrentUser();
     }
@@ -28,9 +30,9 @@ public class UserTest extends SpringTest {
     @Test
     public void testUserGroups() {
         assertThat(user.isAuthenticated(), is(true));
-        assertTrue(user.isMemberOfGroup(Sets.newHashSet("Gruppe69")));
-        assertTrue(user.isMemberOfGroup(Sets.newHashSet("Gruppe96", "Enannengruppe")));
-        assertFalse(user.isMemberOfGroup(Sets.newHashSet("veldighemmeliggruppe")));
+        assertTrue(user.isMemberOfGroup(Set.of("Gruppe69")));
+        assertTrue(user.isMemberOfGroup(Set.of("Gruppe96", "Enannengruppe")));
+        assertFalse(user.isMemberOfGroup(Set.of("veldighemmeliggruppe")));
     }
 
 

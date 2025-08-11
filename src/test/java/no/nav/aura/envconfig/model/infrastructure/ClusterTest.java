@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.spring.SpringTest;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.NoResultException;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -119,8 +119,8 @@ public class ClusterTest extends SpringTest {
 
     @Test
     public void invalidUrlFails() throws Exception {
-        HashSet<String> invalidUrls = Sets.newHashSet("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com",
-                "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90");
+        HashSet<String> invalidUrls = new HashSet<>(Set.of("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com",
+                "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90"));
 
         for (String url : invalidUrls) {
             try {

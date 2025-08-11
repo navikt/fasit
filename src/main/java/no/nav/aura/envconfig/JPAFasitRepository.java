@@ -1,21 +1,19 @@
 package no.nav.aura.envconfig;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.util.SerializableFunction;
-import no.nav.aura.envconfig.util.Tuple;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
@@ -32,12 +30,32 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.*;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.Map.Entry;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.util.Tuple;
 
 public class JPAFasitRepository implements FasitRepository {
 
@@ -66,18 +84,19 @@ public class JPAFasitRepository implements FasitRepository {
     @Override
     public List<Tuple<Long, RevisionType>> getRevisionsFor(Class<? extends ModelEntity> entityClass, Long entityId) {
         if (entityId == null) {
-            return Lists.newArrayList();
+            return new ArrayList<>();
         }
         AuditReader auditReader = AuditReaderFactory.get(em);
         @SuppressWarnings("unchecked")
         List<Object[]> revisions = auditReader.createQuery().forRevisionsOfEntity(entityClass, entityClass.getName(), false, true).add(AuditEntity.id().eq(entityId)).getResultList();
-        @SuppressWarnings("serial")
-        List<Tuple<Long, RevisionType>> entityRevisions = FluentIterable.from(revisions).transform(new SerializableFunction<Object[], Tuple<Long, RevisionType>>() {
-            public Tuple<Long, RevisionType> process(Object[] objects) {
-                return Tuple.of(((AdditionalRevisionInfo<?>) objects[1]).getRevision(), ((RevisionType) objects[2]));
-            }
-        }).toSortedList(Tuple.fstComparator(Ordering.natural().reverse()));
-        return entityRevisions;
+        
+        return revisions.stream()
+                .map(objects -> Tuple.of(
+                        ((AdditionalRevisionInfo<?>) objects[1]).getRevision(),
+                        ((RevisionType) objects[2]))
+                )
+                .sorted((o1, o2) -> Long.compare(o2.fst, o1.fst)) // Reverse order comparison
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -134,16 +153,14 @@ public class JPAFasitRepository implements FasitRepository {
         return predicates;
     }
 
-    @SuppressWarnings({ "unchecked", "serial" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     public <T> List<Tuple<T, RevisionType>> getEntitiesForRevision(Class<T> entityClass, long revision) {
         AuditReader auditReader = AuditReaderFactory.get(em);
         List<Object[]> resultList = auditReader.createQuery().forRevisionsOfEntity(entityClass, entityClass.getName(), false, true).add(AuditEntity.revisionNumber().eq(revision)).getResultList();
-        return FluentIterable.from(resultList).transform(new SerializableFunction<Object[], Tuple<T, RevisionType>>() {
-            public Tuple<T, RevisionType> process(Object[] input) {
-                return Tuple.of((T) input[0], (RevisionType) input[2]);
-            }
-        }).toList();
+        return resultList.stream()
+                .map(input -> Tuple.of((T) input[0], (RevisionType) input[2]))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -179,9 +196,11 @@ public class JPAFasitRepository implements FasitRepository {
         // removing nodes from parent
         if (entity instanceof Node) {
             Node node = (Node) entity;
+
             Environment environment = getEnvironmentBy(node);
             if (environment != null) {
                 log.debug("Removing node {} from environment {} ", node.getHostname(), environment.getName());
+                
                 environment.removeNode(node);
                 store(environment);
             }
@@ -202,13 +221,10 @@ public class JPAFasitRepository implements FasitRepository {
             if (applicationInstance != null) {
                 log.debug("Removing exposed resource {} from application instance {} ", resource, applicationInstance);
                 Set<ExposedServiceReference> exposedServices = applicationInstance.getExposedServices();
-                Optional<ExposedServiceReference> findExposed = FluentIterable.from(exposedServices).firstMatch(new com.google.common.base.Predicate<ExposedServiceReference>() {
+                Optional<ExposedServiceReference> findExposed = exposedServices.stream()
+						.filter(exposedServiceReference -> exposedServiceReference.getResource().getID().equals(resource.getID()))
+						.findFirst(); 
 
-                    @Override
-                    public boolean apply(ExposedServiceReference input) {
-                        return input.getResource().getID().equals(resource.getID());
-                    }
-                });
                 if (findExposed.isPresent()) {
                     applicationInstance.getExposedServices().remove(findExposed.get());
                     remove(findExposed.get());
@@ -300,7 +316,7 @@ public class JPAFasitRepository implements FasitRepository {
      * Hibernate predicate for filtering out scope. NB Not including application scope use filterApplicationScope
      */
     private Predicate createScopePredicates(Scope scope, CriteriaBuilder builder, Path<Scope> scopePath) {
-        List<Predicate> predicates = Lists.newArrayList();
+        List<Predicate> predicates = new ArrayList<>();
         if (scope.getEnvClass() != null) {
             predicates.add(builder.equal(scopePath.get("envClass"), scope.getEnvClass()));
         }
@@ -431,7 +447,7 @@ public class JPAFasitRepository implements FasitRepository {
     @Override
     public List<ApplicationInstance> findApplicationInstancesBy(Application application) {
         if (application.isNew()) {
-            return Lists.newArrayList();
+            return new ArrayList<>();
         }
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<ApplicationInstance> query = builder.createQuery(ApplicationInstance.class);
@@ -442,10 +458,28 @@ public class JPAFasitRepository implements FasitRepository {
     @Override
     public Set<Cluster> findClustersBy(ApplicationGroup applicationGroup) {
 
-        String query = "select distinct c from Cluster c join c.applications clusterApps join " +
-                "clusterApps.application app where app in " +
-                "(select agApps from ApplicationGroup ag join ag.applications agApps where ag.id = :applicationGroupId)";
-        return Sets.newHashSet(em.createQuery(query, Cluster.class).setParameter("applicationGroupId", applicationGroup.getID()).getResultList());
+//        String query = "select distinct c from Cluster c join c.applications clusterApps join " +
+//                "clusterApps.application app where app in " +
+//                "(select agApps from ApplicationGroup ag join ag.applications agApps where ag.id = :applicationGroupId)";
+        
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Cluster> query = builder.createQuery(Cluster.class);
+        Root<Cluster> cluster = query.from(Cluster.class);
+        
+        // Join cluster.applications.application to access the applications in a cluster
+        Join<Object, Object> clusterApps = cluster.join("applications");
+        Join<Object, Object> app = clusterApps.join("application");
+        
+        // Join ApplicationGroup.applications to get all applications in the group
+        Subquery<Application> subquery = query.subquery(Application.class);
+        Root<ApplicationGroup> agRoot = subquery.from(ApplicationGroup.class);
+        subquery.select(agRoot.join("applications"))
+                .where(builder.equal(agRoot.get("id"), applicationGroup.getID()));
+        
+        // Find clusters containing at least one application from the application group
+        query.select(cluster).distinct(true)
+             .where(app.in(subquery));
+        return new HashSet<>(em.createQuery(query).getResultList());
     }
 
     @Override
@@ -453,7 +487,7 @@ public class JPAFasitRepository implements FasitRepository {
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Resource> query = builder.createQuery(Resource.class);
         Root<Resource> resourceRoot = query.from(Resource.class);
-        List<Predicate> clauses = Lists.newArrayList();
+        List<Predicate> clauses = new ArrayList<>();
         for (Entry<String, String> entry : resource.getProperties().entrySet()) {
             MapJoin<Resource, String, String> properties = resourceRoot.joinMap("properties", JoinType.INNER);
             clauses.add(builder.and(builder.equal(properties.key(), entry.getKey()), builder.equal(properties.value(), entry.getValue())));
@@ -479,13 +513,11 @@ public class JPAFasitRepository implements FasitRepository {
         Predicate typeEqual = builder.equal(resourceRoot.get("type"), resource.getType());
         List<Resource> resultList = em.createQuery(query.where(builder.and(idNotEquals, envClassEqual, envNameEqual, domainEqual, aliasEqual, typeEqual))).getResultList();
         // TODO Simplify this when we have reduced Scope.application to application
-        return FluentIterable.from(resultList).filter(new com.google.common.base.Predicate<Resource>() {
-            public boolean apply(@Nullable Resource input) {
-                assert input != null;
-                return new EqualsBuilder().append(resource.getScope().getApplication(), input.getScope().getApplication()).isEquals();
-            }
-
-        }).toList();
+        return resultList.stream()
+			.filter(input -> new EqualsBuilder()
+				.append(resource.getScope().getApplication(), input.getScope().getApplication())
+				.isEquals())
+			.collect(Collectors.toList());
     }
 
     private <T> Predicate equalOrNull(CriteriaBuilder builder, Path<T> path, T object) {
@@ -505,8 +537,30 @@ public class JPAFasitRepository implements FasitRepository {
 
     @Override
     public Collection<ResourceReference> findFutureResourceReferencesBy(String resourceName, ResourceType resourceType) {
-        String q = "select rr from ResourceReference rr where alias = ?1 and resourceType = ?2 and future = true and applicationinstance_entid is not null";
-        return em.createQuery(q, ResourceReference.class).setParameter(1, resourceName).setParameter(2, resourceType).getResultList();
+//        String q = "select rr from ResourceReference rr where alias = ?1 and resourceType = ?2 and future = true and applicationinstance_entid is not null";
+//        return em.createQuery(q, ResourceReference.class).setParameter(1, resourceName).setParameter(2, resourceType).getResultList();
+   
+    	CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<ResourceReference> query = builder.createQuery(ResourceReference.class);
+        Root<ResourceReference> root = query.from(ResourceReference.class);
+        
+        // Create predicates for the query
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(root.get("alias"), resourceName));
+        predicates.add(builder.equal(root.get("resourceType"), resourceType));
+        predicates.add(builder.isTrue(root.get("future")));
+        
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<ApplicationInstance> aiRoot = subquery.from(ApplicationInstance.class);
+        Join<ApplicationInstance, ResourceReference> resRefs = aiRoot.join("resourceReferences");
+        
+        subquery.select(resRefs.get("id")).where(builder.equal(resRefs.get("id"), root.get("id")));
+        
+        predicates.add(builder.exists(subquery));
+
+        query.where(builder.and(predicates.toArray(new Predicate[0])));
+
+        return em.createQuery(query).getResultList();
     }
 
     @Override
@@ -551,15 +605,15 @@ public class JPAFasitRepository implements FasitRepository {
             ApplicationGroup appGroup = findApplicationGroup(application);
             if (appGroup == null ){
                 log.debug("Application {} is not in an applicationGroup" , application );
-                Optional.absent();
+                Optional.empty();
             }
             if (foundAppGroup != null  && !foundAppGroup.equals(appGroup)){
                 log.debug("Application {} is in applicationGroup {}, expected it to be in {}" , application, appGroup, foundAppGroup );
-                Optional.absent();
+                Optional.empty();
             }
             foundAppGroup=appGroup;
         }
-        return Optional.fromNullable(foundAppGroup);
+        return Optional.ofNullable(foundAppGroup);
     }
 
     @Override

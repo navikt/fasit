@@ -1,12 +1,11 @@
 package no.nav.aura.envconfig.util;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public abstract class ExceptionUtil {
 
@@ -22,12 +21,12 @@ public abstract class ExceptionUtil {
     }
 
     public static List<String> getMessages(final Throwable startException) {
-        List<String> messages = Lists.newArrayList();
-        Set<Throwable> visited = Sets.newHashSet();
+        List<String> messages = new ArrayList<>();
+        Set<Throwable> visited = new HashSet<>();
         Throwable exception = startException;
         while (exception != null && !visited.contains(exception)) {
             String message = exception.getMessage();
-            messages.add(exception.getClass().getName() + ": " + Optional.fromNullable(message).or("(null)"));
+            messages.add(exception.getClass().getName() + ": " + Optional.ofNullable(message).orElse("(null)"));
             exception = exception.getCause();
         }
         return messages;

@@ -8,13 +8,11 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
-import jakarta.inject.Inject;
-import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.envers.RevisionType;
@@ -36,10 +34,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.DomainDO;
@@ -61,7 +57,6 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
-import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 
@@ -211,21 +206,21 @@ public class ResourcesRestService {
         return new ResourceElementList(elements);
     }
 
-    @SuppressWarnings("serial")
     private Collection<Resource> filterResultsForBestMatch(final Scope scope, Collection<Resource> activeResources) {
         // create a multimap with all resources of a type and its name
-        Multimap<String, Resource> resourcesMultiMap = ArrayListMultimap.create();
+        Map<String, List<Resource>> resourcesMap = new HashMap<>();
+
         for (Resource resource : activeResources) {
-            resourcesMultiMap.put(resource.getAlias().toLowerCase() + resource.getType(), resource);
+            String key = resource.getAlias().toLowerCase() + resource.getType();
+            resourcesMap.computeIfAbsent(key, k -> new ArrayList<>()).add(resource);
         }
         // Filter out best matching resources
-        Map<String, Resource> resourcesMap = Maps.transformValues(resourcesMultiMap.asMap(), new SerializableFunction<Collection<Resource>, Resource>() {
-            public Resource process(Collection<Resource> input) {
-                return scope.singleBestMatch(input);
-            }
-        });
+        Map<String, Resource> bestMatchMap = new HashMap<>();
+        for (Map.Entry<String, List<Resource>> entry : resourcesMap.entrySet()) {
+            bestMatchMap.put(entry.getKey(), scope.singleBestMatch(entry.getValue()));
+        }
 
-        return resourcesMap.values();
+        return bestMatchMap.values();
     }
 
 
