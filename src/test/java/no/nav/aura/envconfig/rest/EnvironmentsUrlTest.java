@@ -47,6 +47,16 @@ public class EnvironmentsUrlTest extends RestTest {
         assertEquals("u", path.getString("environment.envClass"), "environment class");
         assertThat("applicationref", path.getString("environment.applicationsRef"), Matchers.endsWith("/environments/test/applications"));
     }
+    
+    @Test
+    public void getEnvironmentsWithParams() {
+    	String xml = expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments?envClass=u").asString();
+    	XmlPath path = from(xml);
+		assertEquals(2, path.getInt("collection.environment.size()"), "environments with envClass=u");
+		assertEquals("test", path.getString("collection.environment[0].name"), "first environment name");
+//		assertEquals("ChEvY_cAsE", path.getString("collection.environment[1].name"), "second environment name");
+		assertEquals("chevy_case", path.getString("collection.environment[1].name"), "second environment name");
+    }
 
     @Test
     public void gettingNonExistingEnvironment_shouldGiveNotFound() throws Exception {
@@ -56,7 +66,7 @@ public class EnvironmentsUrlTest extends RestTest {
     @Test
     public void applicationGetServices_shouldBeCaseInsensitive() throws Exception {
         expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments/chevy_case").asString();
-        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments/?envClass=U").asString();
+        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/environments?envClass=U").asString();
     }
 
 

@@ -48,7 +48,7 @@ public class SearchRepositoryTest {
     private SearchRepository searchRepository;
     private URI baseUri;
     private Resource someResource;
-    private List<Long> storedAppInstanceIds = new ArrayList();
+    private List<Long> storedAppInstanceIds = new ArrayList<>();
 
     public SearchRepositoryTest() throws URISyntaxException {
     }
@@ -56,8 +56,8 @@ public class SearchRepositoryTest {
     @BeforeEach
     public void setup() throws URISyntaxException {
         baseUri  = new URI("somebaseuri.con");
-        Environment someEnvironment = new Environment("someEnvironment", EnvironmentClass.u);
-        Environment someMoreEnvironment = new Environment("someMoreEnvironment", EnvironmentClass.u);
+        Environment someEnvironment = repository.store(new Environment("someEnvironment", EnvironmentClass.u));
+        Environment someMoreEnvironment = repository.store(new Environment("someMoreEnvironment", EnvironmentClass.u));
         Cluster someCluster = repository.store(new Cluster("someCluster", Domain.Adeo));
         Cluster notDeployToCluster = repository.store(new Cluster("notDeployedToCluster", Domain.Devillo));
         notDeployToCluster.addApplication(repository.store(new Application("notDeployedApplication")));
@@ -71,7 +71,7 @@ public class SearchRepositoryTest {
         someCluster.addNode(someNode);
         someEnvironment.addCluster(someCluster);
         someEnvironment.addNode(someNode);
-        repository.store(differentNode);
+        someEnvironment.addNode(differentNode);
         repository.store(someEnvironment);
         repository.store(someMoreEnvironment);
 

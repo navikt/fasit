@@ -12,6 +12,6 @@ public interface Nameable {
     }
 
     default Map<String, Object> getEnityProperties() {
-        return new HashMap();
+        return new HashMap<>();
     }
 }

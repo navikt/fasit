@@ -11,7 +11,7 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ResourceElementList {
 
-  @XmlElement(name = "resource")
+	@XmlElement(name = "resource")
 	private List<ResourceElement> resourceElements = new ArrayList<>();
 
   	public ResourceElementList() {

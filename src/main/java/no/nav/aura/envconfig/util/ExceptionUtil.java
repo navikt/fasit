@@ -14,8 +14,8 @@ public abstract class ExceptionUtil {
 
     public static RuntimeException unpackInvocationException(InvocationTargetException e) {
         Throwable cause = e.getCause();
-        if (cause instanceof RuntimeException) {
-            return (RuntimeException) cause;
+        if (cause instanceof RuntimeException exception) {
+            return exception;
         }
         return new RuntimeException(cause);
     }

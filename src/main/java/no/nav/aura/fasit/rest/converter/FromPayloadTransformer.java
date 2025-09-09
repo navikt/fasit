@@ -20,8 +20,7 @@ public abstract class FromPayloadTransformer<T extends EntityPayload, R extends 
     public R apply(T from) {
         R to = transform(from);
         
-        if (to instanceof AccessControlled) {
-            AccessControlled accessControlled = (AccessControlled) to;
+        if (to instanceof AccessControlled accessControlled) {
             List<String> adGroups = from.accessControl.adGroups;
             if (adGroups != null) {
                 accessControlled.getAccessControl().setAdGroups(adGroups);

@@ -13,7 +13,8 @@ import java.io.Serializable;
 public class Port implements Serializable {
 
     @Id
-    @GeneratedValue()
+    @SequenceGenerator(name = "hibernate_sequence", sequenceName = "hibernate_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hibernate_sequence")
     @Column(name = "port_entid")
     public Long id;
 

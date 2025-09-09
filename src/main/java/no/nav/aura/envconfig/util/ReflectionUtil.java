@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public abstract class ReflectionUtil {
     }
 
     public static void doRecursively(ModelEntity entity, Consumer<ModelEntity> effect) {
-        doRecursively(entity, effect, Set.<Integer> of());
+        doRecursively(entity, effect, new HashSet<Integer>());
     }
 
     private static void doRecursively(ModelEntity entity, Consumer<ModelEntity> effect, Set<Integer> touched) {
@@ -60,8 +61,8 @@ public abstract class ReflectionUtil {
         Collection<?> collection = (Collection<?>) field.get(entity);
         if (collection != null) {
             for (Object object : collection) {
-                if (object instanceof ModelEntity) {
-                    doRecursively((ModelEntity) object, effect, touched);
+                if (object instanceof ModelEntity modelEntity) {
+                    doRecursively(modelEntity, effect, touched);
                 }
             }
         }

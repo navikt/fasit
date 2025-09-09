@@ -1,5 +1,6 @@
 package no.nav.aura.envconfig.model.resource;
 
+import no.nav.aura.envconfig.JPABooleanToNumberConverter;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.ModelEntity;
@@ -57,7 +58,10 @@ public class Resource extends DeleteableEntity implements Scopeable, AccessContr
     @MapKeyColumn(name = "file_key")
     @NotAudited
     private Map<String, FileEntity> fileEntities = new HashMap<>();
-    private boolean dodgy;
+    
+    @Column(name = "dodgy")
+    @Convert(converter = JPABooleanToNumberConverter.class)
+    private boolean dodgy = false;
 
     @Embedded
     private AccessControl accessControl;

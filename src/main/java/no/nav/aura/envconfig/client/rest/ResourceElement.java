@@ -24,7 +24,7 @@ public class ResourceElement {
     private String environmentClass;
     private DomainDO domain;
     private String environmentName;
-    @XmlElement(name = "scope.application")
+//    @XmlElement(name = "scope.application")
     private String application;
     @XmlElement(name = "property")
     private Set<PropertyElement> properties = new HashSet<>();

@@ -82,7 +82,7 @@ public class NodesRestService {
         } else if (environmentClass != null) {
             EnvironmentClass envClass = toEnumOrNull(EnvironmentClass.class, environmentClass);
             if (envClass == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is not a valid envClass", environmentClass));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "%s is not a valid envClass".formatted(environmentClass));
             }
             nodes = nodeRepository.findNodesByEnvironmentClass(envClass);
         }
@@ -110,7 +110,7 @@ public class NodesRestService {
         if (platformTypeStr != null && !platformTypeStr.isEmpty()) {
             final PlatformType platformType = toEnumOrNull(PlatformType.class, platformTypeStr);
             if (platformType == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is an invalid platformtype, use %s", platformTypeStr, EnumSet.allOf(PlatformType.class)));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "%s is an invalid platformtype, use %s".formatted(platformTypeStr, EnumSet.allOf(PlatformType.class)));
             }
             nodeStream = nodeStream.filter(node -> node.getPlatformType().equals(platformType));
 
@@ -174,8 +174,8 @@ public class NodesRestService {
     }
 
     private Optional<Cluster> findCluster(DeleteableEntity deleteme) {
-        if (deleteme instanceof Node) {
-            return Optional.ofNullable(nodeRepository.findClusterByNode((Node) deleteme));
+        if (deleteme instanceof Node node) {
+            return Optional.ofNullable(nodeRepository.findClusterByNode(node));
         }
         return Optional.empty();
     }
@@ -281,10 +281,10 @@ public class NodesRestService {
                 Cluster cluster = firstAppInstance.getCluster();
                 if (!cluster.getDomain().equals(domain)) {
                 	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-							String.format("Cluster already exists in a different domain. " +
-									"Existing cluster: %s in %s New cluster in %s." +
-									" Fix this by manually deleting the cluster created in the wrong domain in Fasit",
-									cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
+                            ("Cluster already exists in a different domain. " +
+                                    "Existing cluster: %s in %s New cluster in %s." +
+                                    " Fix this by manually deleting the cluster created in the wrong domain in Fasit").formatted(
+                                    cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
                 }
                 return cluster;
 

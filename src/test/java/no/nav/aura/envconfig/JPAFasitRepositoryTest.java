@@ -147,7 +147,9 @@ public class JPAFasitRepositoryTest {
         Environment envZone = repository.findEnvironmentBy("t1");
         assertEquals(1, envZone.getClusters().iterator().next().getNodes().size(), "nodes");
         String clusterName = "tsys";
-        envZone.findClusterByName(clusterName).addNode(new Node("a1236.test.local", "srvyo", "pass"));
+        Node node =new Node("a1236.test.local", "srvyo", "pass");
+        envZone.findClusterByName(clusterName).addNode(node);
+        envZone.addNode(node);
         repository.store(envZone);
         envZone = getEnvironment();
         assertEquals(2, envZone.getClusters().iterator().next().getNodes().size(), "nodes");
@@ -189,7 +191,9 @@ public class JPAFasitRepositoryTest {
         Environment environment = getEnvironment();
         Cluster cluster = getCluster(environment);
         assertEquals(1, cluster.getNodes().size());
-        cluster.addNode(new Node("heihost.test.local", "sa", "password"));
+        Node node = new Node("heihost.test.local", "sa", "password");
+        cluster.addNode(node);
+        environment.addNode(node);
         repository.store(environment);
         assertEquals(2, getCluster(getEnvironment()).getNodes().size());
     }
@@ -270,7 +274,6 @@ public class JPAFasitRepositoryTest {
         Environment environment = repository.store(new Environment("NyttEnv", EnvironmentClass.u));
         Node node = new Node("der", "han", "pass", environment.getEnvClass(), PlatformType.JBOSS);
         environment.addNode(node);
-        repository.store(environment);
         Cluster cluster = new Cluster("C", Domain.Devillo);
         cluster.addNode(node);
         cluster.setName("C");
@@ -284,7 +287,8 @@ public class JPAFasitRepositoryTest {
         assertNotNull(node, "found node");
         assertNull(repository.findNodeBy("shouldnotbefound"), "should not be found");
         repository.delete(node);
-        assertNull(repository.findNodeBy("node1.test.local"), "deleted");
+        Node node2 = repository.findNodeBy("node1.test.local");
+        assertNull(node2, "deleted");
     }
 
     @Test
@@ -297,7 +301,7 @@ public class JPAFasitRepositoryTest {
         Cluster cluster = new Cluster("tull", Domain.Devillo);
         cluster.addApplication(application);
         environment.addCluster(cluster);
-        environment.addNode(new Node(UUID.randomUUID().toString(), "root", "pass", environment.getEnvClass(), PlatformType.JBOSS));
+        environment.addNode(cluster, new Node(UUID.randomUUID().toString(), "root", "pass", environment.getEnvClass(), PlatformType.JBOSS));
         repository.store(environment);
         return repository.findApplicationInstancesBy(application);
     }
@@ -394,8 +398,9 @@ public class JPAFasitRepositoryTest {
     public void findOverlappingResourceScope_complete() {
         Scope scope = new Scope(t1).application(application);
         Resource resource = repository.store(new Resource("a", ResourceType.DataSource, scope));
+        Application appTull = repository.store(new Application("tull"));
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(null))).size());
-        assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(new Application("tull")))).size());
+        assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(appTull))).size());
         assertEquals(1, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).domain(null))).size());
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).domain(Domain.TestLocal))).size());
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).envName(null))).size());

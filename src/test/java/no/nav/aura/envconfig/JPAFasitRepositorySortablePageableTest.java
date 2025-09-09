@@ -14,6 +14,7 @@ import static org.hamcrest.core.Is.is;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,18 @@ public class JPAFasitRepositorySortablePageableTest {
         repository.store(new Resource("dbb", DataSource, new Scope(t).domain(Oera).envName("t8")));
         repository.store(new Resource("url1", BaseUrl, new Scope(t).domain(Devillo).envName("t8")));
     }
+    
+    @AfterEach
+    public void tearDown() {
+    	List<Resource> resources = repository.findResourcesByLikeAlias(new Scope().envName("t8"), null, null, 0, 10, "alias", true);
+    	for (Resource resource : resources) {
+			repository.delete(resource);
+		}
+    	List<Resource> resources2 = repository.findResourcesByLikeAlias(new Scope().envName("u1"), null, null, 0, 10, "alias", true);
+    	for (Resource resource : resources2) {
+			repository.delete(resource);
+    	}
+    }
 
     @Test
     public void findsNumberOfResources() {
@@ -69,7 +82,7 @@ public class JPAFasitRepositorySortablePageableTest {
     public void findsByPartialAlias() {
         assertThat(repository.findNrOfResources(new Scope(), null, "db"), is(4L));
         List<Resource> resources = repository.findResourcesByLikeAlias(new Scope(), null, "db", 0, 10, "alias", true);
-        assertThat(resources.stream().map(input -> input.getAlias()).collect(Collectors.toList()), equalTo(asList("dba", "dbb", "url1")));
+        assertThat(resources.stream().map(input -> input.getAlias()).collect(Collectors.toList()), equalTo(asList("dba", "dba", "dbb", "dbb")));
 
     }
 

@@ -1,33 +1,53 @@
 package no.nav.aura.envconfig.rest;
 
-import io.restassured.http.ContentType;
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.client.rest.PropertyElement;
-import no.nav.aura.envconfig.client.rest.ResourceElement;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.util.SerializableFunction;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.springframework.http.HttpStatus;
+import static io.restassured.RestAssured.expect;
+import static io.restassured.RestAssured.given;
+import static no.nav.aura.envconfig.util.TestHelper.assertAndGetSingleOrNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasXPath;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import jakarta.persistence.NoResultException;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.restassured.RestAssured.expect;
-import static io.restassured.RestAssured.given;
-import static no.nav.aura.envconfig.util.TestHelper.assertAndGetSingleOrNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.springframework.http.HttpStatus;
+
+import io.restassured.http.ContentType;
+import io.restassured.path.xml.XmlPath;
+import io.restassured.response.Response;
+import jakarta.persistence.NoResultException;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.client.rest.PropertyElement;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.client.rest.ResourceElementList;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class ResourcesRestUrlTest extends RestTest {
@@ -35,7 +55,7 @@ public class ResourcesRestUrlTest extends RestTest {
     private static Environment environment;
     private static Application application;
 
-    @BeforeAll
+    @BeforeEach
     public void setUp() throws Exception {
         application = repository.store(new Application("app"));
         environment = repository.store(new Environment("myEnv", EnvironmentClass.u));
@@ -48,11 +68,11 @@ public class ResourcesRestUrlTest extends RestTest {
         repository.store(db);
     }
     
-    @AfterAll
+    @AfterEach
     void tearDown() {
-		cleanupEnvironments();
 		cleanupApplications();
 		cleanupResources();
+		cleanupEnvironments();
 	}
 
     @Test
@@ -292,11 +312,18 @@ public class ResourcesRestUrlTest extends RestTest {
     }
 
     private ResourceElement checkResource(String alias, ResourceType resourceType, boolean expect) {
-        List<ResourceElement> list = expect()
-                .statusCode(HttpStatus.OK.value())
-                .when()
-                .get("/conf/resources?envClass=u&alias=" + alias)
-                .xmlPath().getList("collection.resource", ResourceElement.class);
+    	ResourceElementList resourceElementList = given()
+    			.queryParam("envClass", "u")
+    			.queryParam("alias", alias)
+    			.get("/conf/resources")
+    			.then()
+    			.log().all()
+    			.statusCode(HttpStatus.OK.value())
+    			.extract()
+    			.as(ResourceElementList.class);
+    	
+    	List<ResourceElement> list = resourceElementList.getResourceElements();
+        		
 
         if (expect) {
             assertEquals(1, list.size());
@@ -442,11 +469,19 @@ public class ResourcesRestUrlTest extends RestTest {
         String resourceName = "myresource2";
         repository.store(createCredentialResource(resourceName));
         repository.store(createCredentialResource(resourceName));
-        List<ResourceElement> list = expect().log().all()
-                .statusCode(HttpStatus.OK.value())
-                .when()
-                .get("/conf/resources?bestmatch=false&envClass=u&alias=" + resourceName)
-                .xmlPath().getList("collection.resource", ResourceElement.class);
+        
+    	ResourceElementList resourceElementList = given()
+    			.queryParam("bestmatch", "false")
+    			.queryParam("envClass", "u")
+    			.queryParam("alias", resourceName)
+    			.get("/conf/resources")
+    			.then()
+    			.log().all()
+    			.statusCode(HttpStatus.OK.value())
+    			.extract()
+    			.as(ResourceElementList.class);
+    	
+    	List<ResourceElement> list = resourceElementList.getResourceElements();
         assertThat(list.size(), equalTo(2));
     }
 
@@ -470,7 +505,7 @@ public class ResourcesRestUrlTest extends RestTest {
 
         String myRequest = setupUsageInApplicationEnvironment("env1", "appName1", "resourceName1", "clusterName1", true);
 
-        expect().statusCode(HttpStatus.OK.value())
+        expect().log().all().statusCode(HttpStatus.OK.value())
                 .body(hasXPath("/collection/resource/usedInApplications/usedInApplication/name"))
                 .body(hasXPath("/collection/resource/usedInApplications/usedInApplication/envName"))
                 .when()
@@ -483,7 +518,7 @@ public class ResourcesRestUrlTest extends RestTest {
 
         String myRequest = setupUsageInApplicationEnvironment("env2", "appName2", "resourceName2", "clusterName2", false);
 
-        expect().statusCode(HttpStatus.OK.value())
+        expect().log().all().statusCode(HttpStatus.OK.value())
                 .body(not(hasXPath("/collection/resource/usedInApplications")))
                 .when()
                 .get(myRequest);
@@ -493,19 +528,16 @@ public class ResourcesRestUrlTest extends RestTest {
     private String setupUsageInApplicationEnvironment(String envName, String applicationName, String resourceName, String clusterName, boolean showUsageInApplications) {
 
         Environment myEnvironment = repository.store(new Environment(envName, EnvironmentClass.u));
+        Application myApplication = repository.store(new Application(applicationName, "a.b.c", "c.d.e"));
 
         Node myNode = new Node("host.devillo.no", "username", "password", EnvironmentClass.u, PlatformType.JBOSS);
-        myEnvironment.addNode(myNode);
 
         Cluster myCluster = new Cluster(clusterName, Domain.Devillo);
 
-        Application myApplication = repository.store(new Application(applicationName, "a.b.c", "c.d.e"));
-
-        myEnvironment.addCluster(myCluster);
-
         myCluster.addApplication(myApplication);
         myCluster.addNode(myNode);
-
+        environment.addNode(myCluster, myNode);
+//        environment.addCluster(myCluster);
         repository.store(myEnvironment);
 
         String requestAppend = "";
@@ -530,6 +562,7 @@ public class ResourcesRestUrlTest extends RestTest {
         Set<ResourceReference> resourceReferenceSet = appInstance.getResourceReferences();
 
         resourceReferenceSet.add(resourceReference);
+        repository.store(appInstance);
 
         repository.store(myEnvironment);
 

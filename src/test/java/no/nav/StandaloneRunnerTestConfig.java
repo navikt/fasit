@@ -17,8 +17,6 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.spring.SpringDomainConfig;
 import no.nav.aura.envconfig.spring.SpringSecurityTestConfig;
 import no.nav.aura.envconfig.util.InsideJobService;
@@ -33,6 +31,7 @@ public class StandaloneRunnerTestConfig {
     @Bean
     DataSource getDataSource() {
         System.setProperty("envconfDB.dbtype", "h2");
+        System.setProperty("useH2", "true");
 		return new EmbeddedDatabaseBuilder().setType(EmbeddedDatabaseType.H2).build();
 	}
 
@@ -68,8 +67,8 @@ public class StandaloneRunnerTestConfig {
         System.setProperty("systemuser.srvfasit.username", "srvfasit");
         System.setProperty("systemuser.srvfasit.password", "secret");
 
-        // Creating som testdata
-        Environment environment = new Environment("q1", EnvironmentClass.q);
+//        // Creating som testdata
+//        Environment environment = new Environment("q1", EnvironmentClass.q);
         
 
 

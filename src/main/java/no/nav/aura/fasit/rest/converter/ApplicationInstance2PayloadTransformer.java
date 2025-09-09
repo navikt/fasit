@@ -1,15 +1,7 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.MissingResourcePayload;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
-import no.nav.aura.fasit.rest.model.Link;
-import no.nav.aura.fasit.rest.model.PortPayload;
-import org.springframework.web.util.UriComponentsBuilder;
+import static java.util.stream.Collectors.toSet;
+import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,13 +11,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
-import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Port;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.MissingResourcePayload;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
+import no.nav.aura.fasit.rest.model.Link;
+import no.nav.aura.fasit.rest.model.PortPayload;
 
 public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer<ApplicationInstance, ApplicationInstancePayload> {
-
-    private URI baseUri;
+    
+	private URI baseUri;
     private ApplicationInstanceRepository applicationInstanceRepository;
     private Boolean showUsage = true;
 
@@ -118,7 +123,7 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             }
             selfTestUrls.addAll(cluster.getNodes()
                     .stream()
-                    .map(n -> normalize(format("https://%s:%d/%s", n.getHostname(), httpsPort, selfTestPath)))
+                    .map(n -> normalize("https://%s:%d/%s".formatted(n.getHostname(), httpsPort, selfTestPath)))
                     .collect(Collectors.toList()));
         }
 

@@ -3,8 +3,6 @@ package no.nav.aura.fasit.rest.spring.jackson;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -18,12 +16,10 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 @Component
 public class JacksonConfig extends WebMvcAutoConfiguration {
-	private static final Logger log = LoggerFactory.getLogger(JacksonConfig.class);
     private static final DateTimeFormatter DATE_TIME_FORMATTER = 
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
     @Bean
     ObjectMapper objectMapper() {
-    	log.info("Creating custom ObjectMapper with JavaTimeModule and EnumModule");
 		// Create a custom ObjectMapper with JavaTimeModule and EnumModule
 		// to handle Java 8 time types and case-insensitive enum deserialization
     	// JAvaTimeModule is used to handle Java 8 date/time types

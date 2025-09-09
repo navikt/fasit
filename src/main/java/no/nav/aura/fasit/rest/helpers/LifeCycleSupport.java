@@ -50,7 +50,7 @@ public class LifeCycleSupport {
     }
 
     public void delete(DeleteableEntity deleteable) {
-        String comment = String.format("User %s deleted %s:%s with comment \"%s\"", getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
+        String comment = "User %s deleted %s:%s with comment \"%s\"".formatted(getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
         log.info("Cleaning up status after deletion of {}:{}:{} with comment {}", deleteable.getClass().getSimpleName(), deleteable.getName(), deleteable.getID(), comment);
     }
    
@@ -58,7 +58,7 @@ public class LifeCycleSupport {
 
     protected void stop(DeleteableEntity deleteable) {
         if (LifeCycleStatus.STOPPED != deleteable.getLifeCycleStatus()) {
-            String comment = String.format("User %s stopped %s:%s with comment \"%s\"", getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
+            String comment = "User %s stopped %s:%s with comment \"%s\"".formatted(getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
             log.info("Changing status on {} to stopped  with comment {}",deleteable.getName(), comment);
             deleteable.changeStatus(STOPPED);
         }
@@ -66,7 +66,7 @@ public class LifeCycleSupport {
 
     protected void start(DeleteableEntity deleteable) {
         if (deleteable.getLifeCycleStatus()!= null && LifeCycleStatus.RUNNING !=deleteable.getLifeCycleStatus()) {
-            String comment = String.format("User %s started %s:%s with comment \"%s\"", getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
+            String comment = "User %s started %s:%s with comment \"%s\"".formatted(getUser(), deleteable.getClass().getSimpleName(), deleteable.getName(), EntityCommenter.getComment());
             log.debug("Clearing status on {} with comment {}",deleteable.getName(), comment);
             deleteable.resetStatus();
         }
