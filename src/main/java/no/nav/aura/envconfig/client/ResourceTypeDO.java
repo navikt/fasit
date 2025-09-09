@@ -57,8 +57,7 @@ public enum ResourceTypeDO {
     }
 
     private static ResourceTypeDO find(Resource resource) {
-        if (resource instanceof DBTypeAware) {
-            DBTypeAware ds = (DBTypeAware) resource;
+        if (resource instanceof DBTypeAware ds) {
             if (ds.getType() == DBTypeAware.DBType.DB2) {
                 return DB2DataSource;
             }

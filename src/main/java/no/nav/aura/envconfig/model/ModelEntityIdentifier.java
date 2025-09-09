@@ -54,11 +54,11 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
     }
 
     public boolean isNew() {
-        return !entityId.isPresent();
+        return entityId.isEmpty();
     }
 
     public boolean isHead(FasitRepository repository) {
-        if (!entityId.isPresent() || !revisionId.isPresent()) {
+        if (entityId.isEmpty() || revisionId.isEmpty()) {
             return true;
         }
         List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(entityClass, entityId.get());
@@ -79,7 +79,7 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
             // If the entity is null we have a deleted entity and have to fetch the previous version
             List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(entityClass, entityId.get());
             if (history.size() < 2){
-                throw new RuntimeException(String.format("Deleted entity with missing history, id = %s entityClass = %s", entityId, entityClass));
+                throw new RuntimeException("Deleted entity with missing history, id = %s entityClass = %s".formatted(entityId, entityClass));
             }
             return repository.getRevision(entityClass, entityId.get(), history.get(1).fst).getModelEntity();
         }

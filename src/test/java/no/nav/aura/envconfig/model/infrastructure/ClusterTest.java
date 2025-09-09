@@ -28,9 +28,13 @@ public class ClusterTest extends SpringTest {
         cluster = new Cluster("mycluster", Domain.Devillo);
         cluster.addApplication(new Application("hei"));
         cluster.addApplication(new Application("hopp"));
-        cluster.addNode(new Node("host.devillo.no", "root", "password"));
-        cluster.addNode(new Node("post.devillo.no", "rot", "pass"));
+        Node node1 = new Node("host.devillo.no", "root", "password");
+        cluster.addNode(node1);
+        Node node2 = new Node("post.devillo.no", "rot", "pass");
+        cluster.addNode(node2);
         environment.addCluster(cluster);
+        environment.addNode(node1);
+        environment.addNode(node2);
         environment = repository.store(environment);
         cluster = TestHelper.assertAndGetSingle(environment.getClusters());
     }
@@ -119,7 +123,7 @@ public class ClusterTest extends SpringTest {
 
     @Test
     public void invalidUrlFails() throws Exception {
-        HashSet<String> invalidUrls = new HashSet<>(Set.of("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com",
+        HashSet<String> invalidUrls = new HashSet<>(Set.of("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "httttp://d34asdf.oera-t.com", "http;//d34aqwsdf.oera-t.com",
                 "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90"));
 
         for (String url : invalidUrls) {

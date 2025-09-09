@@ -224,7 +224,7 @@ public class ApplicationInstanceRest {
             errorMessages.addAll(applicationInstanceRepository
                     .findAllApplicationInstancesExposingSameResource(exposedResource.id)
                     .stream()
-                    .filter(ai -> !existingAppInstanceId.isPresent() || ai.getID() != existingAppInstanceId.get())
+                    .filter(ai -> existingAppInstanceId.isEmpty() || ai.getID() != existingAppInstanceId.get())
                     .map(ai -> "ID: " + ai.getID() + ", name: " + ai.getName() + ", resourceId: " + exposedResource.id + "\n")
                     .collect(toList()));
         }
@@ -309,7 +309,7 @@ public class ApplicationInstanceRest {
             if (!resourceRepository.existsById(resourceRef.id)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resource with id " + resourceRef.id + " does not exit is Fasit");
             } else {
-                if (resourceRef.revision != null && !revisionRepository.getRevisionEntry(Resource.class, resourceRef.id, resourceRef.revision).isPresent()) {
+                if (resourceRef.revision != null && revisionRepository.getRevisionEntry(Resource.class, resourceRef.id, resourceRef.revision).isEmpty()) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resource with id " + resourceRef.id + " does not have a revision " + resourceRef.revision);
                 }
             }

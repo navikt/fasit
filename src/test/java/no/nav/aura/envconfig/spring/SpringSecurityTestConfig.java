@@ -32,6 +32,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
 import no.nav.aura.envconfig.FasitRepository;
@@ -89,7 +90,7 @@ public class SpringSecurityTestConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .csrf(csrf -> csrf
                 		.disable())
-                .authorizeRequests(requests -> requests
+                .authorizeHttpRequests(requests -> requests
                 		.dispatcherTypeMatchers(DispatcherType.REQUEST, DispatcherType.ERROR).permitAll() // allow access to error dispatcher and drop redirects
                         .requestMatchers("/conf/secrets/**").authenticated()
                         .requestMatchers("/api/v2/secrets/**").authenticated()
@@ -148,7 +149,6 @@ public class SpringSecurityTestConfig {
     PerformanceMeasureAspect getPerformanceMeasureAspect() {
         return new PerformanceMeasureAspect();
     }
-
     
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

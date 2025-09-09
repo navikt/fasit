@@ -188,35 +188,52 @@ public class JPAFasitRepository implements FasitRepository {
             entity = em.merge(entity);
         }
         em.remove(entity);
+        em.flush();
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void delete(ModelEntity entity) {
         // removing nodes from parent
-        if (entity instanceof Node) {
-            Node node = (Node) entity;
-
+        if (entity instanceof Node node) {
             Environment environment = getEnvironmentBy(node);
             if (environment != null) {
                 log.debug("Removing node {} from environment {} ", node.getHostname(), environment.getName());
-                
+                for ( Cluster cluster : node.getClusters() ) {
+                	cluster.removeNode(node);
+                	node.getClusters().remove(cluster);
+                	store(node);
+                	store(cluster);
+				}
                 environment.removeNode(node);
                 store(environment);
             }
-        } else if (entity instanceof Cluster) {
-            Cluster cluster = (Cluster) entity;
+        } else if (entity instanceof Cluster cluster) {
             Environment environment = getEnvironmentBy(cluster);
             environment.removeCluster(cluster);
             store(environment);
-        } else if (entity instanceof Application) {
-            Application application = (Application) entity;
+        }  else if (entity instanceof Application application) {
             List<ApplicationInstance> applicationInstances = findApplicationInstancesBy(application);
             for (ApplicationInstance applicationInstance : applicationInstances) {
+            	log.debug("Removing application {} from application instance {} ", application.getName(), applicationInstance);
                 remove(applicationInstance);
             }
-        } else if (entity instanceof Resource) {
-            final Resource resource = (Resource) entity;
+                
+            List<Resource> allResources = findResourceBy(new Scope().application(application));
+            for (Resource resource : allResources) {
+                if (resource.getScope() != null && 
+                    resource.getScope().getApplication() != null && 
+                    resource.getScope().getApplication().equals(application)) {
+                    
+                    log.debug("Removing additional application {} reference from resource {}",
+                            application.getName(), resource.getAlias());
+                        resource.getScope().application(null);
+                        store(resource);
+                }
+            }
+
+        } else if (entity instanceof Resource resource) {
+        	log.debug("Deleting resource {} with id {}", resource.getAlias(), resource.getID());
             ApplicationInstance applicationInstance = findApplicationInstanceByExposedResourceId(resource.getID());
             if (applicationInstance != null) {
                 log.debug("Removing exposed resource {} from application instance {} ", resource, applicationInstance);
@@ -227,9 +244,21 @@ public class JPAFasitRepository implements FasitRepository {
 
                 if (findExposed.isPresent()) {
                     applicationInstance.getExposedServices().remove(findExposed.get());
-                    remove(findExposed.get());
+                    store(applicationInstance);
                     return;
                 }
+            } else {
+            	ApplicationInstance applicationInstance2 = findApplicationInstanceByResourceId(resource.getID());
+            	if (applicationInstance2 != null) {
+					log.debug("Removing resource {} from application instance {} ", resource, applicationInstance2);
+					for (ResourceReference ref: applicationInstance2.getResourceReferences()) {
+						if (ref.getResource().equals(resource)) {
+							log.debug("Removing resource reference {} from application instance {} ", ref, applicationInstance2);
+							ref.setResource(null); // Remove the resource from the reference
+							store(ref);
+						}
+					}
+				}
             }
         }
 
@@ -418,7 +447,7 @@ public class JPAFasitRepository implements FasitRepository {
     }
 
     @Override
-    public Environment getEnvironmentBy(ApplicationInstance entity) {
+    public Environment getEnvironmentBy(ApplicationInstance instance) {
         // if (entity instanceof Cluster && ((Cluster) entity).getID() != null) {
         // String q = "select ep from Environment ep inner join ep.clusters c where c.id = ?1";
         // return em.createQuery(q, Environment.class).setParameter(1, entity.getID()).getSingleResult();
@@ -427,15 +456,20 @@ public class JPAFasitRepository implements FasitRepository {
         // String q = "select ep from Environment ep inner join ep.nodes n where n.id = ?1";
         // return em.createQuery(q, Environment.class).setParameter(1, entity.getID()).getSingleResult();
         // }
-        if (entity instanceof ApplicationInstance) {
-            return getEnvironmentBy(((ApplicationInstance) entity).getCluster());
-        }
-        throw new RuntimeException("Unable to handle access check of entity " + entity.getClass());
+		if (instance.getCluster() != null) {
+			return getEnvironmentBy(instance.getCluster());
+		}
+        throw new RuntimeException("Unable to handle access check of entity " + instance.getClass());
     }
 
     @Override
     public Environment getEnvironmentBy(Node node) {
-        return getSingleResultOrNull(em.createQuery("select ep from Environment ep where :node MEMBER OF ep.nodes", Environment.class).setParameter("node", node));
+        try {
+            return getSingleResultOrNull(em.createQuery("select ep from Environment ep where :node MEMBER OF ep.nodes", Environment.class).setParameter("node", node));
+        } catch (RuntimeException e) {
+            log.warn("Error finding environment for node {}: {}", node.getHostname(), e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -536,6 +570,14 @@ public class JPAFasitRepository implements FasitRepository {
     }
 
     @Override
+    @Nullable
+	public ApplicationInstance findApplicationInstanceByResourceId(Long resourceId) {
+    	String q = "select ai from ApplicationInstance ai join ai.resourceReferences es join es.resource res where res.id = :resourceId";
+    	TypedQuery<ApplicationInstance> query = em.createQuery(q, ApplicationInstance.class).setParameter("resourceId", resourceId);
+    	return getSingleResultOrNull(query);
+	}
+
+	@Override
     public Collection<ResourceReference> findFutureResourceReferencesBy(String resourceName, ResourceType resourceType) {
 //        String q = "select rr from ResourceReference rr where alias = ?1 and resourceType = ?2 and future = true and applicationinstance_entid is not null";
 //        return em.createQuery(q, ResourceReference.class).setParameter(1, resourceName).setParameter(2, resourceType).getResultList();
@@ -625,5 +667,15 @@ public class JPAFasitRepository implements FasitRepository {
         String query = "select ag from ApplicationGroup ag inner join ag.applications a where a.id = :applicationid";
         return getSingleResultOrNull(em.createQuery(query, ApplicationGroup.class).setParameter("applicationid", application.getID()));
     }
+    
+    @Override
+	public List<Resource> findResourceBy(Scope scope) {
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Resource> query = builder.createQuery(Resource.class);
+        Root<Resource> resourceRoot = query.from(Resource.class);
+        Predicate scopePredicate = createScopePredicates(scope, builder, resourceRoot.get("scope"));
+        query.where(scopePredicate);
+        return em.createQuery(query).getResultList();
+	}
 
 }

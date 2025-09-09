@@ -421,7 +421,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().all()
                 .statusCode(200)
@@ -439,7 +439,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().body()
                 .statusCode(400);
@@ -456,7 +456,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().body()
                 .statusCode(200);

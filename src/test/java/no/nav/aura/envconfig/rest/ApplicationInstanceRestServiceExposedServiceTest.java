@@ -43,8 +43,10 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         testEnv.addCluster(cluster);
         Application app = new Application("app", "app", "no.nav.app");
         cluster.addApplication(app);
-        cluster.addNode(new Node("hostname.test.local", "username", "password"));
+        Node node = new Node("hostname.test.local", "username", "password");
+        cluster.addNode(node);
         testEnv.addCluster(cluster);
+        testEnv.addNode(node);
         testEnv = repository.store(testEnv);
         repository.store(new Resource("appUser", ResourceType.Credential, new Scope(EnvironmentClass.t)));
 

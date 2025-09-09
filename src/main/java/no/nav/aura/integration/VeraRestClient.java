@@ -31,6 +31,12 @@ public class VeraRestClient {
         this.restTemplate = new RestTemplate();
         veraUrl = url;
     }
+    
+    public VeraRestClient(String url, RestTemplate restTemplate) {
+        log.info("Using " + url + " as vera endpoint url");
+        this.restTemplate = restTemplate;
+        veraUrl = url;
+    }
 
     public void notifyVeraOfDeployment(ApplicationInstance appInstance, Environment environment) {
         String platform = appInstance.getCluster().getNodes().stream().findFirst()
@@ -60,6 +66,7 @@ public class VeraRestClient {
 
     private void postToVera(String deploymentMode, String url, Map<String, String> requestBody, int retries) {
         try {
+        	log.debug("Posting to VERA at " + url + " with body: " + requestBody);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);

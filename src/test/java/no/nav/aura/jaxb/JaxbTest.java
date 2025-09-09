@@ -530,8 +530,7 @@ public class JaxbTest {
             if (artifactId.equals(artifact.getArtifactId())) {
                 return artifact;
             } else {
-                if (artifact instanceof Ear) {
-                    Ear ear = (Ear) artifact;
+                if (artifact instanceof Ear ear) {
                     if (ear.getClassPathLibraries() != null) {
                         List<ClassPathLibrary> classPathLibraries = ear.getClassPathLibraries();
                         for (ClassPathLibrary library : classPathLibraries) {

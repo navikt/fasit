@@ -8,6 +8,8 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.servlet.Filter;
 import javax.sql.DataSource;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
@@ -40,7 +42,7 @@ import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackageClasses = ApplicationInstanceRepository.class)
 public class SpringDomainConfig {
-    private static Logger log = LoggerFactory.getLogger(SpringDomainConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringDomainConfig.class);
 
     @Bean
     @DependsOn("entityManagerFactory")
@@ -63,7 +65,7 @@ public class SpringDomainConfig {
         Properties jpaProperties = new Properties();
 //        jpaProperties.setProperty("hibernate.hbm2ddl.auto", getHbm2DllAuto());
 //        jpaProperties.setProperty("hibernate.show_sql", "false");
-//        jpaProperties.setProperty("hibernate.dialect", getDialect());
+        jpaProperties.setProperty("hibernate.dialect", getDialect());
         jpaProperties.setProperty("hibernate.cache.use_second_level_cache", "true");
         jpaProperties.setProperty("hibernate.cache.use_query_cache", "true");
         jpaProperties.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.jcache.JCacheRegionFactory");
@@ -148,12 +150,12 @@ public class SpringDomainConfig {
         return serializer;
     }
 
-//    private String getDialect() {
-//        if ("true".equals(System.getProperty("useH2"))) {
-//            return H2Dialect.class.getName();
-//        }
-//        return Oracle10gDialect.class.getName();
-//    }
+    private String getDialect() {
+        if ("true".equals(System.getProperty("useH2"))) {
+            return H2Dialect.class.getName();
+        }
+        return OracleDialect.class.getName();
+    }
 
 //    private String getHbm2DllAuto() {
 //        if (H2Dialect.class.getName().equals(getDialect())) {

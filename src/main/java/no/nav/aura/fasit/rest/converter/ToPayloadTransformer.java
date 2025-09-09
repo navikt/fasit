@@ -20,8 +20,7 @@ abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends Entity
         to.id = from.getID();
         to.lifecycle.status = from.getLifeCycleStatus();
 
-        if (from instanceof AccessControlled) {
-            AccessControlled accessControlled = (AccessControlled) from;
+        if (from instanceof AccessControlled accessControlled) {
             AccessControl accessControl = accessControlled.getAccessControl();
             to.accessControl.environmentClass = accessControl.getEnvironmentClass();
             to.accessControl.adGroups = accessControl.getAdGroupsAsList();

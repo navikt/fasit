@@ -72,7 +72,7 @@ public class ApplicationUrlTest extends RestTest {
 
     private void assertPortOffsetForApplication(String applicationName, int expectedPortOffset) {
         String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value())
-                .when().get(String.format("/conf/applications/%s/", applicationName)).asString();
+                .when().get("/conf/applications/%s".formatted(applicationName)).asString();
         assertEquals(expectedPortOffset, from(xml).getInt("application.portOffset"), "PortOffset");
     }
 

@@ -7,6 +7,7 @@
     </appender>
 
     <!-- <logger name="org.springframework.security" level="debug" /> -->
+    <logger name="no.nav" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="console" />
