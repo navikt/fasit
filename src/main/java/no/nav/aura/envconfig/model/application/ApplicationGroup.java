@@ -106,10 +106,9 @@ public class ApplicationGroup extends ModelEntity implements AccessControlled {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ApplicationGroup)) {
+        if (!(obj instanceof ApplicationGroup other)) {
             return false;
         }
-        ApplicationGroup other = (ApplicationGroup) obj;
         return createEqualsBuilder(other).append(name, other.name).build();
     }
 

@@ -59,10 +59,10 @@ public class ValidationExeptionMapper{
         String valueStr = (value == null) ? "" : value.toString();
         
         if (valueStr.isEmpty()) {
-            return String.format("%s: %s Reason: %s", "parameter", parameter.toLowerCase(), v.getMessage().toLowerCase());
+            return "%s: %s Reason: %s".formatted("parameter", parameter.toLowerCase(), v.getMessage().toLowerCase());
         }
         
-        return String.format("%s: %s Reason: %s Value: %s", "parameter", parameter, v.getMessage(), valueStr);
+        return "%s: %s Reason: %s Value: %s".formatted("parameter", parameter, v.getMessage(), valueStr);
     }
     
 //    private String format(FieldError fe) {

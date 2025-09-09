@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
 import no.nav.aura.envconfig.spring.User;
 
 @SuppressWarnings("serial")
@@ -22,7 +23,8 @@ import no.nav.aura.envconfig.spring.User;
 public abstract class ModelEntity implements Serializable, Identifiable, Nameable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "app_seq", sequenceName = "hibernate_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "app_seq")
     @Column(name = "entid")
     private Long id;
 
@@ -82,15 +84,14 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
     @PreUpdate
     protected void onMerge() {
     	ZonedDateTime now = ZonedDateTime.now();
-
-        if (isNew()) {
+        if (isNew() || created == null) {
+			// If this is a new entity, or if created is not set, we set created to now
             setCreated(now);
         }
 
         String userName = User.getCurrentUser().getDisplayName();
         String ident = User.getCurrentUser().getIdentity();
-        String authorlabel = ident == null ? userName : String.format("%s (%s)", userName, ident);
-
+        String authorlabel = ident == null ? userName : "%s (%s)".formatted(userName, ident);
         setUpdated(now);
 
         setUpdatedBy(authorlabel);

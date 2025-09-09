@@ -9,7 +9,10 @@ import org.hibernate.envers.RevisionTimestamp;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -22,7 +25,8 @@ public class AdditionalRevisionInfo<T extends ModelEntity> implements Serializab
     private static final String ONBEHALFOF_SPLITCHAR = ";";
 
     @Id
-    @GeneratedValue
+    @SequenceGenerator(name = "app_seq", sequenceName = "hibernate_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "app_seq")
     @RevisionNumber
     private long revision;
 

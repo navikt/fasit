@@ -61,6 +61,9 @@ public interface FasitRepository {
     @Nullable
     ApplicationInstance findApplicationInstanceByExposedResourceId(Long resourceId);
 
+    @Nullable
+    ApplicationInstance findApplicationInstanceByResourceId(Long resourceId);
+
     Set<Cluster> findClustersBy(ApplicationGroup applicationGroup);
 
     Node findNodeBy(String hostName);
@@ -68,6 +71,8 @@ public interface FasitRepository {
     List<Resource> findDuplicateProperties(Resource resource);
 
     List<Resource> findOverlappingResourceScope(Resource resource);
+
+    List<Resource> findResourceBy(Scope scope);
 
     List<Tuple<Long, RevisionType>> getRevisionsFor(Class<? extends ModelEntity> entityClass, Long entityId);
 

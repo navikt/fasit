@@ -103,16 +103,15 @@ public class Application extends DeleteableEntity implements AccessControlled {
     /** equals based on globally unique name */
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Application)) {
+        if (!(obj instanceof Application other)) {
             return false;
         }
-        Application other = (Application) obj;
         return new EqualsBuilder().append(name, other.name).build();
     }
 
     @Override
     public Map<String, Object> getEnityProperties() {
-        Map<String, Object> properties = new HashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put("groupdId", groupId);
         properties.put("artifactId", artifactId);
         properties.put("portOffset", String.valueOf(portOffset));

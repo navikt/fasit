@@ -1,4 +1,4 @@
-FROM navikt/java:8
+FROM navikt/java:17
 
 COPY nais/run-java.sh /run-java.sh
 

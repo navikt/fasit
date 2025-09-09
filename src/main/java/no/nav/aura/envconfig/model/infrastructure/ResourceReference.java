@@ -1,5 +1,6 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
+import no.nav.aura.envconfig.JPABooleanToNumberConverter;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
@@ -26,7 +27,9 @@ public class ResourceReference extends ModelEntity implements Reference {
 
     private String alias;
     
-    private Boolean future;
+    @Column(name = "future")
+    @Convert(converter = JPABooleanToNumberConverter.class)
+    private Boolean future = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "resource_type")

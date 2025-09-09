@@ -9,6 +9,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.*;
 import java.util.*;
@@ -26,10 +28,14 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
 
     @Enumerated(EnumType.STRING)
     private Domain domain;
+    
+    @ManyToOne
+    @JoinColumn(name = "env_id")
+    private Environment environment;
 
     @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST })
     @JoinTable(name = "clusters_node", joinColumns = @JoinColumn(name = "clusters_entid"), inverseJoinColumns = { @JoinColumn(name = "nodes_entid") })
-    private List<Node> nodes = new ArrayList<Node>();
+    private Set<Node> nodes = new HashSet<Node>();
 
     @Fetch(FetchMode.SUBSELECT)
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -70,12 +76,20 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
         this.name = name;
     }
 
-    public Set<Node> getNodes() {
+    
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+
+	public Set<Node> getNodes() {
         return new HashSet<Node>(nodes);
     }
 
     public void addNode(Node node) {
-        nodes.add(node);
+		if (!nodes.contains(node)) {
+			nodes.add(node);
+			node.getClusters().add(this);
+		}
 
     }
 
@@ -109,10 +123,15 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public void removeNode(Node node) {
-        nodes.remove(node);
+    	nodes.remove(node);
+    	node.getClusters().remove(this);
     }
 
-    public String getLoadBalancerUrl() {
+    public void removeEnvironment() {
+		this.environment = null;
+	}
+
+	public String getLoadBalancerUrl() {
         return loadBalancerUrl;
     }
 

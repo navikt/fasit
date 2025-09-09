@@ -1,16 +1,17 @@
 package no.nav.aura.envconfig.client;
 
+import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.Set;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.time.LocalDate;
-import java.util.Date;
-import java.util.Set;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import no.nav.aura.envconfig.client.adapter.ZonedDateTimeAdapter;
 
 @XmlRootElement(name = "application")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -20,7 +21,9 @@ public class ApplicationInstanceDO {
     private URI ref;
     private String name;
     private String version;
-    private LocalDate lastDeployment;
+    
+    @XmlJavaTypeAdapter(ZonedDateTimeAdapter.class)
+    private ZonedDateTime lastDeployment;
     private String deployedBy;
     private String selftestPagePath;
     private URI appConfigRef;
@@ -48,7 +51,7 @@ public class ApplicationInstanceDO {
         return version;
     }
 
-    public LocalDate getLastDeployment() {
+    public ZonedDateTime getLastDeployment() {
         return lastDeployment;
     }
 
@@ -92,7 +95,7 @@ public class ApplicationInstanceDO {
         this.selftestPagePath = selftestPagePath;
     }
 
-    public void setLastDeployment(LocalDate lastDeployment) {
+    public void setLastDeployment(ZonedDateTime lastDeployment) {
         this.lastDeployment = lastDeployment;
     }
 

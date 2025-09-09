@@ -36,7 +36,9 @@ public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
         cluster = new Cluster("myCluster", Domain.TestLocal);
         cluster.setLoadBalancerUrl(loadBalancer);
         env.addCluster(cluster);
-        cluster.addNode(new Node("hostname.test.local", "username", "password"));
+        Node node = new Node("hostname.test.local", "username", "password");
+        cluster.addNode(node);
+        env.addNode(node);
         env = repository.store(env);
     }
 
@@ -99,7 +101,9 @@ public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
     public void registeringApplicationWithLBInfoInDev_shouldUpdateLBUrlOnClusterToANode() throws Exception {
         Environment environment = new Environment("u1", EnvironmentClass.u);
         Cluster cluster = new Cluster("myCluster", Domain.Devillo);
-        cluster.addNode(new Node("hostname.devillo.no", "user", "password"));
+        Node clusterNode = new Node("hostname.devillo.no", "user", "password");
+        cluster.addNode(clusterNode);
+        environment.addNode(clusterNode);
         String lbUrl = "https://someloadbalancer.test.local";
         cluster.setLoadBalancerUrl(lbUrl);
         Application app = new Application("nonLbApp");
@@ -120,9 +124,11 @@ public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
         Environment env = repository.store(new Environment("u1", EnvironmentClass.u));
         Cluster cluster = new Cluster("myCluster", Domain.Devillo);
         String hostname = "hostname.devillo.no";
-        cluster.addNode(new Node(hostname, "username", "password"));
+        Node node = new Node(hostname, "username", "password");
+        cluster.addNode(node);
         Application app = new Application("serviceExposingAppWithoutLBInfo");
         cluster.addApplication(app);
+        env.addNode(cluster, node);
         env.addCluster(cluster);
         repository.store(env);
         assertThat(cluster.getLoadBalancerUrl(), nullValue());

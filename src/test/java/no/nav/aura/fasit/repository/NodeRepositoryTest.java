@@ -77,12 +77,18 @@ public class NodeRepositoryTest {
     
     @AfterEach
     public void tearDown() throws Exception {
-		// Cleanup the repository after each test
-		repository.delete(t1);
-		repository.delete(application);
-		repository.delete(appGroupWithOneApplication);
-		repository.delete(multiApplicationGroup);
-	}
+        // Cleanup the repository after each test - proper order respecting dependencies
+        
+        repository.delete(t1);
+        repository.delete(appGroupWithOneApplication);
+        repository.delete(multiApplicationGroup);
+        repository.delete(application);
+        for (Application app : repository.getApplications()) {
+            if (app.getName().startsWith("my")) {
+                repository.delete(app);
+            }
+        }
+    }
     
 
     private Application createApplication(String applicationName) {

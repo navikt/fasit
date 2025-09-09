@@ -39,7 +39,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 
@@ -103,7 +102,7 @@ public class ApplicationInstanceRestService {
         appDO.setDeployedBy(instance.getUpdatedBy());
         ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toLocalDate());
+            appDO.setLastDeployment(deployDate);
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(UriComponentsBuilder.fromPath("/environments/{env}/applications/{appname}/appconfig")
@@ -209,7 +208,7 @@ public class ApplicationInstanceRestService {
                     .port(cluster.getHttpsPortFromPlatformType())
                     .build().toString());
         } else if (loadBalancerInfoIsDefinedInAppConfig(application) && environmentIsLoadBalanced(environment, appInstance)) {
-            cluster.setLoadBalancerUrl(format("https://%s", LoadBalancerHostnameBuilder.create(appInstance.getDomain(), environment.getName())));
+            cluster.setLoadBalancerUrl("https://%s".formatted(LoadBalancerHostnameBuilder.create(appInstance.getDomain(), environment.getName())));
         }
 
         registerUsedResources(container.getUsedResources(), container.getAppconfig().getResources(EnvironmentDependentResource.class), appInstance, environment);
@@ -332,8 +331,7 @@ public class ApplicationInstanceRestService {
                 if (sameScope(environment, expectedDomain, resource)) {
                     ApplicationInstance applicationInstanceForExposedService = repo.findApplicationInstanceByExposedResourceId(resource.getID());
                     if (notSameApplication(newApplication, applicationInstanceForExposedService) && !(ResourceTypeDO.Queue.name().equals(resource.getType().name()))) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format(
-                                "The resource %s of type %s already exists in Fasit and is not exposed by application %s. A resource can not be registrered more than once in the same scope %s ",
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The resource %s of type %s already exists in Fasit and is not exposed by application %s. A resource can not be registrered more than once in the same scope %s ".formatted(
                                 resource.getName(), resource.getType(), newApplication.getName(), resource.getScope()));
                     }
                 }

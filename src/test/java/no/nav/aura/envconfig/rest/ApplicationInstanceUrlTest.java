@@ -1,35 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import io.restassured.http.ContentType;
-import io.restassured.parsing.Parser;
-import io.restassured.path.xml.XmlPath;
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.client.DeployedApplicationDO;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.util.Effect;
-import no.nav.aura.fasit.client.model.AppConfig;
-import no.nav.aura.fasit.client.model.AppConfig.Format;
-import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
-import no.nav.aura.fasit.client.model.UsedResource;
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-
-import jakarta.xml.bind.JAXBException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.xml.XmlPath.from;
@@ -37,10 +7,57 @@ import static no.nav.aura.envconfig.model.resource.ResourceType.BaseUrl;
 import static no.nav.aura.envconfig.rest.JaxbHelper.marshal;
 import static no.nav.aura.envconfig.util.TestHelper.assertAndGetSingle;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.parsing.Parser;
+import io.restassured.path.xml.XmlPath;
+import jakarta.xml.bind.JAXBException;
+import no.nav.StandaloneFasitJettyRunner;
+import no.nav.StandaloneRunnerTestOracleConfig;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.client.DeployedApplicationDO;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.util.Effect;
+import no.nav.aura.fasit.client.model.AppConfig;
+import no.nav.aura.fasit.client.model.AppConfig.Format;
+import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
+import no.nav.aura.fasit.client.model.UsedResource;
+
+//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestOracleConfig.class})
 @SuppressWarnings("serial")
 @TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationInstanceUrlTest extends RestTest {
@@ -48,8 +65,10 @@ public class ApplicationInstanceUrlTest extends RestTest {
     private static Application app;
     private static Environment env;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() throws Exception {
+        RestAssured.port = 1337;
+
         env = new Environment("test", EnvironmentClass.u);
         Cluster cluster = new Cluster("myCluster", Domain.Devillo);
         cluster.setLoadBalancerUrl("https://mylb.adeo.no");
@@ -72,10 +91,10 @@ public class ApplicationInstanceUrlTest extends RestTest {
         env = repository.store(env);
     }
     
-    @AfterAll
+    @AfterEach
     public void tearDown() {
 		cleanupEnvironments();
-        cleanupApplicationGroup();
+//        cleanupApplicationGroup();
 		cleanupApplications();
     }
 		
@@ -151,7 +170,8 @@ public class ApplicationInstanceUrlTest extends RestTest {
                 .header("x-onbehalfof", "otheruser")
                 .contentType(ContentType.XML)
                 .expect().body(equalTo("")).statusCode(HttpStatus.NO_CONTENT.value())
-                .when().put("/conf/environments/test/applications/app");
+                .when().put("/conf/environments/test/applications/app")
+                .then().log().all();
 
         insideJobService.perform(new Effect() {
             public void perform() {

@@ -4,6 +4,8 @@ import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.ModelEntity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class, SpringSecurityTestConfig.class})
 @Transactional
+@Import(WebMvcAutoConfiguration.class)
 public abstract class SpringTest {
 
     @Inject

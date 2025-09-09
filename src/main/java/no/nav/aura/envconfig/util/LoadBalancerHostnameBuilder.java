@@ -1,13 +1,12 @@
 package no.nav.aura.envconfig.util;
 
-import static java.lang.String.format;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Zone;
 
 public class LoadBalancerHostnameBuilder {
 
     public static String create(Domain domain, String environmentName) {
-        return format("%s.%s", getSubdomain(domain, environmentName), getLbDomain(domain));
+        return "%s.%s".formatted(getSubdomain(domain, environmentName), getLbDomain(domain));
     }
 
     private static String getLbDomain(Domain domain) {

@@ -5,6 +5,8 @@ import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import org.hibernate.envers.Audited;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.*;
 import java.util.HashMap;
@@ -18,11 +20,17 @@ import java.util.regex.Pattern;
 @Entity
 @Audited
 public class Node extends DeleteableEntity implements EnvironmentDependant, AccessControlled {
-
+	private static final Logger log = LoggerFactory.getLogger(Node.class);
+	
+    @Column(unique = true)
     private String hostname;
 
     private String username;
 
+    @ManyToOne
+    @JoinColumn(name = "env_id")
+    private Environment environment;
+    
     @Enumerated(EnumType.STRING)
     private PlatformType platformType;
 
@@ -30,7 +38,8 @@ public class Node extends DeleteableEntity implements EnvironmentDependant, Acce
     @JoinColumn(name = "password_entid")
     private Secret password;
 
-    @ManyToMany(mappedBy="nodes" , cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+//    @ManyToMany(mappedBy="nodes" , cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @ManyToMany(mappedBy="nodes")
     private Set<Cluster> clusters = new HashSet<Cluster>();
 
     @Embedded
@@ -119,7 +128,15 @@ public class Node extends DeleteableEntity implements EnvironmentDependant, Acce
         }
     }
 
-    public PlatformType getPlatformType() {
+    public Environment getEnvironment() {
+		return environment;
+	}
+
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+
+	public PlatformType getPlatformType() {
         return platformType != null ? platformType : PlatformType.WILDFLY;
     }
 
@@ -134,6 +151,22 @@ public class Node extends DeleteableEntity implements EnvironmentDependant, Acce
     @Override
     public AccessControl getAccessControl() {
         return accessControl;
+    }
+    
+    public void addToCluster(Cluster cluster) {
+        if (!this.clusters.contains(cluster)) {
+            this.clusters.add(cluster);
+            if (!cluster.getNodes().contains(this)) {
+                cluster.getNodes().add(this);
+            }
+        }
+    }
+
+    public void removeFromCluster(Cluster cluster) {
+        if (this.clusters.contains(cluster)) {
+        	log.debug("Removing cluster {} from node {}", cluster.getName(), this.getHostname());
+            this.clusters.remove(cluster);
+        }
     }
 
 }

@@ -1,7 +1,14 @@
 package no.nav.aura.envconfig.client;
 
-import no.nav.aura.envconfig.client.rest.PropertyElement;
-import no.nav.aura.envconfig.client.rest.ResourceElement;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URI;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
@@ -14,17 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.eq;
+import no.nav.aura.envconfig.client.rest.PropertyElement;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
 
 public class FasitRestClientTest {
 
@@ -40,7 +38,6 @@ public class FasitRestClientTest {
         client.setRestTemplate(restTemplateMock);
         responseMock = Mockito.mock(ResponseEntity.class);
         when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
-        when(responseMock.getStatusCodeValue()).thenReturn(200);
         when(responseMock.getHeaders()).thenReturn(org.springframework.http.HttpHeaders.EMPTY);
         when(responseMock.hasBody()).thenReturn(true);
     }
@@ -123,7 +120,6 @@ public class FasitRestClientTest {
     @Test
     public void test() throws Exception {
         when(responseMock.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
-        when(responseMock.getStatusCodeValue()).thenReturn(404);
         when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(ResourceElement.class)))
             .thenReturn(responseMock);
         try {
@@ -147,7 +143,6 @@ public class FasitRestClientTest {
 
         
 		when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
-		when(responseMock.getStatusCodeValue()).thenReturn(200);
 		when(responseMock.hasBody()).thenReturn(true);
 		when(responseMock.getBody()).thenReturn(mockResponse);
         when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), 
@@ -165,7 +160,6 @@ public class FasitRestClientTest {
     public void testUnautorized() throws Exception {
         Assertions.assertThrows(SecurityException.class, () -> {
             when(responseMock.getStatusCode()).thenReturn(HttpStatus.UNAUTHORIZED);
-            when(responseMock.getStatusCodeValue()).thenReturn(401);
             when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));
@@ -176,7 +170,6 @@ public class FasitRestClientTest {
     public void testForbidden() throws Exception {
         Assertions.assertThrows(SecurityException.class, () -> {
             when(responseMock.getStatusCode()).thenReturn(HttpStatus.FORBIDDEN);
-            when(responseMock.getStatusCodeValue()).thenReturn(403);
             when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));
@@ -187,7 +180,6 @@ public class FasitRestClientTest {
     public void testNotFound() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             when(responseMock.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
-            when(responseMock.getStatusCodeValue()).thenReturn(404);
             when(restTemplateMock.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(responseMock);
             client.getSecret(URI.create("http://someserver.com"));

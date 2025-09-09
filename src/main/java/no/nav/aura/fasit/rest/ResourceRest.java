@@ -1,7 +1,6 @@
 package no.nav.aura.fasit.rest;
 
 import static java.lang.Long.parseLong;
-import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -327,11 +326,11 @@ public class ResourceRest extends AbstractResourceRest {
 
         if (filteredDuplicates.size() > 0) {
         	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    format("Duplicate resource: \n" +
+                    ("Duplicate resource: \n" +
                             filteredDuplicates
                                     .stream()
                                     .map(r -> r.getID() + " " + r.getScope().getDisplayString())
-                                    .collect(joining("\n"))));
+                                    .collect(joining("\n"))).formatted());
         }
         
     }
@@ -340,7 +339,7 @@ public class ResourceRest extends AbstractResourceRest {
     // It is allowed to have a generic resource scoped to just an env class and multiple identical resources scoped to specific environments.
     // This is a step towards reducing the number of paralell test environments
     private List<Resource> filterDuplicateCandidates(Optional<Environment> environment, List<Resource> existingResources) {
-        if(!environment.isPresent()) {
+        if(environment.isEmpty()) {
             return existingResources
                     .stream()
                     .filter(r -> r.getScope().getEnvironmentName() == null)

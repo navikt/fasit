@@ -362,8 +362,8 @@ public class FasitRestClient {
     public Set<ResourceElement> findUsedResourcesFromCache() {
         Set<ResourceElement> usedResources = new HashSet<>();
         for (Object cacheObject : cache.values()) {
-            if (cacheObject instanceof ResourceElement) {
-                usedResources.add((ResourceElement) cacheObject);
+            if (cacheObject instanceof ResourceElement element) {
+                usedResources.add(element);
             }
         }
 
@@ -508,8 +508,8 @@ public class FasitRestClient {
      * API exception in 2013?
      */
     private RuntimeException rethrow(Exception e) {
-        if (e instanceof RuntimeException) {
-            return (RuntimeException) e;
+        if (e instanceof RuntimeException exception) {
+            return exception;
         }
         return new RuntimeException(e);
     }

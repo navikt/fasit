@@ -37,6 +37,9 @@ public class FasitApplication {
         String url = System.getProperty("envconfDB.url");
         String username = System.getProperty("envconfDB.username");
         String password = System.getProperty("envconfDB.password");
+        if (url == null || username == null || password == null) {
+			throw new IllegalStateException("Missing database configuration. Please provide envconfDB.url, envconfDB.username and envconfDB.password as system properties");
+		}
 
         System.setProperty("hibernate.default_schema", username);
         BasicDataSource ds = new BasicDataSource();

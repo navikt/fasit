@@ -15,7 +15,6 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 import org.apache.commons.lang3.StringUtils;
 
-@SuppressWarnings("serial")
 @Embeddable
 public class AccessControl implements Serializable {
 

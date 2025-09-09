@@ -29,7 +29,6 @@ import static no.nav.aura.fasit.rest.search.SearchResultType.*;
 
 @Component
 public class SearchRepository {
-
     enum SearchType {
         NAVIGATION, SEARCH
     }
@@ -112,7 +111,6 @@ public class SearchRepository {
             List<? extends DeleteableEntity> clusters = findMatches(Cluster.class, "name", searchString, maxCount - entities.size());
             entities.addAll(toSearchResults(clusters, searchType, CLUSTER, baseUri));
         }
-
         return new HashSet(entities.subList(0, Math.min(entities.size(), maxCount)));
     }
 
@@ -124,7 +122,6 @@ public class SearchRepository {
         if (environment == null) {
             return new HashSet();
         }
-
         List<ApplicationInstance> actualInstances = environment.getApplicationInstances().stream()
                 .filter(instance -> instance.getApplication().getName().contains(applicationName))
                 .collect(toList());
@@ -256,7 +253,6 @@ public class SearchRepository {
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<? extends DeleteableEntity> query = builder.createQuery(entityClass);
         Path<String> namePath = query.from(entityClass).get(fieldName);
-
         return em.createQuery(query.where(builder.like(builder.lower(namePath), "%" + search.toLowerCase() + "%"))).setMaxResults(maxCount).getResultList();
     }
 

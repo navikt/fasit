@@ -51,7 +51,10 @@ public class AuthoritiesMapper implements GrantedAuthoritiesMapper {
             if (groupRoleMap.get(ldapGroupName) != null) {
                 groupRoleMap.get(ldapGroupName).add(applicationRole);
             } else {
-                groupRoleMap.put(ldapGroupName, Set.of(applicationRole));
+                // Create a mutable HashSet instead of an immutable Set.of()
+                Set<ApplicationRole> roles = new HashSet<>();
+                roles.add(applicationRole);
+                groupRoleMap.put(ldapGroupName, roles);
             }
         }
     }

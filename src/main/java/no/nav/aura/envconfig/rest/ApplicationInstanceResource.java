@@ -143,7 +143,7 @@ public class ApplicationInstanceResource {
         appDO.setDeployedBy(instance.getUpdatedBy());
         ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toLocalDate());
+            appDO.setLastDeployment(deployDate);
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(uriBuilder.path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));

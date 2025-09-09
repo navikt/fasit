@@ -48,6 +48,7 @@ import no.nav.aura.envconfig.client.rest.ResourceElementList;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
@@ -216,7 +217,7 @@ public class ResourcesRestService {
         }
         // Filter out best matching resources
         Map<String, Resource> bestMatchMap = new HashMap<>();
-        for (Map.Entry<String, List<Resource>> entry : resourcesMap.entrySet()) {
+        for (Entry<String, List<Resource>> entry : resourcesMap.entrySet()) {
             bestMatchMap.put(entry.getKey(), scope.singleBestMatch(entry.getValue()));
         }
 
@@ -227,9 +228,7 @@ public class ResourcesRestService {
     /**
      * Legger til en ressurs i fasit
      * 
-     * @param uriInfo
-     *            uriInfo
-     * @param input
+     * @param request
      *            multipart form der hver property i ressursen har sin egen part
      * 
      * @HTTP 400 ved feil eller manglende properties
@@ -247,7 +246,7 @@ public class ResourcesRestService {
      * 
      * @param type
      *            ressurstypen
-     * @param input
+     * @param request
      *            multipart form der hver property i ressursen har sin egen part
      * 
      * @HTTP 400 ved feil eller manglende properties
@@ -310,7 +309,7 @@ public class ResourcesRestService {
      * Oppdaterer en ressurs i fasit
      * 
      * 
-     * @param input
+     * @param request
      *            multipart form der hver property i ressursen har sin egen part
      * 
      * @HTTP 400 ved feil eller manglende properties
@@ -461,7 +460,6 @@ public class ResourcesRestService {
 
         List<ApplicationInstance> applications = applicationInstanceRepository.findApplicationInstancesUsing(resource);
         List<ApplicationInstanceDO> usedInApplications = new ArrayList<ApplicationInstanceDO>();
-
         for (ApplicationInstance applicationInstance : applications) {
             Environment environment = repo.getEnvironmentBy(applicationInstance.getCluster());
             ApplicationInstanceDO usedInApplication = createApplicationDO(environment, applicationInstance);

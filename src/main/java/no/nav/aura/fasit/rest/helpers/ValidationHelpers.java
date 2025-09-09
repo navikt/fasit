@@ -81,7 +81,7 @@ public class ValidationHelpers {
 
     public Optional<Domain> domainFromZone(EnvironmentClass environmentClass, Optional<Environment> environment, Zone zone) {
         if (zone != null) {
-            if (environmentClass == null && !environment.isPresent()) {
+            if (environmentClass == null && environment.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zone without environmentClass or environment is not possible");
             }
 
