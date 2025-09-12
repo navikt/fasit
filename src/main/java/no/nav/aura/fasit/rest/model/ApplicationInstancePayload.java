@@ -1,6 +1,5 @@
 package no.nav.aura.fasit.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.fasit.rest.model.PortPayload.PortType;
@@ -40,8 +39,6 @@ public class ApplicationInstancePayload extends EntityPayload {
     public Set<ResourceRefPayload> usedresources = new HashSet<>();
     @Valid
     public Set<MissingResourcePayload> missingresources = new HashSet<>();
-
-    @JsonProperty("environmentclass")
     public EnvironmentClass environmentClass;
 
     public ApplicationInstancePayload() {
@@ -59,22 +56,11 @@ public class ApplicationInstancePayload extends EntityPayload {
         this.application = application;
         this.environment = environment;
     }
-    
-    public Set<NodeRefPayload> getNodes() {
-		return nodes;
-	}
 
-	public void setNodes(Set<NodeRefPayload> nodes) {
-		this.nodes = nodes;
-	}
-
-	public static class AppconfigPayload {
+    public static class AppconfigPayload {
         @NotNull(message = "value is required")
         public String value;
         public URI ref;
-
-        public AppconfigPayload() {
-		}
 
         public AppconfigPayload(String value) {
             this.value = value;
@@ -91,11 +77,7 @@ public class ApplicationInstancePayload extends EntityPayload {
         @Size(min = 1, message = "A node must have at least one port")
         public Set<PortPayload> ports = new HashSet<>();
 
-        
-        public NodeRefPayload() {
-		}
-
-		public NodeRefPayload(String hostname, int port, PortType type) {
+        public NodeRefPayload(String hostname, int port, PortType type) {
             this.hostname = hostname;
             this.ports.add(new PortPayload(port, type));
         }
@@ -104,24 +86,8 @@ public class ApplicationInstancePayload extends EntityPayload {
             this.hostname = hostname;
             this.ports = ports;
         }
-        
-        public String getHostname() {
-			return hostname;
-		}
 
-		public void setHostname(String hostname) {
-			this.hostname = hostname;
-		}
-
-		public Set<PortPayload> getPorts() {
-			return ports;
-		}
-
-		public void setPorts(Set<PortPayload> ports) {
-			this.ports = ports;
-		}
-
-		@Override
+        @Override
         public String toString() {
             return hostname + " : " + ports;
         }
@@ -202,9 +168,6 @@ public class ApplicationInstancePayload extends EntityPayload {
             public String alias;
             @NotNull(message = "type is required")
             public ResourceType type;
-
-            public MissingResourcePayload() {
-			}
 
             public MissingResourcePayload(String alias, ResourceType type) {
                 this.alias = alias;

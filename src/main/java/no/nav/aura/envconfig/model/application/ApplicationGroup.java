@@ -1,20 +1,31 @@
 package no.nav.aura.envconfig.model.application;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.*;
-import com.google.common.primitives.Ints;
-import no.nav.aura.envconfig.model.AccessControl;
-import no.nav.aura.envconfig.model.AccessControlled;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
-import javax.persistence.Table;
-import java.util.List;
-import java.util.Set;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
+
+import no.nav.aura.envconfig.model.AccessControl;
+import no.nav.aura.envconfig.model.AccessControlled;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 @SuppressWarnings("serial")
 @Entity
@@ -25,7 +36,7 @@ public class ApplicationGroup extends ModelEntity implements AccessControlled {
     @Column(name = "group_name", unique = true)
     private String name;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany
     @JoinColumn(name = "app_group_id")
     @AuditJoinTable(name = "APP_GROUP_APPLICATION_AUD")
     private Set<Application> applications = Sets.newHashSet();

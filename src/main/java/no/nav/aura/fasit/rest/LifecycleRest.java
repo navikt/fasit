@@ -1,21 +1,5 @@
 package no.nav.aura.fasit.rest;
 
-import javax.validation.Valid;
-
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.transaction.Transactional;
-
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
@@ -26,9 +10,19 @@ import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
 import no.nav.aura.fasit.rest.model.LifecyclePayload;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-@RestController
-@RequestMapping(path = "/api/v1/lifecycle")
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+@Component
+@Path("api/v1/lifecycle")
 public class LifecycleRest {
 
     @Inject
@@ -37,6 +31,9 @@ public class LifecycleRest {
     @Inject
     private LifeCycleSupport lifeCycleSupport;
 
+
+    @Context
+    private UriInfo uriInfo;
 
     protected enum EntityType {
         Application(Application.class),
@@ -55,15 +52,6 @@ public class LifecycleRest {
         public Class<? extends DeleteableEntity> entityClass() {
             return entityType;
         }
-        
-        public static EntityType fromString(String value) {
-            for (EntityType type : values()) {
-                if (type.name().equalsIgnoreCase(value)) {
-                    return type;
-                }
-            }
-            throw new IllegalArgumentException("No enum constant for " + value);
-        }
     }
 
     public LifecycleRest() {
@@ -73,17 +61,19 @@ public class LifecycleRest {
     /**
      * Changes lifecycle status for entities.
      */
-    @PutMapping(path = "/{entityType}/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PUT
+    @Path("{entityType}/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public void updateLifecycle(@PathVariable(name = "entityType") String entityTypeStr, @PathVariable(name = "id") Long id, @Valid @RequestBody LifecyclePayload payload) {
-        EntityType entityType = EntityType.fromString(entityTypeStr);
+    public void updateLifecycle(@PathParam("entityType") EntityType entityType, @PathParam("id") Long id, @Valid LifecyclePayload payload) {
         Class<? extends DeleteableEntity> aClass = entityType.entityClass();
 
         try {
             DeleteableEntity entity = fasitRepository.getById(aClass, id);
             lifeCycleSupport.update(entity, payload);
         } catch (NoResultException nre) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find entity " + id + " of type " + entityType.toString());
+            throw new NotFoundException("Unable to find entity " + id + " of type " + entityType.toString());
         }
     }
 }

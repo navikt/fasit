@@ -1,100 +1,66 @@
 package no.nav.aura.envconfig.rest;
 
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.client.*;
+import no.nav.aura.envconfig.client.DomainDO.EnvClass;
+import no.nav.aura.envconfig.client.rest.PropertyElement;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.*;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
+import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpMethod;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.client.ApplicationDO;
-import no.nav.aura.envconfig.client.ApplicationInstanceDO;
-import no.nav.aura.envconfig.client.ClusterDO;
-import no.nav.aura.envconfig.client.DomainDO;
-import no.nav.aura.envconfig.client.DomainDO.EnvClass;
-import no.nav.aura.envconfig.client.FasitRestClient;
-import no.nav.aura.envconfig.client.LifeCycleStatusDO;
-import no.nav.aura.envconfig.client.NodeDO;
-import no.nav.aura.envconfig.client.PlatformTypeDO;
-import no.nav.aura.envconfig.client.ResourceTypeDO;
-import no.nav.aura.envconfig.client.rest.PropertyElement;
-import no.nav.aura.envconfig.client.rest.ResourceElement;
-import no.nav.aura.envconfig.client.rest.ResourceElementList;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Cluster;
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.Node;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
-
-@TestInstance(Lifecycle.PER_CLASS)
 public class RestClientApiTest extends RestTest {
-    private static final Logger log = LoggerFactory.getLogger(RestClientApiTest.class);
 
     private FasitRestClient client;
-    private Application app;
-    private Environment appGroupEnv;
-    private Environment env;
-    private ApplicationGroup appGroup;
-    private Environment newEnv;
-    private Resource db;
-    private Cluster appGroupcluster;
+    private static Application app;
+    private static Environment appGroupEnv;
+    private static Environment env;
+    private static ApplicationGroup appGroup;
+    private static Environment newEnv;
 
     @BeforeAll
-    @Transactional
-    public void setUpData() {
+    public static void setUpData() {
         env = new Environment("myTestEnv", EnvironmentClass.u);
         Cluster cluster = new Cluster("cluster", Domain.Devillo);
-        cluster.setLoadBalancerUrl("https://resclientlbtest.adeo.no");
+        cluster.setLoadBalancerUrl("https://lb.adeo.no");
         env.addCluster(cluster);
-        app = repository.store(new Application("myApp", "myApp-appconfig", "no.nav.myApp"));
+        app = (Application) repository.store(new Application("myApp", "myApp-appconfig", "no.nav.myApp"));
         cluster.addApplication(app);
-        Node node = new Node("myNewHostrestClient.devillo.no", "username", "pass");
+        Node node = new Node("myNewHost.devillo.no", "username", "pass");
         env.addNode(cluster, node);
         cluster.addNode(node);
         repository.store(env);
 
-        db = new Resource("myDB", no.nav.aura.envconfig.model.resource.ResourceType.DataSource, env.getScope().domain(Domain.Devillo));
+        Resource db = new Resource("myDB", no.nav.aura.envconfig.model.resource.ResourceType.DataSource, env.getScope().domain(Domain.Devillo));
         db.putPropertyAndValidate("url", "jdbc:url");
         db.putPropertyAndValidate("username", "user");
         db.putPropertyAndValidate("oemEndpoint", "test");
@@ -110,7 +76,7 @@ public class RestClientApiTest extends RestTest {
         repository.store(appGroup);
 
         appGroupEnv = repository.store(new Environment("myenv", EnvironmentClass.u));
-        appGroupcluster = new Cluster("myCluster", Domain.Devillo);
+        Cluster appGroupcluster = new Cluster("myCluster", Domain.Devillo);
         appGroupcluster.addApplicationGroup(appGroup);
         appGroupEnv.addCluster(appGroupcluster);
         repository.store(appGroupEnv);
@@ -118,21 +84,21 @@ public class RestClientApiTest extends RestTest {
         newEnv = repository.store(new Environment("newAppGrpEnv", EnvironmentClass.u));
 
     }
-    
-    @AfterAll
-    @Transactional
-    public void tearDownData() {
-		cleanupEnvironments();
-        cleanupResources();
-        cleanupApplicationGroup();
-        cleanupApplications();
-
-	}
 
     @BeforeEach
     public void setupRestClient() {
-        client = new FasitRestClient("http://localhost:1337/conf", "prodadmin", "prodadmin");
+        client = new FasitRestClient("http://localhost:" + jetty.getPort() + "/conf", "prodadmin", "prodadmin");
     }
+
+//    @AfterEach
+//    public void resteasy_should_leave_them_entities_alone() {
+//        client.getEnvironments();
+//    }
+//
+//    @AfterEach
+//    public void checkThatTheHttpClientIsLeftInAUsableState() {
+//        client.getApplicationInstance("myTestEnv", "myApp");
+//    }
 
     @Test
     public void testGetCluster() {
@@ -143,7 +109,7 @@ public class RestClientApiTest extends RestTest {
         ClusterDO cluster = appInstance.getCluster();
         assertThat(cluster.getNodes().length, greaterThanOrEqualTo(1));
         assertThat(cluster.getDomainDO().getFqn(), equalTo("devillo.no"));
-        assertThat(getHostnames(cluster.getNodesAsList()), hasItem("myNewHostrestClient.devillo.no"));
+        assertThat(getHostnames(cluster.getNodesAsList()), hasItem("myNewHost.devillo.no"));
     }
 
     @Test
@@ -158,7 +124,7 @@ public class RestClientApiTest extends RestTest {
 
     @Test
     public void testFindResources() {
-        ResourceElementList resources = client.findResources(EnvClass.u, "myTestEnv", DomainDO.Devillo, "myApp", ResourceTypeDO.DataSource, "myDB");
+        Collection<ResourceElement> resources = client.findResources(EnvClass.u, "myTestEnv", DomainDO.Devillo, "myApp", ResourceTypeDO.DataSource, "myDB");
         assertEquals(1, resources.size(), "all params");
         resources = client.findResources(EnvClass.u, null, null, null, null, "myDB");
         assertEquals(1, resources.size(), "with nulls");
@@ -175,7 +141,7 @@ public class RestClientApiTest extends RestTest {
     @Test
     public void registerApplicationWithComment() {
         RegisterApplicationInstancePayload payload = new RegisterApplicationInstancePayload(app.getName(), "1.0.2", env.getName());
-        payload.setNodes(Arrays.asList("myNewHostrestClient.devillo.no"));
+        payload.setNodes(Arrays.asList("myNewHost.devillo.no"));
         client.setOnBehalfOf("otheruser");
         client.registerApplication(payload, "my new comment");
 
@@ -187,7 +153,6 @@ public class RestClientApiTest extends RestTest {
         FasitRevision<ApplicationInstance> headrevision = getHeadrevision(instance);
         assertEquals("my new comment", headrevision.getMessage());
         assertEquals("prodadmin", headrevision.getAuthor());
-        log.info("OnBehalfOf: {}", headrevision.getOnbehalfOf());
         assertEquals("otheruser", headrevision.getOnbehalfOf().getId());
     }
 
@@ -236,23 +201,24 @@ public class RestClientApiTest extends RestTest {
     }
 
     @Test
+    @Transactional
     public void whenDeletingLastNodeInCluster_theClusterWillAlsoBeDeleted() throws URISyntaxException {
         Environment environment = repository.store(new Environment("newEnv", EnvironmentClass.u));
         NodeDO node = createNodeDO("willSoonBeDeleted.devillo.no", environment.getName(), "myApp");
         client.registerNode(node, "comment");
-        assertThat(client.getApplicationInstance(environment.getName(), "myApp").getCluster(), notNullValue());
+        assertThat(client.getApplicationInstance("newEnv", "myApp").getCluster(), notNullValue());
         client.deleteNode("willSoonBeDeleted.devillo.no", null);
-        assertThat(client.getApplicationInstances(environment.getName()).getApplications(), nullValue());
+        assertThat(client.getApplicationInstances("newEnv"), hasSize(0));
     }
 
     @Test
     public void stopNode() throws URISyntaxException {
         NodeDO node = new NodeDO();
-        node.setHostname("myNewHostrestClient.devillo.no");
+        node.setHostname("myNewHost.devillo.no");
         node.setStatus(LifeCycleStatusDO.STOPPED);
         client.setOnBehalfOf("otheruser");
         client.updateNode(node, "Stopping it");
-        Node storedNode = repository.findNodeBy("myNewHostrestClient.devillo.no");
+        Node storedNode = repository.findNodeBy("myNewHost.devillo.no");
         assertEquals(LifeCycleStatus.STOPPED, storedNode.getLifeCycleStatus());
         FasitRevision<Node> headrevision = getHeadrevision(storedNode);
         assertEquals("Stopping it", headrevision.getMessage());
@@ -292,19 +258,14 @@ public class RestClientApiTest extends RestTest {
         assertEquals(expected, headrevision.getMessage());
     }
 
-//    private List<String> getHostnames(final List<NodeDO> nodes) {
-//        return Lists.transform(nodes, new Function<NodeDO, String>() {
-//            public String apply(@Nullable NodeDO input) {
-//                return input.getHostname();
-//            }
-//        });
-//    }
     private List<String> getHostnames(final List<NodeDO> nodes) {
-        return nodes.stream()
-                .map(NodeDO::getHostname)
-                .collect(Collectors.toList());
+        return Lists.transform(nodes, new Function<NodeDO, String>() {
+            public String apply(@Nullable NodeDO input) {
+                return input.getHostname();
+            }
+        });
     }
-    
+
     private NodeDO createNodeDO(String hostname) throws URISyntaxException {
         return createNodeDO(hostname, "mytestenv", "myApp");
     }
@@ -371,7 +332,7 @@ public class RestClientApiTest extends RestTest {
         newResource.setEnvironmentName("myTestEnv");
         newResource.setDomain(DomainDO.Devillo);
         newResource.setApplication("myApp");
-//        newResource.addProperty(new PropertyElement("url", "http://der/her"));
+        newResource.addProperty(new PropertyElement("url", "http://der/her"));
         client.registerResource(newResource, "ressurskommentar");
         ResourceElement resource = client.getResource("mytestenv", "fullScopeResource", ResourceTypeDO.BaseUrl, DomainDO.Devillo, "myApp");
         assertNotNull(resource);
@@ -384,28 +345,21 @@ public class RestClientApiTest extends RestTest {
     @Test
     public void registerResourceMultipart() throws IOException {
 
-        org.springframework.util.MultiValueMap<String, Object> data = new LinkedMultiValueMap<>();
-        data.add("alias", "mintjeneste");
-        data.add("scope.environmentclass", "u");
-        data.add("scope.environmentname", "myTestEnv");
-        data.add("scope.domain", "devillo.no");
-        data.add("scope.application", "myApp");
-        data.add("type", ResourceTypeDO.Certificate.name());
+        MultipartFormDataOutput data = new MultipartFormDataOutput();
+        data.addFormData("alias", "mintjeneste", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("scope.environmentclass", "u", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("scope.environmentname", "myTestEnv", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("scope.domain", "devillo.no", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("scope.application", "myApp", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("type", ResourceTypeDO.Certificate, MediaType.TEXT_PLAIN_TYPE);
 
-        data.add("keystorealias", "app-key");
-        data.add("keystorepassword", "keystoresecret");
-        data.add("keystore.filename", "keystore.jks");
-        data.add("keystore.file", new ByteArrayResource("dilldalldull".getBytes()) {
-            @Override
-            public String getFilename() {
-                return "keystore.jks";
-            }
-        });
-//        data.add("keystore.file", "dilldalldull".getBytes());
+        data.addFormData("keystorealias", "app-key", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("keystorepassword", "keystoresecret", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("keystore.filename", "keystore.jks", MediaType.TEXT_PLAIN_TYPE);
+        data.addFormData("keystore.file", "dilldalldull".getBytes(), MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
         // check results
-        ResourceElement resource = client.executeMultipart(HttpMethod.PUT, "/resources", data, "comment med multipart", ResourceElement.class);
-//        ResourceElement resource = resourceList.getResourceElements().get(0);
+        ResourceElement resource = client.executeMultipart("PUT", "resources", data, "comment med multipart", ResourceElement.class);
         assertNotNull(resource);
         assertEquals("mintjeneste", resource.getAlias());
         assertEquals("mytestenv", resource.getEnvironmentName());
@@ -435,14 +389,14 @@ public class RestClientApiTest extends RestTest {
 
     @Test
     public void testGetApplicationInfo_notFound() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Assertions.assertThrows(RuntimeException.class, () -> {
             client.getApplicationInfo("unknown");
         });
     }
 
     @Test
     public void testGetClusters_notFound() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Assertions.assertThrows(RuntimeException.class, () -> {
             client.getApplicationInstance("myTestEnv", "unknown");
         });
     }

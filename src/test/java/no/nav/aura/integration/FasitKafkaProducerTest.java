@@ -12,12 +12,12 @@ import no.nav.protos.deployment.DeploymentEvent;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static no.nav.protos.deployment.DeploymentEvent.Event;
 import static no.nav.protos.deployment.DeploymentEvent.RolloutStatus;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class FasitKafkaProducerTest {

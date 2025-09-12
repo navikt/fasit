@@ -6,48 +6,42 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.rest.RestTest;
-import org.junit.jupiter.api.AfterAll;
+import no.nav.aura.fasit.repository.ResourceRepository;
+import no.nav.aura.fasit.repository.SecretRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
-@TestInstance(Lifecycle.PER_CLASS)
 public class SecretRestTest extends RestTest {
-    private final static Logger log = LoggerFactory.getLogger(SecretRestTest.class);
 
-    private Resource savedResource;
-    
+
+    private static Resource savedResource;
+
     @BeforeAll
     @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
+        ResourceRepository repo = jetty.getBean(ResourceRepository.class);
         Resource db = new Resource("myDB", ResourceType.DataSource, new Scope(EnvironmentClass.u).domain(Domain.Devillo).envName("myEnv"));
         db.putPropertyAndValidate("url", "jdbc:url");
         db.putPropertyAndValidate("username", "user");
         db.putPropertyAndValidate("oemEndpoint", "test");
         db.putPropertyAndValidate("onsHosts", "test:6200,test1:6200");
         db.putSecretAndValidate("password", "secret");
-        savedResource = repository.store(db);
+        savedResource = repo.save(db);
     }
-
-    @Transactional
-    @AfterAll
-    public void tearDown() throws Exception {
-    	cleanupResources();
-	}
 
 
     @Test
     public void findSecretAsAdmin() {
+        ResourceRepository repo = jetty.getBean(ResourceRepository.class);
+        SecretRepository repo2 = jetty.getBean(SecretRepository.class);
         given()
-            .auth().preemptive().basic("prodadmin", "prodadmin")
-            .pathParam("id", savedResource.getSecrets().get("password").getID())
+            .auth().basic("prodadmin", "prodadmin")
+            .pathParam("id", savedResource.getID())
+                // .pathParam("id", savedResource.getSecrets().get("password").getID())
         .when()
             .get("/api/v2/secrets/{id}" )
         .then()
@@ -58,7 +52,7 @@ public class SecretRestTest extends RestTest {
     @Test
     public void getSecretRequiresLogin() {
         given()
-            .pathParam("id", savedResource.getSecrets().get("password").getID())
+            .pathParam("id", savedResource.getID())
         .when()
            .get("/api/v2/secrets/{id}" )
         .then()

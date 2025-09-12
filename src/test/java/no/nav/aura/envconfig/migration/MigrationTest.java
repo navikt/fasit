@@ -31,7 +31,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.google.common.collect.Lists;
@@ -49,7 +51,8 @@ import com.google.common.collect.Lists;
  * 
  * Remove abstract if you want to run this test
  */
-@SpringJUnitConfig(classes = {SpringOracleUnitTestConfig.class})
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { SpringOracleUnitTestConfig.class })
 public abstract class MigrationTest {
 
     @PersistenceContext

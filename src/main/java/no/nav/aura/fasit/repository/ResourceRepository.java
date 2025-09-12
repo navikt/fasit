@@ -1,12 +1,13 @@
 package no.nav.aura.fasit.repository;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
 
 import no.nav.aura.envconfig.model.resource.Resource;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-@Repository
+import java.util.List;
+
 public interface ResourceRepository extends JpaRepository<Resource, Long>, JpaSpecificationExecutor<Resource> {
 
 }
