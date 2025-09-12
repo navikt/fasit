@@ -7,12 +7,11 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.infrastructure.Zone;
 import no.nav.aura.fasit.repository.ApplicationRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import java.util.Optional;
 
 @Component
@@ -28,7 +27,7 @@ public class ValidationHelpers {
         Application application = applicationRepository.findByNameIgnoreCase(applicationName);
 
         if (application == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application " + applicationName + " does not exist in fasit");   
+            throw new BadRequestException("Application " + applicationName + " does not exist in fasit");
         }
         return application;
     }
@@ -37,7 +36,7 @@ public class ValidationHelpers {
         Application application = applicationRepository.findByNameIgnoreCase(applicationName);
 
         if (application == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + applicationName + " does not exist in fasit");
+            throw new NotFoundException("Application " + applicationName + " does not exist in fasit");
         }
         return application;
     }
@@ -47,7 +46,7 @@ public class ValidationHelpers {
         Environment environment = environmentRepository.findByNameIgnoreCase(environmentName);
 
         if (environment == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, " Environment " + environmentName + " does not exist in fasit");
+            throw new BadRequestException(" Environment " + environmentName + " does not exist in fasit");
         }
         return environment;
     }
@@ -56,7 +55,7 @@ public class ValidationHelpers {
         Environment environment = environmentRepository.findByNameIgnoreCase(environmentName);
 
         if (environment == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, " Environment " + environmentName + " does not exist in fasit");
+            throw new NotFoundException(" Environment " + environmentName + " does not exist in fasit");
         }
         return environment;
     }
@@ -82,7 +81,7 @@ public class ValidationHelpers {
     public Optional<Domain> domainFromZone(EnvironmentClass environmentClass, Optional<Environment> environment, Zone zone) {
         if (zone != null) {
             if (environmentClass == null && !environment.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zone without environmentClass or environment is not possible");
+                throw new BadRequestException("Zone without environmentClass or environment is not possible");
             }
 
             if (environment.isPresent()) {

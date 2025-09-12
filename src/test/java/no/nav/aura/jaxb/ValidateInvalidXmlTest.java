@@ -1,17 +1,16 @@
 package no.nav.aura.jaxb;
 
-
+import static org.junit.Assert.assertNotNull;
 import no.nav.aura.appconfig.Application;
-import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.Test;
 
 public class ValidateInvalidXmlTest {
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void parse() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> Application.instance(getClass().getResourceAsStream("/app-config-invalid.xml")));
-
+        Application app = Application.instance(getClass().getResourceAsStream("/app-config-invalid.xml"));
+        assertNotNull(app);
     }
 
 }

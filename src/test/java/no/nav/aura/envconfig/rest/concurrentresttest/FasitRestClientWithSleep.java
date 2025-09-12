@@ -1,29 +1,26 @@
 package no.nav.aura.envconfig.rest.concurrentresttest;
 
 
-import java.net.URI;
-
-import org.springframework.web.util.UriComponentsBuilder;
-
 import no.nav.aura.envconfig.client.FasitRestClient;
+
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 
 public class FasitRestClientWithSleep extends FasitRestClient {
 
-    private final URI baseUrl;
+    private final String baseUrl;
 
     public FasitRestClientWithSleep(String baseUrl, String username, String password) {
         super(baseUrl, username, password);
-        this.baseUrl = URI.create(baseUrl);
+        this.baseUrl = baseUrl;
     }
 
     public String sleep(Integer milliseconds) {
-    	URI uri = UriComponentsBuilder.fromUri(baseUrl)
-				.path("/sleep")
-				.queryParam("milliseconds", milliseconds)
-				.build().toUri();
+        URI uri = UriBuilder.fromUri(baseUrl).path("sleep").queryParam("milliseconds", milliseconds).build();
         try {
-            return get(uri, String.class);
+            String s = get(uri, String.class);
+            return s;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

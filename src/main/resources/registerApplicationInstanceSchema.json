@@ -18,7 +18,7 @@
     },
     "selftest": {
       "description": "the applications selftest url",
-      "type": ["string", "null"]
+      "type": "string"
     },
     "nodes": {
       "description": "hostnames of the node(s) the application was deployed to",
@@ -51,16 +51,13 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": ["number", "null"]},
+          "id": {"type": "number"},
           "alias": {"type": "string"},
           "type": {"type": "string"},
-          "accessAdGroups":{"type": ["string", "null"]},
-          "domain": {
-			"type": ["string", "null"],
-			"enum": ["devillo.no", "test.local", "oera-t.local", "preprod.local", "oera-q.local", "adeo.no", "oera.no", null]
-		  },
+          "accessAdGroups":{"type": "string"},
+          "domain": {"enum": ["devillo.no", "test.local", "oera-t.local", "preprod.local", "oera-q.local", "adeo.no", "oera.no"]},
           "properties": {
-            "type": ["object", "null"]
+            "type": "object"
           }
         },
         "required": [
@@ -88,7 +85,7 @@
     },
     "appConfig": {
       "description": "the app-config, if this was used with the deployment",
-      "type": ["object", "null"],
+      "type": "object",
       "properties": {
         "format": {"enum": ["xml"]},
         "content": {"type": "string"}

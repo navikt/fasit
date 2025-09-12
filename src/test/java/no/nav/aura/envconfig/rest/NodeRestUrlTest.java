@@ -2,22 +2,15 @@ package no.nav.aura.envconfig.rest;
 
 import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.OK;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
+import javax.ws.rs.core.Response.Status;
 
-import com.google.common.collect.Lists;
-
-import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
@@ -30,15 +23,21 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 
-@TestInstance(Lifecycle.PER_CLASS)
+import org.junit.Ignore;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Lists;
+import io.restassured.http.ContentType;
+
 public class NodeRestUrlTest extends RestTest {
 
-    private Environment testEnv;
-    private Node newNode;
+    private static Environment testEnv;
+    private static Node node;
 
     @BeforeAll
-    @Transactional
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
         Environment utvEnv = repository.store(new Environment("myUtvEnv", EnvironmentClass.u));
 
         Cluster appCluster = utvEnv.addCluster(new Cluster("cluster", Domain.Devillo));
@@ -59,19 +58,11 @@ public class NodeRestUrlTest extends RestTest {
         Node groupNode = new Node("grouphost.devillo.no", "username", "password");
         utvEnv.addNode(groupCluster, groupNode);
         repository.store(utvEnv);
-//        node = repository.findNodeBy(newNode.getHostname());
         testEnv = repository.store(new Environment("myTestEnv", EnvironmentClass.t));
-    }
-    
-    @AfterAll
-    @Transactional
-    void tearDown() {
-    	cleanupEnvironments();
-    	cleanupApplicationGroup();
-    	cleanupApplications();
+        node = repository.findNodeBy(newNode.getHostname());
+
     }
 
-    
     @Test
     public void nodeGetServices_shouldBeCaseInsensitive() throws Exception {
         String envName = "env";
@@ -81,16 +72,16 @@ public class NodeRestUrlTest extends RestTest {
         env.addNode(node);
         repository.store(env);
 
-        expect().statusCode(HttpStatus.OK.value()).body(containsString(hostname)).when().get("/conf/nodes?envName=" + envName);
-        expect().statusCode(HttpStatus.OK.value()).body(containsString(hostname)).when().get("/conf/nodes?envName=" + envName.toUpperCase());
-        expect().statusCode(HttpStatus.OK.value()).body(containsString(hostname)).when().get("/conf/nodes/" + hostname);
-        expect().statusCode(HttpStatus.OK.value()).body(containsString(hostname)).when().get("/conf/nodes/" + hostname.toUpperCase());
+        expect().statusCode(OK.getStatusCode()).body(containsString(hostname)).when().get("/conf/nodes?envName=" + envName);
+        expect().statusCode(OK.getStatusCode()).body(containsString(hostname)).when().get("/conf/nodes?envName=" + envName.toUpperCase());
+        expect().statusCode(OK.getStatusCode()).body(containsString(hostname)).when().get("/conf/nodes/" + hostname);
+        expect().statusCode(OK.getStatusCode()).body(containsString(hostname)).when().get("/conf/nodes/" + hostname.toUpperCase());
     }
 
     @Test
     public void getNodeWithSingleApp() {
         expect().
-                statusCode(HttpStatus.OK.value())
+                statusCode(OK.getStatusCode())
                 .body(containsString("<hostname>myNewHost.devillo.no"))
                 .body(containsString("<username>username"))
                 .body(containsString("<applicationMappingName>myApp"))
@@ -103,7 +94,7 @@ public class NodeRestUrlTest extends RestTest {
     @Test
     public void getNodeWithApplicationGroup() {
         expect().
-                statusCode(HttpStatus.OK.value())
+                statusCode(OK.getStatusCode())
                 .body(containsString("<hostname>grouphost.devillo.no"))
                 .body(containsString("<username>username"))
                 .body(containsString("<applicationMappingName>myAppGrp"))
@@ -116,7 +107,7 @@ public class NodeRestUrlTest extends RestTest {
 
     @Test
     public void getNodeNotFound() {
-        expect().statusCode(HttpStatus.NOT_FOUND.value()).when().get("/conf/nodes/unknown");
+        expect().statusCode(NOT_FOUND.getStatusCode()).when().get("/conf/nodes/unknown");
     }
 
     @Test
@@ -131,7 +122,7 @@ public class NodeRestUrlTest extends RestTest {
         repository.store(t14);
 
         expect().
-                statusCode(HttpStatus.OK.value())
+                statusCode(OK.getStatusCode())
                 .body(containsString("<hostname>node13_1.devillo.no"))
                 .body(containsString("<hostname>node13_2.devillo.no"))
                 .body(containsString("<hostname>node14_1.test.local"))
@@ -146,7 +137,7 @@ public class NodeRestUrlTest extends RestTest {
         repository.store(u2);
 
         expect().
-                statusCode(HttpStatus.OK.value())
+                statusCode(OK.getStatusCode())
                 .body(not(containsString("<hostname>myNewHost.devillo.no")))
                 .body(containsString("<hostname>node2.devillo.no"))
                 .when().get("/conf/nodes?envName=u2");
@@ -158,8 +149,8 @@ public class NodeRestUrlTest extends RestTest {
         given()
                 .auth().basic("prodadmin", "prodadmin")
                 .queryParam("entityStoreComment", "deleteComment")
-                .expect().statusCode(HttpStatus.NO_CONTENT.value()).when().delete("/conf/nodes/myNewHost.devillo.no");
-        Node node = repository.findNodeBy(newNode.getHostname());
+                .expect().statusCode(Status.NO_CONTENT.getStatusCode()).when().delete("/conf/nodes/myNewHost.devillo.no");
+
         FasitRevision<Node> headrevision = getHeadrevision(node);
         assertEquals("deleteComment", headrevision.getMessage());
     }
@@ -168,27 +159,27 @@ public class NodeRestUrlTest extends RestTest {
     public void deleteDmgr() {
         Resource storedDmgr = createDmgr("mydmgr.devillo.no");
 
-        given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.OK.value()).when().get("/conf/resources/" + storedDmgr.getID());
-        given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.NO_CONTENT.value()).when().delete("/conf/nodes/mydmgr.devillo.no");
-        given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.NOT_FOUND.value()).when().get("/conf/resources/" + storedDmgr.getID());
+        given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.OK.getStatusCode()).when().get("/conf/resources/" + storedDmgr.getID());
+        given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.NO_CONTENT.getStatusCode()).when().delete("/conf/nodes/mydmgr.devillo.no");
+        given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.NOT_FOUND.getStatusCode()).when().get("/conf/resources/" + storedDmgr.getID());
     }
 
     @Test
     public void deletingNonExistentDmgr_shouldDoNothing() throws Exception {
         Resource storedDmgr = createDmgr("dmgr.devillo.no");
 
-        given().auth().preemptive().basic("prodadmin", "prodadmin").delete("/conf/nodes/feil.devillo.no");
-        given().auth().preemptive().basic("prodadmin", "prodadmin").expect().statusCode(HttpStatus.OK.value()).when().get("/conf/resources/" + storedDmgr.getID());
+        given().auth().basic("prodadmin", "prodadmin").delete("/conf/nodes/feil.devillo.no");
+        given().auth().basic("prodadmin", "prodadmin").expect().statusCode(Status.OK.getStatusCode()).when().get("/conf/resources/" + storedDmgr.getID());
     }
 
     @Test
     public void deleteNodeNotAuthorized() {
-        expect().statusCode(HttpStatus.UNAUTHORIZED.value()).when().delete("/conf/nodes/myNewHost.devillo.no");
+        expect().statusCode(Status.UNAUTHORIZED.getStatusCode()).when().delete("/conf/nodes/myNewHost.devillo.no");
     }
 
     @Test
     public void deleteNodeNotFound() {
-        given().auth().preemptive().basic("prodadmin", "prodadmin").expect().expect().statusCode(HttpStatus.NOT_FOUND.value()).when().delete("/conf/nodes/unknown");
+        given().auth().basic("prodadmin", "prodadmin").expect().expect().statusCode(Status.NOT_FOUND.getStatusCode()).when().delete("/conf/nodes/unknown");
     }
 
     @Test
@@ -197,7 +188,7 @@ public class NodeRestUrlTest extends RestTest {
         given().body(content)
                 .contentType(ContentType.XML)
                 .expect()
-                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .statusCode(Status.UNAUTHORIZED.getStatusCode())
                 .when().post("/conf/nodes/myNewHost.devillo.no");
     }
 
@@ -208,7 +199,7 @@ public class NodeRestUrlTest extends RestTest {
                 .auth().basic("prodadmin", "prodadmin")
                 .contentType(ContentType.XML)
                 .expect()
-                .statusCode(HttpStatus.NOT_FOUND.value())
+                .statusCode(Status.NOT_FOUND.getStatusCode())
                 .when().post("/conf/nodes/unknown.devillo.no");
     }
 
@@ -219,7 +210,7 @@ public class NodeRestUrlTest extends RestTest {
                 .auth().basic("prodadmin", "prodadmin")
                 .contentType(ContentType.XML)
                 .expect()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .statusCode(Status.BAD_REQUEST.getStatusCode())
                 .when().post("/conf/nodes/myNewHost.devillo.no");
     }
 
@@ -227,15 +218,15 @@ public class NodeRestUrlTest extends RestTest {
     public void stopNode() {
         String content = "<node><status>STOPPED</status></node>";
         given().auth()
-                .preemptive().basic("prodadmin", "prodadmin")
+                .basic("prodadmin", "prodadmin")
                 .body(content)
                 .contentType(ContentType.XML)
                 .expect()
-                .statusCode(HttpStatus.CREATED.value())
+                .statusCode(Status.CREATED.getStatusCode())
                 .when().post("/conf/nodes/myNewHost.devillo.no");
 
         expect().
-                statusCode(HttpStatus.OK.value())
+                statusCode(OK.getStatusCode())
                 .body(containsString("<hostname>myNewHost.devillo.no"))
                 .body(containsString("<status>STOPPED"))
                 .when().get("/conf/nodes/myNewHost.devillo.no");
@@ -340,7 +331,7 @@ public class NodeRestUrlTest extends RestTest {
 
     private void registerNode(String content, int expectedStatusCode) {
         given().auth()
-                .preemptive().basic("prodadmin", "prodadmin")
+                .basic("prodadmin", "prodadmin")
                 .body(content)
                 .contentType(ContentType.XML)
                 .expect()
@@ -361,7 +352,7 @@ public class NodeRestUrlTest extends RestTest {
                 "<dataCenter>dataCenter1</dataCenter><memoryMb>2048</memoryMb><cpuCount>2</cpuCount></node>";
     }
 
-    private Resource createDmgr(String hostname) {
+    private static Resource createDmgr(String hostname) {
         Resource dmgr = new Resource("wasdmgr", ResourceType.DeploymentManager, new Scope(EnvironmentClass.u).domain(Domain.Devillo));
         dmgr.putPropertyAndValidate("hostname", hostname);
         dmgr.putPropertyAndValidate("username", "user");

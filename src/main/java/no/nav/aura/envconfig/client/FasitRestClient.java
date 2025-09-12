@@ -1,90 +1,83 @@
 package no.nav.aura.envconfig.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.UnknownContentTypeException;
-import org.springframework.web.util.UriComponentsBuilder;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.envconfig.client.DomainDO.EnvClass;
 import no.nav.aura.envconfig.client.rest.PropertyElement;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
-import no.nav.aura.envconfig.client.rest.ResourceElementList;
 import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
+
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FasitRestClient {
 
     private URI baseUrl;
-    private RestTemplate restTemplate;
+    private HttpClient httpClient;
     private static final Logger log = LoggerFactory.getLogger(FasitRestClient.class);
     private Map<URI, Object> cache = new HashMap<URI, Object>();
     private String onBehalfOf;
     private boolean useCache = true;
 
     public FasitRestClient(String baseUrl, String username, String password) {
-        this.baseUrl = URI.create(baseUrl);
-        this.restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new FasitResponseErrorHandler());
-        restTemplate.getInterceptors().add((request, body, execution) -> {
-            String auth = username + ":" + password;
-            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes());
-            String authHeader = "Basic " + new String(encodedAuth);
-            request.getHeaders().set("Authorization", authHeader);
-            
-            if (onBehalfOf != null) {
-                request.getHeaders().set("x-onbehalfof", onBehalfOf);
-            }
-            
-            return execution.execute(request, body);
-        });
-        
+        this.baseUrl = UriBuilder.fromUri(baseUrl).build();
+
+        Credentials credentials = new UsernamePasswordCredentials(username, password);
+        ThreadSafeClientConnManager connectionManager = new ThreadSafeClientConnManager();
+        // The number of concurrent requests allowed, default is two. Set to 1 for now, realizing only thread safety, but no
+        // concurrency.
+        connectionManager.setDefaultMaxPerRoute(1);
+        DefaultHttpClient defaultHttpClient = new DefaultHttpClient(connectionManager);
+        defaultHttpClient.getCredentialsProvider().setCredentials(AuthScope.ANY, credentials);
+        this.httpClient = defaultHttpClient;
+
         log.info("using rest based envconfig client with url : {} and user {}", baseUrl, username);
     }
   
-    public UriComponentsBuilder getBaseUrl() {
-        return UriComponentsBuilder.fromUri(baseUrl);
+    public UriBuilder getBaseUrl() {
+        return UriBuilder.fromUri(baseUrl);
     }
 
     public ApplicationInstanceDO getApplicationInstance(String environment, String appName) {
-        URI url = getBaseUrl().path("/environments/{env}/applications/{app}").buildAndExpand(environment, appName).toUri();
+        URI url = getBaseUrl().path("environments/{env}/applications/{app}").build(environment, appName);
         ApplicationInstanceDO appInstance = get(url, ApplicationInstanceDO.class);
         return appInstance;
     }
 
     public Collection<EnvironmentDO> getEnvironments() {
-        URI url = getBaseUrl().path("/environments").build().toUri();
+        URI url = getBaseUrl().path("environments").build();
         EnvironmentDO[] environments = get(url, EnvironmentDO[].class);
         return Arrays.asList(environments);
     }
 
-    public ApplicationInstanceListDO getApplicationInstances(String environment) {
-        URI url = getBaseUrl().path("/environments/{env}/applications").build(environment);
-        ApplicationInstanceListDO instances = get(url, ApplicationInstanceListDO.class);
-        return instances;
+    public Collection<ApplicationInstanceDO> getApplicationInstances(String environment) {
+        URI url = getBaseUrl().path("environments/{env}/applications").build(environment);
+        ApplicationInstanceDO[] instances = get(url, ApplicationInstanceDO[].class);
+        return Arrays.asList(instances);
     }
 
     public String getSecret(URI url) {
@@ -94,14 +87,11 @@ public class FasitRestClient {
                 return (String) cache.get(url);
             }
             log.debug("Calling url {}", url);
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("showsecret", "true");
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-            
+            ClientRequest client = createClientRequest(url.toString());
+            client.header("showsecret", true);
+            ClientResponse<String> response = client.get(String.class);
             checkResponse(response, url);
-            String result = response.getBody();
-
+            String result = response.getEntity();
             putInCache(url, result);
             return result;
         } catch (Exception e) {
@@ -126,11 +116,10 @@ public class FasitRestClient {
     }
 
     /** Find resources matching given scope */
-    public ResourceElementList findResources(EnvClass envClass, String environment, DomainDO domain, String appName, ResourceTypeDO type, String alias) {
+    public Collection<ResourceElement> findResources(EnvClass envClass, String environment, DomainDO domain, String appName, ResourceTypeDO type, String alias) {
         URI url = buildResourceQuery(envClass, environment, domain, appName, type, alias, false, false);
-        log.info("Finding resources with url {}", url);
-        ResourceElementList resources = get(url, ResourceElementList.class);
-        return resources;
+        ResourceElement[] resources = get(url, ResourceElement[].class);
+        return Arrays.asList(resources);
     }
 
     public ResourceElement findBestMatchingResource(EnvClass envClass, String environment, DomainDO domain, String appName, ResourceTypeDO type, String alias) {
@@ -143,34 +132,33 @@ public class FasitRestClient {
     }
 
     public URI buildResourceQuery(EnvClass envClass, String environment, DomainDO domain, String appName, ResourceTypeDO type, String alias, Boolean bestMatch, Boolean usage) {
-        UriComponentsBuilder uriBuilder = getBaseUrl().path("/resources");
-
+        UriBuilder uribuilder = getBaseUrl().path("resources");
         if (envClass != null) {
-            uriBuilder.queryParam("envClass", envClass);
+            uribuilder.queryParam("envClass", envClass);
         }
         if (environment != null) {
-        	uriBuilder.queryParam("envName", environment);
+            uribuilder.queryParam("envName", environment);
         }
         if (domain != null) {
-        	uriBuilder.queryParam("domain", domain.getFqn());
+            uribuilder.queryParam("domain", domain.getFqn());
         }
         if (appName != null) {
-        	uriBuilder.queryParam("app", appName);
+            uribuilder.queryParam("app", appName);
         }
         if (type != null) {
-        	uriBuilder.queryParam("type", type);
+            uribuilder.queryParam("type", type);
         }
         if (alias != null) {
-        	uriBuilder.queryParam("alias", alias);
+            uribuilder.queryParam("alias", alias);
         }
         if(bestMatch !=null){
-        	uriBuilder.queryParam("bestmatch", bestMatch);
+            uribuilder.queryParam("bestmatch", bestMatch);
         }
         if(usage !=null){
-        	uriBuilder.queryParam("usage", usage);
+            uribuilder.queryParam("usage", usage);
         }
 
-        URI url = uriBuilder.build().toUri();
+        URI url = uribuilder.build();
         log.debug("REST URL " + url);
         return url;
     }
@@ -181,70 +169,57 @@ public class FasitRestClient {
 
     /** Find the best matching resource given a full scope */
     public ResourceElement getResource(String environment, String alias, ResourceTypeDO type, DomainDO domain, String appName) {
-        URI url = getBaseUrl().path("/resources/bestmatch")
-                .queryParam("envName", environment)
-                .queryParam("domain", domain.getFqn())
-                .queryParam("type", type)
-                .queryParam("alias", alias)
-                .queryParam("app", appName)
-                .build().toUri();
+        URI url = getBaseUrl().path("resources/bestmatch").queryParam("envName", environment).queryParam("domain", domain.getFqn()).queryParam("type", type)
+                .queryParam("alias", alias).queryParam("app", appName).build();
         log.debug("REST URL " + url);
         ResourceElement resource = get(url, ResourceElement.class);
         return resource;
     }
 
     public ResourceElement getResourceById(long resourceId) {
-        URI url = getBaseUrl().path("/resources/{id}")
-                .buildAndExpand(resourceId).toUri();
+        URI url = getBaseUrl().path("resources/" + resourceId).build();
         log.debug("REST URL " + url);
         ResourceElement resource = get(url, ResourceElement.class);
         return resource;
     }
 
     public ApplicationDO getApplicationInfo(String appName) {
-        URI url = getBaseUrl().path("/applications/{appname}").buildAndExpand(appName).toUri();
+        URI url = getBaseUrl().path("applications/{appname}").build(appName);
         return get(url, ApplicationDO.class);
     }
 
     public ApplicationGroupDO getApplicationGroup(String name) {
-        URI url = getBaseUrl().path("/applicationGroups/{name}").buildAndExpand(name).toUri();
+        URI url = getBaseUrl().path("applicationGroups/{name}").build(name);
         return get(url, ApplicationGroupDO.class);
     }
 
-    public ResponseEntity<String> registerApplication(RegisterApplicationInstancePayload payload, String comment) {
-        URI url = getBaseUrl().path("/v1/applicationinstances").build().toUri();
+    public Response registerApplication(RegisterApplicationInstancePayload payload, String comment) {
+        URI url = getBaseUrl().path("/v1/applicationinstances").build();
         log.debug("Registering new application instance to endpoint {} with payload {}", url, payload.toJson());
         return post(url, payload.toJson(), comment, MediaType.APPLICATION_JSON);
     }
 
 
-    public ResponseEntity<String> undeployApplication(String environmentName, String applicationName, String comment) {
-        URI url = getBaseUrl().path("/environments/{env}/applications/{app}").buildAndExpand(environmentName, applicationName).toUri();
+    public Response undeployApplication(String environmentName, String applicationName, String comment) {
+        URI url = getBaseUrl().path("environments/{env}/applications/{app}").build(environmentName, applicationName);
         log.debug("Undeploying application {} on {} ", applicationName, url);
         return delete(url, comment);
     }
 
-    public ResponseEntity<String> verifyApplication(String environment, String applicationName, Application application) {
-        URI url = getBaseUrl().path("/environments/{env}/applications/{app}/verify").buildAndExpand(environment, applicationName).toUri();
+    public Response verifyApplication(String environment, String applicationName, Application application) {
+        URI url = getBaseUrl().path("environments/{env}/applications/{app}/verify").build(environment, applicationName);
         log.debug("Verify application {} on {} ", applicationName, url);
         return put(url, application, null);
     }
 
     public NodeDO registerNode(NodeDO nodeDO, String comment) {
-        URI uri = withComment(getBaseUrl().path("/nodes"), comment).build().toUri();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_XML);
+        URI uri = withComment(getBaseUrl().path("nodes"), comment).build();
+        ClientRequest client = createClientRequest(uri.toString()).body(MediaType.APPLICATION_XML, nodeDO);
         try {
-    		ResponseEntity<NodeDO> response = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(nodeDO, headers), NodeDO.class);
-            checkResponse(response, uri);
-            return response.getBody();
-        	
-        } catch (UnknownContentTypeException ex) {
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(nodeDO, headers), String.class);
-            checkResponse(response, uri);
-        	log.error("Unknown content type when registering node: {}", response.getBody());
-            throw new IllegalArgumentException("Resource not found at " + uri + ": " + response.getBody());
-       } catch (Exception e) {
+            ClientResponse<NodeDO> put = client.put(NodeDO.class);
+            checkResponse(put, uri);
+            return put.getEntity();
+        } catch (Exception e) {
             log.warn("unable to register node", e);
             throw rethrow(e);
         }
@@ -257,22 +232,20 @@ public class FasitRestClient {
      * @param comment
      * @return
      */
-    public ResponseEntity<String> updateNode(NodeDO nodeDO, String comment) {
-        URI uri = getBaseUrl().path("/nodes/{hostname}")
-                .buildAndExpand(nodeDO.getHostname()).toUri();
+    public Response updateNode(NodeDO nodeDO, String comment) {
+        URI uri = getBaseUrl().path("nodes").path(nodeDO.getHostname()).build();
         log.debug("Updating node on url", uri);
         return post(uri, nodeDO, comment);
     }
 
-    public ResponseEntity<String> deleteResource(long id, String comment) {
-        URI url = getBaseUrl().path("/resources/{id}")
-                .buildAndExpand(id).toUri();
+    public Response deleteResource(long id, String comment) {
+        URI url = getBaseUrl().path("resources/{id}").build(id);
         return delete(url, comment);
     }
 
     public ResourceElement updateResource(long id, ResourceElement resource, String comment) {
-    	MultiValueMap<String, Object> data = createFormData(resource);
-        return executeMultipart(HttpMethod.POST, "/resources/" + id, data, comment, ResourceElement.class);
+        MultipartFormDataOutput data = createFormData(resource);
+        return executeMultipart("POST", "resources/" + id, data, comment, ResourceElement.class);
     }
 
     /**
@@ -281,8 +254,8 @@ public class FasitRestClient {
      * @return
      */
     public ResourceElement registerResource(ResourceElement resource, String comment) {
-    	MultiValueMap<String, Object> data = createFormData(resource);
-        return executeMultipart(HttpMethod.PUT, "/resources", data, comment, ResourceElement.class);
+        MultipartFormDataOutput data = createFormData(resource);
+        return executeMultipart("PUT", "resources", data, comment, ResourceElement.class);
     }
 
     /**
@@ -311,29 +284,29 @@ public class FasitRestClient {
      * @return
      */
 
-    public <T> T executeMultipart(HttpMethod method, String path, MultiValueMap<String, Object> data, String comment, Class<T> responseClass) {
-        URI url = withComment(getBaseUrl().path(path), comment).build().toUri();
+    public <T> T executeMultipart(String method, String path, MultipartFormDataOutput data, String comment, Class<T> responseClass) {
+        URI url = withComment(getBaseUrl().path(path), comment).build();
+        ClientRequest client = createClientRequest(url.toString()).body(MediaType.MULTIPART_FORM_DATA, data);
         try {
             log.debug("Sending multipart to {} with method {} ", url, method);
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(data, headers);
-            
-            ResponseEntity<T> response = restTemplate.exchange(
-                url, method, requestEntity, responseClass);
-            
+            ClientResponse<T> response = null;
+            if ("PUT".equals(method)) {
+                response = client.put(responseClass);
+            } else if ("POST".equals(method)) {
+                response = client.post(responseClass);
+            } else {
+                throw new IllegalArgumentException("Expected HTTP method POST or PUT. Got " + method);
+            }
             checkResponse(response, url);
-            return response.getBody();
+            return response.getEntity();
         } catch (Exception e) {
             log.warn("unable to register resource", e);
             throw rethrow(e);
         }
     }
 
-    private MultiValueMap<String, Object> createFormData(ResourceElement resource) {
-        MultiValueMap<String, Object> data = new LinkedMultiValueMap<>();
+    private MultipartFormDataOutput createFormData(ResourceElement resource) {
+        MultipartFormDataOutput data = new MultipartFormDataOutput();
         Map<String, String> fields = new HashMap<>();
         fields.put("alias", resource.getAlias());
         fields.put("type", resource.getType().name());
@@ -349,11 +322,11 @@ public class FasitRestClient {
         }
         for (Entry<String, String> entry : fields.entrySet()) {
             if (entry.getValue() != null) {
-                data.add(entry.getKey(), entry.getValue());
+                data.addFormData(entry.getKey(), entry.getValue(), MediaType.TEXT_PLAIN_TYPE);
             }
         }
         for (PropertyElement element : resource.getProperties()) {
-            data.add(element.getName(), element.getValue());
+            data.addFormData(element.getName(), element.getValue(), MediaType.TEXT_PLAIN_TYPE);
         }
         return data;
     }
@@ -369,26 +342,25 @@ public class FasitRestClient {
         return usedResources;
     }
 
-    public ResponseEntity<String> deleteNode(String hostname, String comment) {
-        URI url = getBaseUrl().path("/nodes/{node}").buildAndExpand(hostname).toUri();
+    public Response deleteNode(String hostname, String comment) {
+        URI url = getBaseUrl().path("nodes").path(hostname).build();
         cache.clear();
         return delete(url, comment);
     }
 
-    private UriComponentsBuilder withComment(UriComponentsBuilder uriBuilder, String comment) {
+    private UriBuilder withComment(UriBuilder uriBuilder, String comment) {
         if (comment != null) {
             return uriBuilder.queryParam("entityStoreComment", comment);
         }
         return uriBuilder;
     }
 
-    private ResponseEntity<String> delete(URI url, String comment) {
+    private Response delete(URI url, String comment) {
         try {
-            URI uri = withComment(UriComponentsBuilder.fromUri(url), comment).build().toUri();
-            ResponseEntity<String> response = restTemplate.exchange(
-                    uri, HttpMethod.DELETE, null, String.class);
-            
+            String urlString = withComment(UriBuilder.fromUri(url), comment).build().toString();
+            ClientResponse<?> response = createClientRequest(urlString).delete();
             checkResponse(response, url);
+            response.releaseConnection();
             log.debug("DELETE {} with comment {}", url, comment);
             return response;
         } catch (Exception e) {
@@ -397,23 +369,18 @@ public class FasitRestClient {
         }
     }
 
-    private ResponseEntity<String> post(URI url, Object data, String comment) {
+    private Response post(URI url, Object data, String comment) {
         return post(url, data, comment, MediaType.APPLICATION_XML);
     }
 
-    private ResponseEntity<String> post(URI url, Object data, String comment, MediaType mediaType) {
+    private Response post(URI url, Object data, String comment, String mediaType) {
         try {
-            URI uri = withComment(UriComponentsBuilder.fromUri(url), comment).build().toUri();
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(mediaType);
-            
-            HttpEntity<?> requestEntity = new HttpEntity<>(data, headers);
-            log.debug("POST {} with comment {}", url, comment);
-            ResponseEntity<String> response = restTemplate.exchange(
-                uri, HttpMethod.POST, requestEntity, String.class);
-            
+            String urlString = withComment(UriBuilder.fromUri(url), comment).build().toString();
+            ClientRequest request = createClientRequest(urlString).body(mediaType, data);
+            ClientResponse<?> response = request.post();
             checkResponse(response, url);
+            response.releaseConnection();
+            log.debug("POST {} with comment {}", url, comment);
             return response;
         } catch (Exception e) {
             log.warn("Could not POST {} with comment {}", url, comment);
@@ -421,24 +388,32 @@ public class FasitRestClient {
         }
     }
 
-    private ResponseEntity<String> put(URI url, Object data, String comment) {
+    private Response put(URI url, Object data, String comment) {
         try {
-            URI uri = withComment(UriComponentsBuilder.fromUri(url), comment).build().toUri();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_XML);
-            
-            HttpEntity<?> requestEntity = new HttpEntity<>(data, headers);
-            
-            ResponseEntity<String> response = restTemplate.exchange(
-                uri, HttpMethod.PUT, requestEntity, String.class);
-            
+            String urlString = withComment(UriBuilder.fromUri(url), comment).build().toString();
+            ClientRequest request = createClientRequest(urlString).body(MediaType.APPLICATION_XML, data);
+            ClientResponse<?> response = request.put();
             checkResponse(response, url);
+            response.releaseConnection();
             log.debug("PUT {} with comment {}", url, comment);
             return response;
         } catch (Exception e) {
             log.warn("Could not PUT {} with comment {}", url, comment);
             throw rethrow(e);
         }
+    }
+
+    private ClientRequest createClientRequest(String url) {
+        CookieStore cookieStore = new BasicCookieStore();
+        HttpContext httpContext = new BasicHttpContext();
+        httpContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+        ApacheHttpClient4Executor clientExecutor = new ApacheHttpClient4Executor(httpClient, httpContext);
+
+        ClientRequest clientRequest = new ClientRequest(url, clientExecutor);
+        if (onBehalfOf != null) {
+            clientRequest.header("x-onbehalfof", onBehalfOf);
+        }
+        return clientRequest;
     }
 
     @SuppressWarnings("unchecked")
@@ -449,27 +424,13 @@ public class FasitRestClient {
                 return (T) cache.get(url);
             }
             log.debug("Calling url {}", url);
-            ResponseEntity<?> response;
-            if (InputStream.class.isAssignableFrom(returnType)) {
-                response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
-                checkResponse(response, url);
-                byte[] responseBody = (byte[]) response.getBody();
-                return (T) new ByteArrayInputStream(responseBody);
-            } else {
-            	try {
-	                response = restTemplate.exchange(url, HttpMethod.GET, null, returnType);
-	                checkResponse(response, url);
-	                T result = (T) response.getBody();
-	                putInCache(url, result);
-	                return result;
-            	} catch (UnknownContentTypeException ex) {
-                    response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
-                    checkResponse(response, url);
-                    throw new IllegalArgumentException("Resource not found at " + url + ": " + response.getBody());
-                }	
-            }
+            ClientRequest client = createClientRequest(url.toString());
+            ClientResponse<T> response = client.get(returnType);
+            checkResponse(response, url);
+            T result = response.getEntity();
+            putInCache(url, result);
+            return result;
         } catch (Exception e) {
-            log.error("Error while calling {}", url, e);
             throw rethrow(e);
         }
     }
@@ -484,23 +445,24 @@ public class FasitRestClient {
         }
     }
 
-    private <T> void checkResponse(ResponseEntity<?> response, URI requestUrl) {
-        HttpStatus status = response.getStatusCode();
-        if (status == HttpStatus.FORBIDDEN) {
+    private <T> void checkResponse(ClientResponse<T> response, URI requestUrl) {
+        Status status = response.getResponseStatus();
+        if (status == Status.FORBIDDEN) {
+            response.releaseConnection();
             throw new SecurityException("Access forbidden to " + requestUrl);
         }
-        if (status == HttpStatus.UNAUTHORIZED) {
-            throw new SecurityException("Unauthorized access to " + requestUrl);
+        if (status == Status.UNAUTHORIZED) {
+            response.releaseConnection();
+            throw new SecurityException("Unautorized access to " + requestUrl);
         }
-        if (status == HttpStatus.NOT_FOUND) {
+        if (status == Status.NOT_FOUND) {
+            response.releaseConnection();
             throw new IllegalArgumentException("Not found " + requestUrl);
         }
-        if (status.value() >= 400) {
-            throw new RuntimeException("Error calling " + requestUrl + " code: " + status.value() + 
-                                       "\n " + response.getBody());
+        if (status.getStatusCode() >= 400) {
+            throw new RuntimeException("Error calling " + requestUrl + " code: " + status.getStatusCode() + "\n " + response.getEntity(String.class));
         }
     }
-
 
     /**
      * This is just a rethrow of resteasy client exceptions which should have been RuntimeExceptions. Who uses Exception as a
@@ -513,22 +475,15 @@ public class FasitRestClient {
         return new RuntimeException(e);
     }
 
-    public void setRestTemplate(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public void setHttpClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
     }
-    
+
     public void setOnBehalfOf(String onBehalfOf) {
         this.onBehalfOf = onBehalfOf;
     }
 
     public void useCache(boolean useCache) {
         this.useCache = useCache;
-    }
-    
-    private static class FasitResponseErrorHandler extends DefaultResponseErrorHandler {
-        @Override
-        public void handleError(ClientHttpResponse response) throws IOException {
-            // Let the checkResponse method handle the error
-        }
     }
 }
