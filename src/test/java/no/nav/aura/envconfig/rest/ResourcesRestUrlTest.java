@@ -13,32 +13,30 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.SerializableFunction;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.springframework.http.HttpStatus;
 
 import javax.persistence.NoResultException;
-import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
 
 import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
-import static javax.ws.rs.core.Response.Status.*;
 import static no.nav.aura.envconfig.util.TestHelper.assertAndGetSingleOrNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
+@TestInstance(Lifecycle.PER_CLASS)
+public class ResourcesRestUrlTest extends RestTest {
 
     private static Environment environment;
     private static Application application;
 
     @BeforeAll
-    public static void setUp() throws Exception {
+    public void setUp() throws Exception {
         application = repository.store(new Application("app"));
         environment = repository.store(new Environment("myEnv", EnvironmentClass.u));
         Resource db = new Resource("myDB", ResourceType.DataSource, new Scope(EnvironmentClass.u).domain(Domain.Devillo).envName("myEnv"));
@@ -49,23 +47,30 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         db.putSecretAndValidate("password", "secret");
         repository.store(db);
     }
+    
+    @AfterAll
+    void tearDown() {
+		cleanupEnvironments();
+		cleanupApplications();
+		cleanupResources();
+	}
 
     @Test
-    public void resourceBestMatch_shouldBeCaseInsensitive() throws Exception {
+    public void resourceBestMatch_shouldBeCaseInsensitive() {
         String alias = "aCamelCasedBaseUrl";
         String envName = "MyEnv";
         Resource resource = new Resource(alias, ResourceType.BaseUrl, new Scope(new Environment(envName, EnvironmentClass.u)));
         resource.getProperties().put("url", "https://myurl.com");
         repository.store(new Application("tulleAPP"));
         repository.store(resource);
-        expect().statusCode(NOT_FOUND.getStatusCode()).when().get("/conf/resources/bestmatch?envClass=P&domain=devillo.no&envName=" + envName + "&alias=" + alias + "&type=BaseUrl&app=tulleapp");
-        expect().statusCode(OK.getStatusCode()).when().get("/conf/resources/bestmatch?envClass=U&domain=devillo.no&envName=" + envName.toLowerCase() + "&alias=" + alias.toUpperCase() + "&type=BaseUrl&app=tulleapp");
-        expect().statusCode(OK.getStatusCode()).when().get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=" + envName.toUpperCase() + "&alias=" + alias.toUpperCase() + "&type=BaseUrl&app=TULLEapp");
+        expect().statusCode(HttpStatus.NOT_FOUND.value()).when().get("/conf/resources/bestmatch?envClass=P&domain=devillo.no&envName=" + envName + "&alias=" + alias + "&type=BaseUrl&app=tulleapp");
+        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/resources/bestmatch?envClass=U&domain=devillo.no&envName=" + envName.toLowerCase() + "&alias=" + alias.toUpperCase() + "&type=BaseUrl&app=tulleapp");
+        expect().statusCode(HttpStatus.OK.value()).when().get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=" + envName.toUpperCase() + "&alias=" + alias.toUpperCase() + "&type=BaseUrl&app=TULLEapp");
     }
 
     @Test
     public void findResoureResourceWithoutAcceptHeaderReturnsXml() {
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("jdbc:url"))
                 .contentType(ContentType.XML)
                 .when()
@@ -77,7 +82,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         given()
                 .header("accept", "application/json")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .body(containsString("jdbc:url"))
                 .contentType(ContentType.JSON)
                 .when()
@@ -94,7 +99,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         stoppedRes.putSecretAndValidate("password", "secret");
         stoppedRes.changeStatus(LifeCycleStatus.STOPPED);
         repository.store(stoppedRes);
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("jdbc:url"))
                 .body(containsString("jdbc:stopped"))
                 .when()
@@ -110,7 +115,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         dbWithoutDbName.putPropertyAndValidate("onsHosts", "test:6200,test1:6200");
         dbWithoutDbName.putSecretAndValidate("password", "secret");
         repository.store(dbWithoutDbName);
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(not(containsString("jdbc:url2")))
                 .body(containsString("jdbc:url"))
                 .when()
@@ -119,7 +124,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
     @Test
     public void searchResourceWithoutEnvClass() {
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("jdbc:url"))
                 .when()
                 .get("/conf/resources?envName=myEnv&alias=myDB&type=DataSource");
@@ -127,7 +132,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
     @Test
     public void bestMatchResource() {
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("jdbc:url"))
                 .when()
                 .get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=myEnv&app=app&alias=myDB&type=DataSource");
@@ -135,7 +140,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
     @Test
     public void bestMatchResourceNotFound() {
-        expect().statusCode(Status.NOT_FOUND.getStatusCode())
+        expect().statusCode(HttpStatus.NOT_FOUND.value())
                 .body(containsString("with alias unknownDB"))
                 .when()
                 .get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=myEnv&app=app&alias=unknownDB&type=DataSource");
@@ -143,7 +148,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
     @Test
     public void findingNonExistingResourceWithBestMatchMode_givesEmptyResourceList() {
-        expect().statusCode(Status.OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("<collection/>"))
                 .when()
                 .get("/conf/resources?envClass=u&domain=devillo.no&envName=myEnv&app=myapp&alias=unknownDB&type=DataSource&bestmatch=true");
@@ -151,7 +156,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
     @Test
     public void findingNonExistingResourceWithoutBestMatchMode_givesEmptyResourceList() {
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(containsString("<collection/>"))
                 .when()
                 .get("/conf/resources?bestmatch=false&envClass=u&domain=devillo.no&envName=myEnv&app=myapp&alias=unknownDB&type=DataSource");
@@ -174,7 +179,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .queryParam("entityStoreComment", "mycomment")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .put("/conf/resources");
 
@@ -192,7 +197,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("url", "http://something")
                 .auth().preemptive().basic("user", "user")
                 .expect()
-                .statusCode(Status.UNAUTHORIZED.getStatusCode())
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .when()
                 .put("/conf/resources");
     }
@@ -206,7 +211,8 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
             given()
                     .auth().preemptive().basic("prodadmin", "prodadmin")
                     .expect()
-                    .statusCode(Status.NO_CONTENT.getStatusCode())
+                    .log().all()
+                    .statusCode(HttpStatus.NO_CONTENT.value())
                     .when()
                     .delete("/conf/resources/{id}", resource.getID());
             repository.getById(Resource.class, resource.getID());
@@ -221,7 +227,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         given()
                 .auth().preemptive().basic("user", "user")
                 .expect()
-                .statusCode(Status.UNAUTHORIZED.getStatusCode())
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .when()
                 .delete("/conf/resources/{id}", resource.getID());
     }
@@ -235,7 +241,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("url", "http://newUrl")
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(Status.OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .body(containsString("newUrl"))
                 .when()
                 .post("/conf/resources/{id}", resource.getID());
@@ -250,7 +256,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("lifeCycleStatus", "STOPPED")
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(Status.OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .body(containsString("<lifeCycleStatus>STOPPED"))
                 .when()
                 .post("/conf/resources/{id}", resource.getID());
@@ -265,7 +271,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("accessAdGroup", "somegroup")
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(Status.OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .body(containsString("<accessAdGroup>somegroup"))
                 .when()
                 .post("/conf/resources/{id}", resource.getID());
@@ -280,14 +286,14 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("url", "http://newUrl")
                 .auth().preemptive().basic("user", "user")
                 .expect()
-                .statusCode(Status.UNAUTHORIZED.getStatusCode())
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .when()
                 .post("/conf/resources/{id}", resource.getID());
     }
 
     private ResourceElement checkResource(String alias, ResourceType resourceType, boolean expect) {
         List<ResourceElement> list = expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .get("/conf/resources?envClass=u&alias=" + alias)
                 .xmlPath().getList("collection.resource", ResourceElement.class);
@@ -312,7 +318,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("scope.domain", "devillo.no")
                 .auth().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(BAD_REQUEST.getStatusCode()).when()
+                .statusCode(HttpStatus.BAD_REQUEST.value()).when()
                 .put("/conf/resources");
     }
 
@@ -335,7 +341,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("keystore.file", file)
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .put("/conf/resources");
 
@@ -343,7 +349,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         String keystoreUri = index(resource).get("keystore").getRef().toString();
         byte[] fileByteArray = given()
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when().get(keystoreUri).asByteArray();
         assertEquals(file.length(), fileByteArray.length);
     }
@@ -363,7 +369,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("url", url)
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .put("/conf/resources");
 
@@ -385,7 +391,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("url", url)
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .put("/conf/resources/" + ResourceType.BaseUrl);
 
@@ -411,7 +417,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
                 .multiPart("password", password)
                 .auth().preemptive().basic("prodadmin", "prodadmin")
                 .expect()
-                .statusCode(OK.getStatusCode())
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .put("/conf/resources");
 
@@ -425,7 +431,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         repository.store(createCredentialResource(resourceName));
         repository.store(createCredentialResource(resourceName));
         expect()
-                .statusCode(BAD_REQUEST.getStatusCode())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .when()
                 .get("/conf/resources?bestmatch=true&envClass=u&alias=" + resourceName)
                 .asString();
@@ -436,8 +442,8 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         String resourceName = "myresource2";
         repository.store(createCredentialResource(resourceName));
         repository.store(createCredentialResource(resourceName));
-        List<ResourceElement> list = expect()
-                .statusCode(OK.getStatusCode())
+        List<ResourceElement> list = expect().log().all()
+                .statusCode(HttpStatus.OK.value())
                 .when()
                 .get("/conf/resources?bestmatch=false&envClass=u&alias=" + resourceName)
                 .xmlPath().getList("collection.resource", ResourceElement.class);
@@ -445,16 +451,16 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
     }
 
     @Test
-    public void bestMatchWithoutApplicationParameter_shouldGiveBadRequest() throws Exception {
+    public void bestMatchWithoutApplicationParameter_shouldGiveBadRequest() {
         Resource resource = new Resource("randomResource", ResourceType.BaseUrl, new Scope(EnvironmentClass.u));
         resource.getProperties().put("url", "https://url.no");
         repository.store(resource);
 
-        expect().statusCode(Status.OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .when()
                 .get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=myEnv&app=app&alias=randomResource&type=BaseUrl");
 
-        expect().statusCode(Status.BAD_REQUEST.getStatusCode())
+        expect().statusCode(HttpStatus.BAD_REQUEST.value())
                 .when()
                 .get("/conf/resources/bestmatch?envClass=u&domain=devillo.no&envName=myEnv&alias=randomResource&type=BaseUrl");
     }
@@ -464,7 +470,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
         String myRequest = setupUsageInApplicationEnvironment("env1", "appName1", "resourceName1", "clusterName1", true);
 
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(hasXPath("/collection/resource/usedInApplications/usedInApplication/name"))
                 .body(hasXPath("/collection/resource/usedInApplications/usedInApplication/envName"))
                 .when()
@@ -477,7 +483,7 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
 
         String myRequest = setupUsageInApplicationEnvironment("env2", "appName2", "resourceName2", "clusterName2", false);
 
-        expect().statusCode(OK.getStatusCode())
+        expect().statusCode(HttpStatus.OK.value())
                 .body(not(hasXPath("/collection/resource/usedInApplications")))
                 .when()
                 .get(myRequest);
@@ -537,7 +543,6 @@ public class ResourcesRestUrlTest extends no.nav.aura.envconfig.rest.RestTest {
         return resource;
     }
 
-    @SuppressWarnings("serial")
     private ImmutableMap<String, PropertyElement> index(ResourceElement resource) {
         return Maps.uniqueIndex(resource.getProperties(), new SerializableFunction<PropertyElement, String>() {
             public String process(PropertyElement input) {

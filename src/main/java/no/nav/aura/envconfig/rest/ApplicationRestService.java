@@ -4,29 +4,31 @@ import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationDO;
 import no.nav.aura.envconfig.client.ApplicationGroupDO;
+import no.nav.aura.envconfig.client.ApplicationListDO;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import javax.ws.rs.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-@Path("/conf/applications")
-@Component
+@RestController
+@RequestMapping(path = "/conf/applications")
 public class ApplicationRestService {
-
-        @Context
-    private UriInfo uriInfo;
+    private final static Logger log = LoggerFactory.getLogger(ApplicationRestService.class);
 
     @Autowired
     private FasitRepository repo;
@@ -43,12 +45,14 @@ public class ApplicationRestService {
      * @return versjonsinfo om alle applikasjoner i et miljø
      * @deprecated use environments/{env}/applications
      */
-    @GET
-    @Path("/{env}/instances")
+    @GetMapping(path = "/{env}/instances")
     @Deprecated
-    public Response getApplicationInstancesForEnvironment(@PathParam("env") String envName) {
-        URI redirectTo = uriInfo.getBaseUriBuilder().clone().path("environments/{env}/applications").build(envName);
-        return Response.temporaryRedirect(redirectTo).build();
+    public ResponseEntity<?> getApplicationInstancesForEnvironment(@PathVariable(name = "env") String envName) {
+        URI redirectTo = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/environments/{env}/applications")
+                .buildAndExpand(envName)
+                .toUri();       
+        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(redirectTo).build();
     }
 
     /**
@@ -59,14 +63,16 @@ public class ApplicationRestService {
      * 
      * @HTTP 404 hvis applikasjonen ikke finnes i envconfig
      */
-    @GET
-    @Path("/{app}")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public ApplicationDO getApplicationInfo(@PathParam("app") String appName) {
+    @GetMapping(path = "/{app}", produces = {
+            MediaType.APPLICATION_XML_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+    })
+    public ApplicationDO getApplicationInfo(@PathVariable(name = "app") String appName) {
+    	log.info("Henter applikasjon " + appName);
         Application app = repo.findApplicationByName(appName);
 
         if (app == null) {
-            throw new NotFoundException("Application " + appName + " not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application " + appName + " not found");
         }
 
         return new ApplicationDO(app.getName(), app.getGroupId(), app.getArtifactId(), app.getPortOffset());
@@ -77,15 +83,18 @@ public class ApplicationRestService {
      * @return liste over alle applikasjoner
      * @HTTP 404 om ingen applikasjoner finnes
      */
-    @GET
-    @Path("/")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public Set<ApplicationDO> getApplications() {
+    @GetMapping(produces = {
+            MediaType.APPLICATION_XML_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+    })
+    public ApplicationListDO getApplications() {
+    	log.info("Henter alle applikasjoner");
         Set<Application> apps = repo.getApplications();
-        Set<ApplicationDO> applications = Sets.newHashSet();
+        List<ApplicationDO> applications = new ArrayList<>();
 
         if (apps == null || apps.isEmpty()) {
-            throw new NotFoundException("No applications found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No applications found");
+
         }
 
         for (Application application : apps) {
@@ -98,7 +107,8 @@ public class ApplicationRestService {
             applications.add(applicationDO);
 
         }
-        return applications;
+        ApplicationListDO applicationListDO = new ApplicationListDO(applications);
+        return applicationListDO;
     }
 
     private ApplicationGroupDO getApplicationGroup(Application application) {
