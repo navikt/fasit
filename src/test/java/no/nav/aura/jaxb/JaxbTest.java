@@ -14,8 +14,7 @@ import no.nav.aura.appconfig.resource.ListenerPort.InitialStates;
 import no.nav.aura.appconfig.security.*;
 import no.nav.aura.appconfig.serveroptions.Cron;
 import no.nav.aura.appconfig.serveroptions.ServerOptions;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,11 +22,11 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JaxbTest {
 
-    private Application app = Application.instance(getClass().getResourceAsStream("/app-config-max.xml"));
+    private final Application app = Application.instance(getClass().getResourceAsStream("/app-config-max.xml"));
 
     @Test
     public void basicParameters() {
@@ -41,10 +40,10 @@ public class JaxbTest {
         Collection<Datasource> resourceCollection = app.getResources(Datasource.class);
 
         Datasource applicationManagedDatasource = findResourceByAlias("myUnmanagedDB2DataSource", Datasource.class);
-        assertTrue(applicationManagedDatasource.getJndi() == null);
+        assertNull(applicationManagedDatasource.getJndi());
 
         Datasource containerManagedDatasource = findResourceByAlias("myXmlDataSource", Datasource.class);
-        assertTrue(containerManagedDatasource.getJndi().equals("java:/ds/myXmlDatasource"));
+        assertEquals("java:/ds/myXmlDatasource", containerManagedDatasource.getJndi());
     }
 
     @Test
@@ -95,7 +94,7 @@ public class JaxbTest {
         Batch bathArtifact = (Batch) findByArtifactId(artifacts, "batchArtifact");
         assertThat(bathArtifact.getGroupId(), is("no.nav.somebatchgroup"));
         assertThat(bathArtifact.getVersion(), is("2.0"));
-        Assert.assertThat(bathArtifact.getSymlink(), is("/was_app/batch/pen"));
+        assertThat(bathArtifact.getSymlink(), is("/was_app/batch/pen"));
 
     }
 
@@ -261,8 +260,8 @@ public class JaxbTest {
         assertThat(queue.getListenerPort().getStartOnlyOnOneNode(), is(true));
         assertThat(queue.getTargetClient(), is(Queue.TargetClient.MQ));
 
-        assertEquals(queue.getCustomProperties().get("replyWithRFH2"), "ALWAYS");
-        assertEquals(queue.getCustomProperties().get("CCSID"), "819");
+        assertEquals("ALWAYS", queue.getCustomProperties().get("replyWithRFH2"));
+        assertEquals("819", queue.getCustomProperties().get("CCSID"));
     }
 
     @Test
@@ -276,7 +275,7 @@ public class JaxbTest {
         QueueManager qmgr = findResourceByAlias("somOtherQueueManager", QueueManager.class);
         Collection<Queue> queues = qmgr.getQueues();
 
-        Assert.assertThat(queues.size(), is(1));
+        assertThat(queues.size(), is(1));
         assertThat(queues.iterator().next().getAlias(), is("someQueueInOtherQM"));
     }
 
@@ -412,7 +411,7 @@ public class JaxbTest {
         assertEquals("1.0", service.getWsdlVersion());
         assertEquals(SecurityToken.NONE, service.getSecurityToken());
         assertEquals(1, service.getExportToZones().size());
-        assertTrue("expose to SBS ", service.exportTo(NetworkZone.SBS));
+        assertTrue(service.exportTo(NetworkZone.SBS), "expose to SBS ");
     }
 
     @Test
@@ -428,7 +427,7 @@ public class JaxbTest {
         assertEquals("1.0", sgwService.getWsdlVersion());
         assertEquals(SecurityToken.NONE, sgwService.getSecurityToken());
         assertEquals(1, sgwService.getExportToZones().size());
-        assertTrue("expose to SBS ", sgwService.exportTo(NetworkZone.SBS));
+        assertTrue(sgwService.exportTo(NetworkZone.SBS), "expose to SBS ");
         assertEquals("Dette er en viktig tjeneste", sgwService.getDescription());
     }
 
@@ -476,7 +475,7 @@ public class JaxbTest {
 
         assertEquals("aWebLink", service.getName());
         assertEquals("linkToAnotherApp", service.getPath());
-        assertTrue("expose to ALL domains ", service.exportTo(NetworkZone.ALL));
+        assertTrue(service.exportTo(NetworkZone.ALL), "expose to ALL domains ");
     }
 
     @Test

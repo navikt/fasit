@@ -1,10 +1,46 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.auditing.EntityCommenter;
+import static java.util.stream.Collectors.toList;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
@@ -22,34 +58,15 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayloa
 import no.nav.aura.fasit.rest.model.RevisionPayload;
 import no.nav.aura.fasit.rest.security.AccessChecker;
 import no.nav.aura.integration.FasitKafkaProducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toList;
-
-@Component
-@Path("api/v2/applicationinstances")
+@RestController
+@RequestMapping("/api/v2/applicationinstances")
 public class ApplicationInstanceRest {
     @Inject
     private ApplicationInstanceRepository applicationInstanceRepository;
     @Inject
     private ResourceRepository resourceRepository;
-    @Inject
+    @Autowired
     private RevisionRepository revisionRepository;
     @Inject
     private LifeCycleSupport lifeCycleSupport;
@@ -64,9 +81,6 @@ public class ApplicationInstanceRest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceRest.class);
 
-    @Context
-    private UriInfo uriInfo;
-
     public ApplicationInstanceRest() {
     }
 
@@ -77,50 +91,49 @@ public class ApplicationInstanceRest {
         this.resourceRest = resourceRest;
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findApplicationInstances(@QueryParam("environment") String environmentName,
-                                             @QueryParam("environmentclass") EnvironmentClass environmentClass,
-                                             @QueryParam("application") String applicationName,
-                                             @QueryParam("status") LifeCycleStatus lifeCycleStatus,
-                                             @QueryParam("usage") @DefaultValue("true") Boolean showUsage,
-                                             @QueryParam("page") @DefaultValue("0") int page,
-                                             @QueryParam("pr_page") @DefaultValue("100") int pr_page) {
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findApplicationInstances(
+    		@RequestParam(name = "environment", required = false) String environmentName,
+    		@RequestParam(name = "environmentclass", required = false) EnvironmentClass environmentClass,
+    		@RequestParam(name = "application", required = false) String applicationName,
+    		@RequestParam(name = "status", required = false) LifeCycleStatus lifeCycleStatus,
+    		@RequestParam(name = "usage", defaultValue = "true") Boolean showUsage,
+    		@RequestParam(name = "page", defaultValue = "0") int page,
+    		@RequestParam(name = "pr_page", defaultValue = "100") int pr_page) {
+
         Specification<ApplicationInstance> spec = ApplicationInstanceSpecs.find(environmentName, environmentClass, applicationName, lifeCycleStatus);
 
         Page<ApplicationInstance> result = findApplicationInstancesBy(spec, page, pr_page);
         List<ApplicationInstancePayload> payload = createPayload(result, showUsage);
-
-        return PagingBuilder.pagingResponseBuilder(result, uriInfo.getRequestUri()).entity(payload).build();
+        return PagingBuilder.pagingResponseBuilder(result, getBaseUri()).body(payload);
     }
 
-    @GET
-    @Path("environment/{environment}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findApplicationInstancesByEnvironment(@PathParam("environment") String environmentName,
-                                                          @QueryParam("usage") @DefaultValue("true") Boolean showUsage,
-                                                          @QueryParam("page") @DefaultValue("0") int page,
-                                                          @QueryParam("pr_page") @DefaultValue("100") int pr_page) {
+
+    @GetMapping(path = "/environment/{environment}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findApplicationInstancesByEnvironment(
+    		@PathVariable("environment") String environmentName,
+    		@RequestParam(name = "usage", defaultValue = "true") Boolean showUsage,
+    		@RequestParam(name = "page", defaultValue = "0") int page,
+    		@RequestParam(name = "pr_page", defaultValue = "100") int pr_page) {
         Environment environment = validationHelpers.getEnvironment(environmentName);
         Specification<ApplicationInstance> spec = ApplicationInstanceSpecs.findByEnvironment(environment);
         Page<ApplicationInstance> result = findApplicationInstancesBy(spec, page, pr_page);
         List<ApplicationInstancePayload> payload = createPayload(result, showUsage);
 
-        return PagingBuilder.pagingResponseBuilder(result, uriInfo.getRequestUri()).entity(payload).build();
+        return PagingBuilder.pagingResponseBuilder(result, getBaseUri()).body(payload);
     }
 
-    @GET
-    @Path("environment/{environment}/application/{application}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ApplicationInstancePayload findAppInstanceByEnvAndApp(@PathParam("environment") String environmentName,
-                                                                 @PathParam("application") String applicationName) {
+    @GetMapping(path = "/environment/{environment}/application/{application}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApplicationInstancePayload findAppInstanceByEnvAndApp(
+    		@PathVariable("environment") String environmentName,
+    		@PathVariable("application") String applicationName) {
         Environment environment = validationHelpers.getEnvironment(environmentName);
         Application application = validationHelpers.getApplication(applicationName);
 
         Specification<ApplicationInstance> spec = ApplicationInstanceSpecs.findByEnvironmentAndApplication(environment, application);
         ApplicationInstance applicationInstance = applicationInstanceRepository.findOne(spec).orElseThrow(() ->
-                new NotFoundException("No application instance found for " + applicationName + " in " + environmentName)
-        );
+	        new ResponseStatusException(HttpStatus.NOT_FOUND, "No application instance found for " + applicationName + " in " + environmentName)
+	);
 
         Long currentRevision = revisionRepository.currentRevision(ApplicationInstance.class, applicationInstance.getID());
 
@@ -128,94 +141,84 @@ public class ApplicationInstanceRest {
     }
 
 
-    @GET
-    @Path("application/{application}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findApplicationInstancesByApplication(@PathParam("application") String applicationName,
-                                                          @QueryParam("usage") @DefaultValue("true") Boolean showUsage,
-                                                          @QueryParam("page") @DefaultValue("0") int page,
-                                                          @QueryParam("pr_page") @DefaultValue("100") int pr_page) {
+    @GetMapping(path = "/application/{application}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> findApplicationInstancesByApplication(@PathVariable("application") String applicationName,
+    		@RequestParam(name = "usage", defaultValue = "true") Boolean showUsage,
+    		@RequestParam(name = "page", defaultValue = "0") int page,
+    		@RequestParam(name = "pr_page", defaultValue = "100") int pr_page) {
         Application application = validationHelpers.getApplication(applicationName);
         Specification<ApplicationInstance> spec = ApplicationInstanceSpecs.findByApplication(application);
         Page<ApplicationInstance> result = findApplicationInstancesBy(spec, page, pr_page);
         List<ApplicationInstancePayload> payload = createPayload(result, showUsage);
 
-        return PagingBuilder.pagingResponseBuilder(result, uriInfo.getRequestUri()).entity(payload).build();
+        return PagingBuilder.pagingResponseBuilder(result, getBaseUri()).body(payload);
     }
 
-    @GET
-    @Path("{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ApplicationInstancePayload getApplicationInstance(@PathParam("id") Long id) {
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApplicationInstancePayload getApplicationInstance(@PathVariable("id") Long id) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         Long currentRevision = revisionRepository.currentRevision(ApplicationInstance.class, appInstance.getID());
 
         return getTransformer(currentRevision).apply(appInstance);
     }
 
-    @GET
-    @Path("{id}/appconfig")
-    @Produces(MediaType.APPLICATION_XML)
-    public Response getAppconfigXml(@PathParam("id") Long id) {
+    @GetMapping(path = "/{id}/appconfig", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<?> getAppconfigXml(@PathVariable("id") Long id) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         String appconfigXml = appInstance.getAppconfigXml();
-        return Response.ok().entity(appconfigXml).build();
+        return ResponseEntity.ok(appconfigXml);
     }
 
-    @GET
-    @Path("{id}/revisions")
-    @Produces(MediaType.APPLICATION_JSON)
+    @GetMapping(path = "/{id}/revisions", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RevisionPayload<ApplicationInstance>> getRevisions(
-            @PathParam("id") Long id) {
+            @PathVariable("id") Long id) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         List<FasitRevision<ApplicationInstance>> revisions = revisionRepository.getRevisionsFor(ApplicationInstance.class, appInstance.getID());
 
         List<RevisionPayload<ApplicationInstance>> payload = revisions.stream()
-                .map(new Revision2PayloadTransformer<>(uriInfo.getAbsolutePath()))
+                .map(new Revision2PayloadTransformer<>(getBaseUri()))
                 .collect(toList());
         return payload;
     }
 
-    @GET
-    @Path("{id}/revisions/{revision}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ApplicationInstancePayload getApplicationByRevision(@PathParam("id") Long id, @PathParam("revision") Long revision) {
+    @GetMapping(path = "/{id}/revisions/{revision}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApplicationInstancePayload getApplicationByRevision(@PathVariable("id") Long id, @PathVariable("revision") Long revision) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         Optional<ApplicationInstance> historic = revisionRepository.getRevisionEntry(ApplicationInstance.class, appInstance.getID(), revision);
-        ApplicationInstance old = historic.orElseThrow(() -> new NotFoundException("Revison " + revision + " is not found for application instance " + id));
+        ApplicationInstance old = historic.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revison " + revision + " is not found for application instance " + id));
         return getTransformer(revision).apply(old);
     }
 
-    @GET
-    @Path("{id}/revisions/{revision}/appconfig")
-    @Produces(MediaType.APPLICATION_XML)
-    public Response getAppconfigXmlByRevision(@PathParam("id") Long id, @PathParam("revision") Long revision) {
+    @GetMapping(path = "/{id}/revisions/{revision}/appconfig", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<String> getAppconfigXmlByRevision(@PathVariable("id") Long id, @PathVariable("revision") Long revision) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         Optional<ApplicationInstance> historic = revisionRepository.getRevisionEntry(ApplicationInstance.class, appInstance.getID(), revision);
-        ApplicationInstance old = historic.orElseThrow(() -> new NotFoundException("Revison " + revision + " is not found for application instance " + id));
+        ApplicationInstance old = historic.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Revison " + revision + " is not found for application instance " + id));
         String appconfigXml = old.getAppconfigXml();
         if (appconfigXml == null || appconfigXml.isEmpty()) {
-            throw new NotFoundException("No appconfig found for revision " + revision + " on application instance " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No appconfig found for revision " + revision + " on application instance " + id);
         }
-        return Response.ok().entity(appconfigXml).build();
+        return ResponseEntity.ok(appconfigXml);
     }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public ApplicationInstancePayload createOrUpdateApplicationInstance(@Valid ApplicationInstancePayload payload) {
+    public ApplicationInstancePayload createOrUpdateApplicationInstance(
+    		@Valid @RequestBody ApplicationInstancePayload payload) {
+        log.info("Create or update application instance {} {}", payload.application, payload.environment);
         ApplicationInstance existingInstance = applicationInstanceRepository.findInstanceOfApplicationInEnvironment(payload.application, payload.environment);
         if (existingInstance == null) {
+            log.info("Application not found. Creating {}", payload.application);
             return createApplicationInstance(payload);
             //throw new NotFoundException("Application instance for " + payload.application + " was not found in environment " + payload.environment);
         }
+        log.info("Updating application {} in environment {}", payload.application, payload.environment);
         return updateApplicationInstance(existingInstance.getID(), payload);
     }
 
     private void verifyThatExposedResourcesAreNotExposedByOtherApps(ApplicationInstancePayload applicationInstancePayload, Optional<Long> existingAppInstanceId) {
 
-        List<String> errorMessages = new ArrayList();
+        List<String> errorMessages = new ArrayList<>();
 
         for (ResourceRefPayload exposedResource : applicationInstancePayload.exposedresources) {
             errorMessages.addAll(applicationInstanceRepository
@@ -227,9 +230,10 @@ public class ApplicationInstanceRest {
         }
 
         if (!errorMessages.isEmpty()) {
-            throw new BadRequestException(
-                    "Unable to register application instance " + applicationInstancePayload.application + " in " + applicationInstancePayload.environment + " because one or more exposed resources are already exposed by another application instance: \n"
-                            + errorMessages + "\nFasit only supports that a resource is exposed by one application instance. ");
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Unable to register application instance " + applicationInstancePayload.application + " in " + applicationInstancePayload.environment + 
+					" because one or more exposed resources are already exposed by another application instance: \n" +
+					errorMessages + "\nFasit only supports that a resource is exposed by one application instance. ");
 
         }
     }
@@ -237,7 +241,7 @@ public class ApplicationInstanceRest {
 
     private ApplicationInstancePayload createApplicationInstance(ApplicationInstancePayload payload) {
         if (payload.clusterName == null) {
-            throw new BadRequestException("Missing parameter clusterName");
+        	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing parameter clusterName");
         }
 
         Environment environment = validationHelpers.findEnvironment(payload.environment);
@@ -268,11 +272,8 @@ public class ApplicationInstanceRest {
     }
 
 
-    @PUT
-    @Path("{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public ApplicationInstancePayload updateApplicationInstance(@PathParam("id") Long id, @Valid ApplicationInstancePayload payload) {
+    @PutMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApplicationInstancePayload updateApplicationInstance(@PathVariable("id") Long id, @Valid @RequestBody ApplicationInstancePayload payload) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         AccessChecker.checkAccess(appInstance.getCluster());
 
@@ -291,32 +292,32 @@ public class ApplicationInstanceRest {
     }
 
 
-    @DELETE
-    @Path("{id}")
-    public void deleteApplicationInstance(@PathParam("id") Long id) {
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteApplicationInstance(@PathVariable("id") Long id) {
         ApplicationInstance appInstance = getAppInstanceById(id);
         AccessChecker.checkAccess(appInstance.getCluster());
 
         lifeCycleSupport.delete(appInstance);
         //vera.notifyVeraOfUndeployment(applicationInstance.getApplication().getName(), environment.getName(), EntityCommenter.getOnBehalfUserOrRealUser(applicationInstance));
         applicationInstanceRepository.delete(appInstance);
+        return ResponseEntity.noContent().build();
     }
 
 
     private void verifyResourcesExists(Set<ResourceRefPayload> resourceRefs) {
         for (ResourceRefPayload resourceRef : resourceRefs) {
             if (!resourceRepository.existsById(resourceRef.id)) {
-                throw new BadRequestException("Resource with id " + resourceRef.id + " does not exit is Fasit");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resource with id " + resourceRef.id + " does not exit is Fasit");
             } else {
                 if (resourceRef.revision != null && !revisionRepository.getRevisionEntry(Resource.class, resourceRef.id, resourceRef.revision).isPresent()) {
-                    throw new BadRequestException("Resource with id " + resourceRef.id + " does not have a revision " + resourceRef.revision);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resource with id " + resourceRef.id + " does not have a revision " + resourceRef.revision);
                 }
             }
         }
     }
 
     private Page<ApplicationInstance> findApplicationInstancesBy(Specification<ApplicationInstance> spec, int page, int pr_page) {
-        PageRequest pageRequest = new PageRequest(page, pr_page);
+        PageRequest pageRequest = PageRequest.of(page, pr_page);
 
         if (spec == null) {
             return applicationInstanceRepository.findAll(pageRequest);
@@ -335,25 +336,37 @@ public class ApplicationInstanceRest {
 
 
     private ApplicationInstance2PayloadTransformer getTransformer(Long currentRevision) {
-        return new ApplicationInstance2PayloadTransformer(uriInfo.getBaseUri(), applicationInstanceRepository, currentRevision);
+        return new ApplicationInstance2PayloadTransformer(getBaseUri(), applicationInstanceRepository, currentRevision);
     }
 
     private ApplicationInstance2PayloadTransformer getTransformer() {
-        return new ApplicationInstance2PayloadTransformer(uriInfo.getBaseUri(), applicationInstanceRepository);
+        return new ApplicationInstance2PayloadTransformer(getBaseUri(), applicationInstanceRepository);
     }
+    
+    private URI getBaseUri() {
+		return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+	}
 
     private ApplicationInstance getAppInstanceById(Long id) {
         ApplicationInstance appInstance = applicationInstanceRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("Application instance with id " + id + " was not found in Fasit")
+        		
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Application instance with id " + id + " was not found in Fasit")
         );
         return appInstance;
     }
 
     public static URI instanceUrl(URI baseUri, Long id) {
-        return UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getApplicationInstance").build(id);
+        return ServletUriComponentsBuilder.fromUri(baseUri)
+                .path("/applicationinstances/{id}")
+                .buildAndExpand(id)
+                .toUri();
     }
 
     public static URI appconfigUri(URI baseUri, Long id) {
-        return UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getAppconfigXml").build(id);
+        return ServletUriComponentsBuilder.fromUri(baseUri)
+                .path("/applicationinstances/{id}/appconfig")
+                .buildAndExpand(id)
+                .toUri();
     }
+
 }

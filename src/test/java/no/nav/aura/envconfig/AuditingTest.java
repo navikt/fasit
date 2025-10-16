@@ -20,12 +20,10 @@ import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 import org.hibernate.envers.RevisionType;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,8 +41,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringUnitTestConfig.class })
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 public class AuditingTest {
 
     @Inject

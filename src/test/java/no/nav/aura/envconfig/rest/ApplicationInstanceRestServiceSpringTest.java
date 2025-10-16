@@ -7,15 +7,10 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
-import no.nav.aura.integration.VeraRestClient;
-import no.nav.aura.sensu.SensuClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
-import javax.inject.Inject;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -23,9 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
 
@@ -38,7 +31,7 @@ public class ApplicationInstanceRestServiceSpringTest extends SpringTest {
 
     @BeforeEach
     public void setup() {
-        service = new ApplicationInstanceRestService(repository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceRestService(repository, mock(FasitKafkaProducer.class));
         env = new Environment("env", EnvironmentClass.t);
         cluster = new Cluster("myCluster", Domain.TestLocal);
         cluster.setLoadBalancerUrl(loadBalancer);

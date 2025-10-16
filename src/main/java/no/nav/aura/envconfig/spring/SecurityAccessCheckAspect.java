@@ -10,7 +10,7 @@ import org.aspectj.lang.annotation.Before;
 public class SecurityAccessCheckAspect {
 
     @Before(value = "(execution(* no.nav.aura.envconfig.FasitRepository.store(..)) || execution(* no.nav.aura.envconfig.FasitRepository.delete(..))) && args(entity)")
-    public void checkUpdateAccess(ModelEntity entity) {
+    public void checkUpdateAccess(ModelEntity entity) throws AccessException {
         if (entity instanceof AccessControlled) {
             AccessControlled accessControlled = (AccessControlled) entity;
 

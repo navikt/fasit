@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.infrastructure.Node;
 
+@Repository
 public interface NodeRepository extends JpaRepository<Node, Long>, JpaSpecificationExecutor<Node> {
 
     @Query("select c from Cluster c JOIN c.nodes n where n=:node")
@@ -39,4 +41,6 @@ public interface NodeRepository extends JpaRepository<Node, Long>, JpaSpecificat
 //    @Query("select ai from ApplicationInstance ai, Environment env where lower(ai.application.name) = lower(:application) and ai.cluster MEMBER OF env.clusters and lower(env.name) = lower(:environment)")
     List<Node> findNodeByApplication(@Param("application") String app);
 
+    @Query("select n from Node n LEFT JOIN FETCH n.clusters WHERE n.hostname = :hostname")
+    Node findNodeBy(@Param("hostname") String hostname);
 }

@@ -1,14 +1,19 @@
 package no.nav.aura.fasit.rest;
 
+import java.net.URI;
+import java.util.Optional;
+
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.fasit.repository.*;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.repository.EnvironmentRepository;
+import no.nav.aura.fasit.repository.ResourceRepository;
+import no.nav.aura.fasit.repository.RevisionRepository;
 import no.nav.aura.fasit.rest.converter.Resource2PayloadTransformer;
 import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
 import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-import java.util.Optional;
 
 public abstract class AbstractResourceRest {
 
@@ -21,8 +26,6 @@ public abstract class AbstractResourceRest {
     protected LifeCycleSupport lifeCycleSupport;
     protected RevisionRepository revisionRepository;
 
-    @Context
-    private UriInfo uriInfo;
 
     public AbstractResourceRest(
             FasitRepository repo,
@@ -42,11 +45,13 @@ public abstract class AbstractResourceRest {
     }
 
     protected Resource2PayloadTransformer createTransformer() {
-        return new Resource2PayloadTransformer(repo, applicationInstanceRepository, uriInfo.getBaseUri());
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return new Resource2PayloadTransformer(repo, applicationInstanceRepository, baseUri);
     }
 
     protected Resource2PayloadTransformer createTransformer(Long currentRevision) {
-        return new Resource2PayloadTransformer(repo, applicationInstanceRepository, uriInfo.getBaseUri(), currentRevision);
+        URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
+        return new Resource2PayloadTransformer(repo, applicationInstanceRepository, baseUri, currentRevision);
     }
     protected static <P> Optional<P> optional(P property) {
         return Optional.ofNullable(property);
