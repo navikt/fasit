@@ -2,7 +2,7 @@ package no.nav.aura.appconfig.exposed;
 
 import no.nav.aura.appconfig.Namespaces;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 

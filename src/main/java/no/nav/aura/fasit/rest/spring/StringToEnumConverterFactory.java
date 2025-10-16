@@ -45,7 +45,7 @@ public class StringToEnumConverterFactory implements ConditionalGenericConverter
                 .collect(Collectors.joining(", "));
         
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-            String.format("Value: %s is not valid for enum %s. Use %s",
-                value, enumType.getSimpleName(), validValues));
+                "Value: %s is not valid for enum %s. Use %s".formatted(
+                        value, enumType.getSimpleName(), validValues));
     }
 }

@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.Scopeable;
@@ -13,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
-import javax.persistence.*;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings("serial")
@@ -30,11 +31,11 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "env_id")
-    private Set<Cluster> clusters = Sets.newHashSet();
+    private Set<Cluster> clusters = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "env_id")
-    private Set<Node> nodes = Sets.newHashSet();
+    private Set<Node> nodes = new HashSet<>();
 
     @Embedded
     private AccessControl accessControl;
@@ -42,7 +43,7 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
     private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
     @SuppressWarnings("unused")
-    private Environment() {
+    public Environment() {
     }
 
 
@@ -50,8 +51,8 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
         super(orig);
         this.name = orig.name;
         this.envClass = orig.envClass;
-        this.clusters = Sets.newHashSet(orig.clusters);
-        this.nodes = Sets.newHashSet(orig.nodes);
+        this.clusters = new HashSet<>(orig.clusters);
+        this.nodes = new HashSet<>(orig.nodes);
         this.accessControl = orig.accessControl;
     }
 
@@ -89,34 +90,41 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
     }
 
     public Set<Cluster> getClusters() {
-        return Sets.newHashSet(clusters);
+        return new HashSet<>(clusters);
     }
 
     public <T extends Cluster> T addCluster(T cluster) {
         clusters.add(cluster);
+        cluster.setEnvironment(this);
         return cluster;
     }
 
     public Set<Node> getNodes() {
-        return Sets.newHashSet(nodes);
+        return new HashSet<>(nodes);
     }
 
     public Node addNode(Cluster cluster, Node node) {
-        nodes.add(node);
+        addNode(node);
         cluster.addNode(node);
+        cluster.setEnvironment(this);
         return node;
     }
 
     public Node addNode(Node node) {
         nodes.add(node);
+        node.setEnvironment(this);
         return node;
     }
 
     public void removeNode(Node node) {
-        nodes.remove(node);
         for (Cluster cluster : clusters) {
-            cluster.removeNode(node);
+        	if(cluster.getNodes().contains(node)) {
+        		log.debug("Removing node {} from cluster {}", node.getHostname(), cluster.getName());
+        		cluster.removeNode(node);
+        	}
         }
+        this.nodes.remove(node);
+        log.debug("Removed node {} from environment {}", node.getHostname(), name);
 
     }
 
@@ -132,7 +140,7 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
 
     @Transactional
     public Set<ApplicationInstance> getApplicationInstances() {
-        Set<ApplicationInstance> apps = Sets.newHashSet();
+        Set<ApplicationInstance> apps = new HashSet<>();
         for (Cluster cluster : getClusters()) {
             apps.addAll(cluster.getApplicationInstances());
         }
@@ -141,7 +149,7 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
     }
 
     public Set<Application> getApplications() {
-        Set<Application> apps = Sets.newHashSet();
+        Set<Application> apps = new HashSet<>();
         for (ApplicationInstance instance : getApplicationInstances()) {
             apps.add(instance.getApplication());
         }
@@ -173,9 +181,10 @@ public class Environment extends DeleteableEntity implements Scopeable, AccessCo
     }
 
     public void removeCluster(Cluster cluster) {
-        if (!clusters.remove(cluster)) {
+        if (!clusters.remove(cluster)) {        	
             throw new RuntimeException("Cluster " + cluster + " to delete from environment " + name + " not found");
         }
+        cluster.removeEnvironment();
     }
 
     public void setName(String name) {

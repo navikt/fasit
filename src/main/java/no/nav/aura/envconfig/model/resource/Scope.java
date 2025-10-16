@@ -2,15 +2,16 @@ package no.nav.aura.envconfig.model.resource;
 
 import java.io.Serializable;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.ManyToOne;
 
 import no.nav.aura.envconfig.model.Scopeable;
 import no.nav.aura.envconfig.model.application.Application;
@@ -21,7 +22,6 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.google.common.collect.Lists;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -185,7 +185,7 @@ public class Scope implements Serializable {
 
         verifyScopeCorrectness(collection);
 
-        List<T> elements = Lists.newArrayList(collection);
+        List<T> elements = new ArrayList<>(collection);
         if (elements.isEmpty()) {
             throw new IllegalArgumentException("Cant find best match for a empty collection");
         }

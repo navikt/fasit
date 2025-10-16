@@ -3,14 +3,15 @@ package no.nav.aura.envconfig.migration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import javax.sql.DataSource;
 
 import no.nav.aura.envconfig.FasitRepository;
@@ -26,7 +27,7 @@ import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 import no.nav.aura.envconfig.util.FlywayUtil;
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.google.common.collect.Lists;
 
 /**
  * Kept only as template for future database refactorings. Usage:
@@ -193,7 +193,7 @@ public abstract class MigrationTest {
             public Long run() {
                 String sqlp1 = "insert into " + table + " (";
                 String sqlp2 = " values (";
-                List<Object> values = Lists.newArrayList();
+                List<Object> values = new ArrayList<>();	
                 for (int i = 0; i < os.length; i += 2) {
                     sqlp1 += ((String) os[i]) + ", ";
                     Object value = os[i + 1];

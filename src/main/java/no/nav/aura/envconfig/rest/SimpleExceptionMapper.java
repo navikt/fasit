@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.util.List;
 
 @ControllerAdvice
@@ -25,8 +25,8 @@ public class SimpleExceptionMapper {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e) {
-        logger.warn("Rest returned code: {} reason: {}", e.getStatus().value(), e.getReason());
-        return ResponseEntity.status(e.getStatus())
+        logger.warn("Rest returned code: {} reason: {}", e.getStatusCode().value(), e.getReason());
+        return ResponseEntity.status(e.getStatusCode())
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(e.getReason());
     }

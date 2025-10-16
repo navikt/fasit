@@ -1,7 +1,6 @@
 package no.nav.aura.envconfig.model.resource;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import no.nav.aura.envconfig.JPABooleanToNumberConverter;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.ModelEntity;
@@ -15,10 +14,11 @@ import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -41,7 +41,7 @@ public class Resource extends DeleteableEntity implements Scopeable, AccessContr
     @MapKeyColumn(name = "property_key")
     @Column(name = "property_value")
     @CollectionTable(name = "resource_properties")
-    private Map<String, String> properties = Maps.newHashMap();
+    private Map<String, String> properties = new HashMap<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "resource_type")
@@ -51,14 +51,17 @@ public class Resource extends DeleteableEntity implements Scopeable, AccessContr
     @JoinTable(name = "resource_secrets", joinColumns = { @JoinColumn(name="resource_table_entid") })
     @MapKeyColumn(name = "secret_key")
     @AuditJoinTable(name = "resource_secrets_aud")
-    private Map<String, Secret> secrets = Maps.newHashMap();
+    private Map<String, Secret> secrets = new HashMap<>();
 
     @ManyToMany(cascade = {CascadeType.ALL})
     @JoinTable(name = "resource_files", joinColumns = { @JoinColumn(name="resource_table_entid") })
     @MapKeyColumn(name = "file_key")
     @NotAudited
-    private Map<String, FileEntity> fileEntities = Maps.newHashMap();
-    private boolean dodgy;
+    private Map<String, FileEntity> fileEntities = new HashMap<>();
+    
+    @Column(name = "dodgy")
+    @Convert(converter = JPABooleanToNumberConverter.class)
+    private boolean dodgy = false;
 
     @Embedded
     private AccessControl accessControl;
@@ -76,15 +79,22 @@ public class Resource extends DeleteableEntity implements Scopeable, AccessContr
 
     public Resource(Resource other) {
         this(other.alias, other.type, other.scope);
-        this.properties = Maps.newHashMap(other.properties);
-        this.secrets = Maps.newHashMap(Maps.transformEntries(other.secrets, (key, value) -> {
-            assert key != null && value != null;
-            return new Secret(value);
-        }));
-        this.fileEntities = Maps.newHashMap(Maps.transformEntries(other.fileEntities, (key, value) -> {
-            assert key != null && value != null;
-            return new FileEntity(value);
-        }));
+        this.properties = new HashMap<>(other.properties); 
+        this.secrets = other.secrets.entrySet().stream()
+			.collect(Collectors.toMap(
+					Map.Entry::getKey, entry -> {
+				          assert entry.getKey() != null && entry.getValue()!= null;
+				            return new Secret(entry.getValue());
+					}
+			));
+        		
+        this.fileEntities = other.fileEntities.entrySet().stream()
+        		.collect(Collectors.toMap(
+        				Map.Entry::getKey, entry -> {
+							assert entry.getKey() != null && entry.getValue() != null;
+							return new FileEntity(entry.getValue());
+						}
+				));
     }
 
     /**
@@ -179,7 +189,7 @@ public class Resource extends DeleteableEntity implements Scopeable, AccessContr
 
     public Map<String, Secret> getSecrets() {
         setupPropertyMap(type);
-        return ImmutableMap.copyOf(secrets);
+        return Map.copyOf(secrets);
     }
 
     public Map<String, FileEntity> getFiles() {

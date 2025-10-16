@@ -30,8 +30,8 @@ public abstract class SpringInTransaction<R> {
             } catch (IllegalStateException | SecurityException e1) {
                 logger.error("Error rolling back", e1);
             }
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
+            if (e instanceof RuntimeException exception) {
+                throw exception;
             }
             throw new RuntimeException(e);
         }

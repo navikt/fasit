@@ -1,10 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.appconfig.Selftest;
 import no.nav.aura.appconfig.exposed.*;
@@ -17,11 +12,9 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
-import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.integration.FasitKafkaProducer;
 import org.hibernate.envers.RevisionType;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,16 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.net.URI;
+import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static com.google.common.base.Optional.fromNullable;
-import static com.google.common.base.Predicates.in;
-import static com.google.common.base.Predicates.not;
-import static com.google.common.collect.Maps.filterKeys;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 
@@ -66,7 +56,7 @@ public class ApplicationInstanceRestService {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceRestService.class);
 
-    private final ImmutableMap<Class<? extends ExposedService>, ResourceType> exposedServiceToResourceMapping = ImmutableMap.of(
+    private final Map<Class<? extends ExposedService>, ResourceType> exposedServiceToResourceMapping = Map.of(
             ExposedSoap.class, ResourceType.WebserviceEndpoint,
             ExposedEjb.class, ResourceType.EJB,
             ExposedRest.class, ResourceType.RestService,
@@ -110,9 +100,9 @@ public class ApplicationInstanceRestService {
     private ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance) {
         ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), UriComponentsBuilder.fromPath(""));
         appDO.setDeployedBy(instance.getUpdatedBy());
-        DateTime deployDate = instance.getDeployDate();
+        ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toDate());
+            appDO.setLastDeployment(deployDate);
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(UriComponentsBuilder.fromPath("/environments/{env}/applications/{appname}/appconfig")
@@ -168,7 +158,7 @@ public class ApplicationInstanceRestService {
         for (Node node : nodes) {
             NodeDO nodeDO = new NodeDO();
             nodeDO.setHostname(node.getHostname());
-            nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orNull());
+            nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orElse(null));
             nodeDO.setUsername(node.getUsername());
             URI ref = UriComponentsBuilder.fromPath(SecretRestService.createPath(node.getPassword())).build().toUri();
             nodeDO.setPasswordRef(ref);
@@ -182,14 +172,8 @@ public class ApplicationInstanceRestService {
     }
 
     private Collection<String> transform(Collection<no.nav.aura.envconfig.model.application.Application> applications) {
-        Collection<String> apps = Collections2.transform(applications, new Function<no.nav.aura.envconfig.model.application.Application, String>() {
-
-            @Override
-            public String apply(no.nav.aura.envconfig.model.application.Application input) {
-                return input.getName();
-            }
-        });
-        return apps;
+        return applications.stream()
+        		.map(no.nav.aura.envconfig.model.application.Application::getName).toList();
     }
 
     @GetMapping(value = "/{applicationName}/appconfig", produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
@@ -224,7 +208,7 @@ public class ApplicationInstanceRestService {
                     .port(cluster.getHttpsPortFromPlatformType())
                     .build().toString());
         } else if (loadBalancerInfoIsDefinedInAppConfig(application) && environmentIsLoadBalanced(environment, appInstance)) {
-            cluster.setLoadBalancerUrl(format("https://%s", LoadBalancerHostnameBuilder.create(appInstance.getDomain(), environment.getName())));
+            cluster.setLoadBalancerUrl("https://%s".formatted(LoadBalancerHostnameBuilder.create(appInstance.getDomain(), environment.getName())));
         }
 
         registerUsedResources(container.getUsedResources(), container.getAppconfig().getResources(EnvironmentDependentResource.class), appInstance, environment);
@@ -241,7 +225,7 @@ public class ApplicationInstanceRestService {
         }
 
         appInstance.setAppconfigXml(application.asXml());
-        appInstance.setDeployDate(DateTime.now());
+        appInstance.setDeployDate(ZonedDateTime.now());
 
         ApplicationInstance savedAppInstance = repo.store(appInstance);
         kafkaProducer.publishDeploymentEvent(savedAppInstance, environment);
@@ -347,8 +331,7 @@ public class ApplicationInstanceRestService {
                 if (sameScope(environment, expectedDomain, resource)) {
                     ApplicationInstance applicationInstanceForExposedService = repo.findApplicationInstanceByExposedResourceId(resource.getID());
                     if (notSameApplication(newApplication, applicationInstanceForExposedService) && !(ResourceTypeDO.Queue.name().equals(resource.getType().name()))) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format(
-                                "The resource %s of type %s already exists in Fasit and is not exposed by application %s. A resource can not be registrered more than once in the same scope %s ",
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The resource %s of type %s already exists in Fasit and is not exposed by application %s. A resource can not be registrered more than once in the same scope %s ".formatted(
                                 resource.getName(), resource.getType(), newApplication.getName(), resource.getScope()));
                     }
                 }
@@ -371,7 +354,7 @@ public class ApplicationInstanceRestService {
     }
 
     private void registerUsedResources(Set<ResourceElement> usedResources, Collection<EnvironmentDependentResource> declaredResourcesInAppconfig, ApplicationInstance instance, Environment environment) {
-        ImmutableSet<ResourceReference> existingResourceReferences = ImmutableSet.copyOf(instance.getResourceReferences());
+        Set<ResourceReference> existingResourceReferences = Set.copyOf(instance.getResourceReferences());
         Set<ResourceReference> newResourceReferences = new HashSet<>();
 
         // Update or modify resources
@@ -559,9 +542,9 @@ public class ApplicationInstanceRestService {
 
             Resource webserviceResource = webserviceEndpoint.getResource();
             if (webService instanceof ExposedSoap) {
-                webserviceResource.putPropertyAndValidate("securityToken", fromNullable(webService.getSecurityToken()).or(SecurityToken.SAML).name());
+                webserviceResource.putPropertyAndValidate("securityToken", Optional.ofNullable(webService.getSecurityToken()).orElse(SecurityToken.SAML).name());
             } else {
-                webserviceResource.putPropertyAndValidate("securityToken", fromNullable(webService.getSecurityToken()).or(SecurityToken.NONE).name());
+                webserviceResource.putPropertyAndValidate("securityToken", Optional.ofNullable(webService.getSecurityToken()).orElse(SecurityToken.NONE).name());
             }
 
             webserviceResource.putPropertyAndValidate("endpointUrl", UriComponentsBuilder.fromUriString(loadBalancerUrl)
@@ -622,19 +605,21 @@ public class ApplicationInstanceRestService {
     }
 
     private Collection<ExposedServiceReference> findCandidatesForDeletion(Collection<ExposedServiceReference> exposedServices, Collection<ExposedService> newServices) {
-        @SuppressWarnings("serial")
-        ImmutableMap<String, ExposedServiceReference> exposedServiceReferences = uniqueIndex(exposedServices, new SerializableFunction<ExposedServiceReference, String>() {
-            public String process(ExposedServiceReference input) {
-                return input.getResourceAlias();
-            }
-        });
+        Map<String, ExposedServiceReference> exposedServiceReferences = exposedServices.stream()
+			.collect(Collectors.toMap(
+					ExposedServiceReference::getResourceAlias,
+					Function.identity(),
+					(existing, replacement) -> existing)); 
 
-        Set<String> newServiceNames = Sets.newHashSet();
+        Set<String> newServiceNames = new HashSet<>();
         for (ExposedService service : newServices) {
             newServiceNames.add(service.getName());
         }
 
-        return filterKeys(exposedServiceReferences, not(in(newServiceNames))).values();
+         return exposedServiceReferences.entrySet().stream()
+				.filter(entry -> !newServiceNames.contains(entry.getKey()))
+				.map(Map.Entry::getValue)
+				.collect(Collectors.toList());
     }
 
     protected ApplicationInstance findApplicationInstance(final String appName, Environment environment) {

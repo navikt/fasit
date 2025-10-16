@@ -73,8 +73,8 @@ public class EnumModule extends SimpleModule {
                     .collect(Collectors.joining(", "));
             
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                String.format("Value: %s is not valid for enum %s. Use %s",
-                    value, enumClass.getSimpleName(), validValues));
+                    "Value: %s is not valid for enum %s. Use %s".formatted(
+                            value, enumClass.getSimpleName(), validValues));
         }
     }
     

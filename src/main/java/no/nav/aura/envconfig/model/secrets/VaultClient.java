@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -83,12 +82,12 @@ public final class VaultClient {
             return tokenFromEnv;
         }
 
-        Path homedirVaultToken = Paths.get(System.getProperty("user.home"), ".vault-token");
+        Path homedirVaultToken = Path.of(System.getProperty("user.home"), ".vault-token");
         if (Files.exists(homedirVaultToken)) {
             return readVaultTokenFromFile(homedirVaultToken);
         }
 
-        Path srvfasitVaultToken = Paths.get("/var/run/secrets/nais.io/vault/vault_token");
+        Path srvfasitVaultToken = Path.of("/var/run/secrets/nais.io/vault/vault_token");
         if (Files.exists(srvfasitVaultToken)) {
             return readVaultTokenFromFile(srvfasitVaultToken);
         }

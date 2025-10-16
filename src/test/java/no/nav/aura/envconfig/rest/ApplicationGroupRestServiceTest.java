@@ -52,7 +52,7 @@ public class ApplicationGroupRestServiceTest extends RestTest {
 
     @Test
     public void getApplicationGroups() {
-        String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value()).when().get("/conf/applicationGroups/").asString();
+        String xml = expect().defaultParser(Parser.XML).statusCode(HttpStatus.OK.value()).when().get("/conf/applicationGroups").asString();
         XmlPath path = from(xml);
         assertThat("applicationGroups", path.getInt("collection.applicationGroup.size()"), is(2));
         assertThat(path.<String> getList("collection.applicationGroup.name"), containsInAnyOrder("myApplicationGroup", "myEmptyApplicationGroup"));

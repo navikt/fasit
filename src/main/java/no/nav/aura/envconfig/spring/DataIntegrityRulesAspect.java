@@ -1,6 +1,6 @@
 package no.nav.aura.envconfig.spring;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
 import no.nav.aura.envconfig.model.ModelEntity;

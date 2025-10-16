@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.net.URI;
 
 import static io.restassured.RestAssured.get;
@@ -356,7 +356,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("$.size", greaterThan(1))
+                .body("$", hasSize(greaterThan(1)))
                 .body("revisiontype", hasItem("mod"));
     }
 
@@ -421,7 +421,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().all()
                 .statusCode(200)
@@ -439,7 +439,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().body()
                 .statusCode(400);
@@ -456,7 +456,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .body(toJson(app))
                 .contentType(ContentType.JSON)
                 .when()
-                .post("/api/v2/applicationinstances/")
+                .post("/api/v2/applicationinstances")
                 .then()
                 // .log().body()
                 .statusCode(200);

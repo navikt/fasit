@@ -1,10 +1,5 @@
 package no.nav.aura.envconfig;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
@@ -30,14 +25,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,7 +90,7 @@ public class AuditingTest {
     }
 
     private static HashSet<String> getTableSet(Connection connection) throws SQLException {
-        HashSet<String> tables = Sets.newHashSet();
+        HashSet<String> tables = new HashSet<>();
         ResultSet resultSet = connection.prepareStatement("select table_name from information_schema.tables").executeQuery();
         while (resultSet.next())
             tables.add(resultSet.getString(1));
@@ -169,7 +166,7 @@ public class AuditingTest {
 
     @Test
     public void testApplicationAuditing() {
-        List<String> artifactIds = ImmutableList.of("testapp-app", "testapp-appc", "testapp-appco", "testapp-appcon", "testapp-appconfi", "testapp-appconfig");
+        List<String> artifactIds = List.of("testapp-app", "testapp-appc", "testapp-appco", "testapp-appcon", "testapp-appconfi", "testapp-appconfig");
 
         Application init = repository.store(new Application("testapp", "testapp", "no.nav.testapp"));
         @SuppressWarnings("serial")
@@ -197,7 +194,7 @@ public class AuditingTest {
 
     @Test
     public void testResourceAuditing() {
-        List<String> urls = ImmutableList.of("initial_value", "value", "value2");
+        List<String> urls = List.of("initial_value", "value", "value2");
         Resource init = new Resource("myAlias", ResourceType.BaseUrl, new Scope(EnvironmentClass.p));
         @SuppressWarnings("serial")
         final Resource resource = fold(urls, init, new SerializableFunction<Tuple<String, Resource>, Resource>() {
@@ -219,7 +216,7 @@ public class AuditingTest {
                     assertEquals(Resource.class, revision.getKey().getModifiedEntityType());
                 }
 
-                HashMap<String, String> valueCheck = Maps.newHashMap();
+                HashMap<String, String> valueCheck = new HashMap<>();
                 valueCheck.put("url", "value");
                 assertTrue(revisions.containsValue(valueCheck));
                 return null;
@@ -291,7 +288,7 @@ public class AuditingTest {
     }
 
     private <T extends Resource> Map<FasitRevision<T>, Map<String, String>> getResourceRevisionHistory(final T entity) {
-        Map<FasitRevision<T>, Map<String, String>> map = Maps.newHashMap();
+        Map<FasitRevision<T>, Map<String, String>> map = new HashMap<>();
         List<FasitRevision<T>> revisions = getHistory(entity);
         for (FasitRevision<T> revision : revisions) {
             map.put(revision, revision.getModelEntity().getProperties());
@@ -299,12 +296,10 @@ public class AuditingTest {
         return map;
     }
 
-    @SuppressWarnings({ "unchecked", "serial" })
+    @SuppressWarnings({ "unchecked" })
     private <T extends ModelEntity> List<FasitRevision<T>> getHistory(final T entity) {
-        return Lists.transform(repository.getRevisionsFor(entity.getClass(), entity.getID()), new SerializableFunction<Tuple<Long, RevisionType>, FasitRevision<T>>() {
-            public FasitRevision<T> process(Tuple<Long, RevisionType> tuple) {
-                return (FasitRevision<T>) repository.getRevision(entity.getClass(), entity.getID(), tuple.fst);
-            }
-        });
+    	return repository.getRevisionsFor(entity.getClass(), entity.getID()).stream()
+    			.map(tuple -> (FasitRevision<T>) repository.getRevision(entity.getClass(), entity.getID(), tuple.fst))
+				.collect(Collectors.toList());
     }
 }

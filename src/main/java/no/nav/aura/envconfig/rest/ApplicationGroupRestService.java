@@ -1,10 +1,9 @@
 package no.nav.aura.envconfig.rest;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
-
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationDO;
 import no.nav.aura.envconfig.client.ApplicationGroupDO;
@@ -29,12 +25,12 @@ import no.nav.aura.envconfig.model.application.ApplicationGroup;
 @RequestMapping("/conf/applicationGroups")
 public class ApplicationGroupRestService {
 
-    @Autowired
     private FasitRepository repo;
 
     public ApplicationGroupRestService() {
     }
 
+    @Inject
     public ApplicationGroupRestService(FasitRepository repo) {
         this.repo = repo;
     }
@@ -64,11 +60,9 @@ public class ApplicationGroupRestService {
     }
 
     private Set<ApplicationDO> transformApplications(Set<Application> applications) {
-        return Sets.newHashSet(Collections2.transform(applications, new Function<Application, ApplicationDO>() {
-            public ApplicationDO apply(Application input) {
-                return new ApplicationDO(input.getName(), input.getGroupId(), input.getArtifactId(), input.getPortOffset());
-            }
-        }));
+    	return applications.stream()
+			.map(application -> new ApplicationDO(application.getName(), application.getGroupId(), application.getArtifactId(), application.getPortOffset()))
+			.collect(Collectors.toSet());
     }
 
     /**
@@ -88,14 +82,12 @@ public class ApplicationGroupRestService {
 
         }
 
-        List<ApplicationGroupDO> result = new ArrayList<>(Collections2.transform(applicationGroups,
-                new Function<ApplicationGroup, ApplicationGroupDO>() {
-                    public ApplicationGroupDO apply(ApplicationGroup applicationGroup) {
-                        return new ApplicationGroupDO(
-                                applicationGroup.getName(),
-                                transformApplications(applicationGroup.getApplications()));
-                    }
-                }));
+        List<ApplicationGroupDO> result = applicationGroups.stream()
+				.map(applicationGroup -> new ApplicationGroupDO(
+						applicationGroup.getName(),
+						transformApplications(applicationGroup.getApplications())))
+				.collect(Collectors.toList());
+
         ApplicationGroupListDO applicationGroupList = new ApplicationGroupListDO(result);
         return applicationGroupList;
 

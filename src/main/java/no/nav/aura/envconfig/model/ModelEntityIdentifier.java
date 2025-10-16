@@ -2,6 +2,7 @@ package no.nav.aura.envconfig.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
@@ -10,8 +11,6 @@ import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
 
 import org.hibernate.envers.RevisionType;
-
-import com.google.common.base.Optional;
 
 @SuppressWarnings("serial")
 public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity> implements Serializable {
@@ -23,7 +22,7 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
     private final Optional<ModelEntityIdentifier<DT, ?>> dependentIdentifier;
 
     public ModelEntityIdentifier(Class<T> entityClass, Optional<Long> entityId, Optional<Long> revisionId) {
-        this(entityClass, entityId, revisionId, Optional.<Producer<T>> absent(), Optional.<ModelEntityIdentifier<DT, ?>> absent());
+        this(entityClass, entityId, revisionId, Optional.<Producer<T>> empty(), Optional.<ModelEntityIdentifier<DT, ?>> empty());
     }
 
     public ModelEntityIdentifier(Class<T> entityClass, Optional<Long> entityId, Optional<Long> revisionId, Optional<Producer<T>> createFunction, Optional<ModelEntityIdentifier<DT, ?>> dependentIdentifier) {
@@ -31,7 +30,7 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
         this.entityId = entityId;
         this.revisionId = revisionId;
         this.dependentIdentifier = dependentIdentifier;
-        this.createFunction = createFunction.or(new Producer<T>() {
+        this.createFunction = createFunction.orElse(new Producer<T>() {
             public T get() {
                 try {
                     return ModelEntityIdentifier.this.entityClass.getConstructor(new Class[] {}).newInstance();
@@ -55,11 +54,11 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
     }
 
     public boolean isNew() {
-        return !entityId.isPresent();
+        return entityId.isEmpty();
     }
 
     public boolean isHead(FasitRepository repository) {
-        if (!entityId.isPresent() || !revisionId.isPresent()) {
+        if (entityId.isEmpty() || revisionId.isEmpty()) {
             return true;
         }
         List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(entityClass, entityId.get());
@@ -71,11 +70,8 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
 
     public T getModelEntity(final FasitRepository repository) {
         if (isHead(repository)) {
-            return entityId.transform(new SerializableFunction<Long, T>() {
-                public T process(Long id) {
-                    return repository.getById(entityClass, id);
-                }
-            }).or(createFunction);
+        	return entityId.map(id -> repository.getById(entityClass, id))
+			        	.orElseGet(createFunction);
         }
         FasitRevision<T> revision = repository.getRevision(entityClass, entityId.get(), revisionId.get());
         T modelEntity = revision.getModelEntity();
@@ -83,7 +79,7 @@ public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity
             // If the entity is null we have a deleted entity and have to fetch the previous version
             List<Tuple<Long, RevisionType>> history = repository.getRevisionsFor(entityClass, entityId.get());
             if (history.size() < 2){
-                throw new RuntimeException(String.format("Deleted entity with missing history, id = %s entityClass = %s", entityId, entityClass));
+                throw new RuntimeException("Deleted entity with missing history, id = %s entityClass = %s".formatted(entityId, entityClass));
             }
             return repository.getRevision(entityClass, entityId.get(), history.get(1).fst).getModelEntity();
         }

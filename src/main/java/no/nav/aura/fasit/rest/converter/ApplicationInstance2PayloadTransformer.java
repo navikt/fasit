@@ -1,6 +1,24 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.infrastructure.*;
+import static java.util.stream.Collectors.toSet;
+import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Port;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
@@ -9,23 +27,10 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
 import no.nav.aura.fasit.rest.model.Link;
 import no.nav.aura.fasit.rest.model.PortPayload;
-import org.joda.time.DateTime;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
-import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
 
 public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer<ApplicationInstance, ApplicationInstancePayload> {
-
-    private URI baseUri;
+    
+	private URI baseUri;
     private ApplicationInstanceRepository applicationInstanceRepository;
     private Boolean showUsage = true;
 
@@ -118,7 +123,7 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             }
             selfTestUrls.addAll(cluster.getNodes()
                     .stream()
-                    .map(n -> normalize(format("https://%s:%d/%s", n.getHostname(), httpsPort, selfTestPath)))
+                    .map(n -> normalize("https://%s:%d/%s".formatted(n.getHostname(), httpsPort, selfTestPath)))
                     .collect(Collectors.toList()));
         }
 
@@ -157,9 +162,9 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             payload.id = resource.getID();
             payload.scope = Resource2PayloadTransformer.transform(resource.getScope());
             payload.type = resource.getType();
-            DateTime updated = resource.getUpdated();
+            ZonedDateTime updated = resource.getUpdated();
             if(updated != null ) {
-                payload.lastChange = updated.getMillis();
+                payload.lastChange = updated.toInstant().toEpochMilli();
             }
 
             payload.lastUpdateBy = resource.getUpdatedBy();
@@ -182,7 +187,7 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
         payload.scope = Resource2PayloadTransformer.transform(exposedResource.getScope());
         payload.type = exposedResource.getType();
         payload.revision = exposed.getRevision();
-        payload.lastChange = exposedResource.getUpdated().getMillis();
+        payload.lastChange = exposedResource.getUpdated().toInstant().toEpochMilli();
         payload.lastUpdateBy = exposedResource.getUpdatedBy();
         payload.ref = UriComponentsBuilder.fromUri(baseUri)
 						.path("/api/v2/resources/{resourceId}")

@@ -2,6 +2,8 @@ package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
@@ -20,7 +24,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/navsearch")
 public class NavSearchRest {
-
+private final static Logger log = LoggerFactory.getLogger(NavSearchRest.class);
     @Inject
     private SearchRepository searchRepository;
 
@@ -34,6 +38,7 @@ public class NavSearchRest {
             @RequestParam(name = "q") String query,
             @RequestParam(name = "maxcount", defaultValue = "20") Integer maxCount) {
         URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
-        return searchRepository.navigationSearch(query, maxCount, baseUri);
+        String decodedSearchString = URLDecoder.decode(query, StandardCharsets.UTF_8);
+        return searchRepository.navigationSearch(decodedSearchString, maxCount, baseUri);
     }
 }

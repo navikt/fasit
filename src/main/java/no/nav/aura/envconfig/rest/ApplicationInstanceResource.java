@@ -3,19 +3,23 @@ package no.nav.aura.envconfig.rest;
 import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -32,18 +36,13 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.github.fge.jsonschema.main.JsonValidator;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.JsonValidator;
+import com.networknt.schema.SpecVersion.VersionFlag;
+import com.networknt.schema.ValidationMessage;
 
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
@@ -96,10 +95,17 @@ public class ApplicationInstanceResource {
 
     @PostMapping(path = "/v1/applicationinstances", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> registerApplicationInstance(@RequestBody String payload) {
-    	String schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
+    	Set<ValidationMessage> schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
+        if (!schemaValidatedJson.isEmpty()) {
+            String errorMessages = schemaValidatedJson.stream()
+                    .map(ValidationMessage::getMessage)
+                    .collect(Collectors.joining(", "));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Input did not pass schema-validation: " + errorMessages);
+        }
+        
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-        	RegisterApplicationInstancePayload applicationInstancePayload = objectMapper.readValue(schemaValidatedJson, RegisterApplicationInstancePayload.class);
+        	RegisterApplicationInstancePayload applicationInstancePayload = objectMapper.readValue(payload, RegisterApplicationInstancePayload.class);
         	ApplicationInstance applicationInstance = register(applicationInstancePayload);
         	return ResponseEntity.created(URI.create("/v1/applicationinstances/" + applicationInstance.getID())).body(applicationInstance.toString());
         } catch (JsonProcessingException e) {
@@ -135,9 +141,9 @@ public class ApplicationInstanceResource {
     protected ApplicationInstanceDO createApplicationDO(Environment environment, ApplicationInstance instance, UriComponentsBuilder uriBuilder) {
         ApplicationInstanceDO appDO = new ApplicationInstanceDO(instance.getApplication().getName(), environment.getName().toLowerCase(), uriBuilder);
         appDO.setDeployedBy(instance.getUpdatedBy());
-        DateTime deployDate = instance.getDeployDate();
+        ZonedDateTime deployDate = instance.getDeployDate();
         if (deployDate != null) {
-            appDO.setLastDeployment(deployDate.toDate());
+            appDO.setLastDeployment(deployDate);
         }
         appDO.setSelftestPagePath(instance.getSelftestPagePath());
         appDO.setAppConfigRef(uriBuilder.path("environments/{env}/applications/{appname}/appconfig").build(environment.getName(), instance.getApplication().getName()));
@@ -149,29 +155,21 @@ public class ApplicationInstanceResource {
     }
 
     protected Set<ResourceDO> getResourceFromReference(Set<? extends Reference> references) {
-        return FluentIterable
-                .from(references)
-                .filter(filterNonExistingResources())
-                .transform(toResourceDO())
-                .toSet();
+    	return references.stream()
+				.filter(filterNonExistingResources())
+				.map(toResourceDO())
+				.collect(Collectors.toSet());
     }
 
     private Function<Reference, ResourceDO> toResourceDO() {
-        return new Function<Reference, ResourceDO>() {
-            public ResourceDO apply(Reference input) {
-                Resource resource = input.getResource();
-                return new ResourceDO(resource.getType().name(), resource.getScope().asDisplayString(), resource.getAlias(), resource.getProperties());
-            }
+        return input -> {
+            Resource resource = input.getResource();
+            return new ResourceDO(resource.getType().name(), resource.getScope().asDisplayString(), resource.getAlias(), resource.getProperties());
         };
     }
 
     private Predicate<Reference> filterNonExistingResources() {
-        return new Predicate<Reference>() {
-            @Override
-            public boolean apply(Reference input) {
-                return input != null && input.getResource() != null;
-            }
-        };
+    	return input -> input != null && input.getResource() != null;
     }
 
     private ClusterDO createClusterDO(UriComponentsBuilder uriBuilder, Environment environment, Cluster cluster) {
@@ -189,7 +187,7 @@ public class ApplicationInstanceResource {
         for (Node node : nodes) {
             NodeDO nodeDO = new NodeDO();
             nodeDO.setHostname(node.getHostname());
-            nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orNull());
+            nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orElse(null));
             nodeDO.setUsername(node.getUsername());
             URI ref = uriBuilder.path(SecretRestService.createPath(node.getPassword())).build().toUri();
             nodeDO.setPasswordRef(ref);
@@ -203,11 +201,9 @@ public class ApplicationInstanceResource {
     }
 
     private List<String> applicationNames(Collection<Application> applications) {
-        return FluentIterable.from(applications).transform(new Function<Application, String>() {
-            public String apply(Application input) {
-                return input.getName();
-            }
-        }).toList();
+        return applications.stream()
+                .map(input -> input.getName())
+                .collect(Collectors.toList());
     }
 
     protected ApplicationInstance findApplicationInstance(final String appName, Environment environment) {
@@ -250,7 +246,7 @@ public class ApplicationInstanceResource {
         applicationInstance.setResourceReferences(createResourceReferences(usedResources, missingResources, exposedResources));
         applicationInstance.setExposedServices(createExposedResources(applicationName, environmentName, exposedResources));
 
-        applicationInstance.setDeployDate(DateTime.now());
+        applicationInstance.setDeployDate(ZonedDateTime.now());
         applicationInstance.setVersion(version);
         applicationInstance.setSelftestPagePath(payload.getSelftest());
 
@@ -269,23 +265,40 @@ public class ApplicationInstanceResource {
 
     }
 
-    protected static String schemaValidateJsonString(String schemaPath, String string) {
-        JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
-
+    protected static Set<ValidationMessage> schemaValidateJsonString(String schemaPath, String string) {
         try {
-            ProcessingReport validation = validator.validate(JsonLoader.fromResource(schemaPath), JsonLoader.fromString(validateJson(string)));
-            if (!validation.isSuccess()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Input did not pass schema-validation. " + validation.toString());
-            }
-        } catch (ProcessingException e) {
-            log.error("Invalid JSON Schema", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
-        } catch (IOException e) {
-            log.error("Unable get JSON Schema", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
-        }
+        	
+        	InputStream schemaStream = JsonValidator.class.getResourceAsStream(schemaPath);
+	   		 if (schemaStream == null) {
+	             throw new IllegalArgumentException("Schema not found at path: " + schemaPath);
+			 }
+    		JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(VersionFlag.V7);
+	    	JsonSchema schema = jsonSchemaFactory.getSchema(schemaStream);
+	    	
+	        ObjectMapper objectMapper = new ObjectMapper();
 
-        return string;
+        	JsonNode jsonNode = objectMapper.readTree(validateJson(string));
+
+        	return schema.validate(jsonNode);
+	        	
+//            ProcessingReport validation = validator.validate(JsonLoader.fromResource(schemaPath), JsonLoader.fromString(validateJson(string)));
+//            
+//            if (!validation.isSuccess()) {
+//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Input did not pass schema-validation. " + validation.toString());
+//            }
+        } 
+        catch (Exception e) {
+            throw new RuntimeException("UGHHH, internal error. Please stay calm.", e);
+        }
+//        catch (ProcessingException e) {
+//            log.error("Invalid JSON Schema", e);
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
+//        } catch (IOException e) {
+//            log.error("Unable get JSON Schema", e);
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
+//        }
+//
+//        return string;
     }
 
     protected static String validateJson(final String string) {
@@ -353,7 +366,7 @@ public class ApplicationInstanceResource {
 
             if (!ResourceType.resourceTypeWithNameExists(typeName)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exposed resource " + exposedResource + " has an unknown resource type " + typeName + ".\n Valid types are: "
-						+ Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
+						+ String.join(", ", ResourceType.getAllResourceTypeNames()));
             }
             ResourceType resourceType = ResourceType.getResourceTypeFromName(exposedResource.getType());
             verifyOnlyExistingFieldsAreProvided(exposedResource);
@@ -390,7 +403,7 @@ public class ApplicationInstanceResource {
         for (String mandatoryField : mandatoryFields) {
             if (!exposedResource.getProperties().containsKey(mandatoryField)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mandatory field " + mandatoryField + " was not found for exposed resource " + exposedResource + ". \n Mandatory fields are: "
-						+ Joiner.on(", ").join(mandatoryFields));
+						+ String.join(", ", mandatoryFields));
             }
         }
     }
@@ -402,7 +415,7 @@ public class ApplicationInstanceResource {
         for (String property : exposedResource.getProperties().keySet()) {
             if (!allFields.contains(property)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provided property field " + property + " is not a valid field for exposed resource " + exposedResource + ". \n Valid fields are: "
-						+ Joiner.on(", ").join(allFields));
+						+ String.join(", ",allFields));
             }
         }
     }
@@ -413,7 +426,7 @@ public class ApplicationInstanceResource {
 
             if (!ResourceType.resourceTypeWithNameExists(typeName)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing resource with alias " + missingResource.getAlias() + " has an unknown resource type " + typeName + ".\n Valid types are: "
-						+ Joiner.on(", ").join(ResourceType.getAllResourceTypeNames()));
+						+ String.join(", ", ResourceType.getAllResourceTypeNames()));
             }
         }
     }
@@ -451,7 +464,9 @@ public class ApplicationInstanceResource {
             checkResolvedFutureResourceReferences(serviceReference.getResource());
         }
 
-        SetView<ExposedServiceReference> toBeDeleted = Sets.difference(existingAppInstance.getExposedServices(), newExposedServices);
+        Set<ExposedServiceReference> toBeDeleted = new HashSet<>(existingAppInstance.getExposedServices());
+        toBeDeleted.removeAll(newExposedServices);
+
         for (ExposedServiceReference exposedServiceReference : toBeDeleted) {
             log.debug("Removing no longer exposed service: {}", exposedServiceReference);
             repository.delete(exposedServiceReference);

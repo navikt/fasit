@@ -1,6 +1,6 @@
 package no.nav.aura.envconfig.client.rest;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +11,7 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ResourceElementList {
 
-  @XmlElement(name = "resource")
+	@XmlElement(name = "resource")
 	private List<ResourceElement> resourceElements = new ArrayList<>();
 
   	public ResourceElementList() {

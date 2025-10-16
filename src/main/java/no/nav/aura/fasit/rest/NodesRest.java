@@ -39,11 +39,12 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
@@ -318,7 +319,7 @@ public class NodesRest {
     private String generateNewClusterName(final String suggestion, Environment environment) {
         if (environment.getClusters().stream().anyMatch(c -> c.getName().equalsIgnoreCase(suggestion))) {
             log.info("Generating new clustername because {} is already in {}", suggestion, environment);
-            return generateNewClusterName(suggestion + "_" + Math.random(), environment);
+            return generateNewClusterName(suggestion + "_" + ThreadLocalRandom.current().nextDouble(), environment);
         }
         return suggestion;
     }

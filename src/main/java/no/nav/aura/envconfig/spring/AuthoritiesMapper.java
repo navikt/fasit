@@ -3,6 +3,8 @@ package no.nav.aura.envconfig.spring;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,9 +16,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 public class AuthoritiesMapper implements GrantedAuthoritiesMapper {
 
     private static final Logger log = LoggerFactory.getLogger(AuthoritiesMapper.class);
@@ -25,7 +24,7 @@ public class AuthoritiesMapper implements GrantedAuthoritiesMapper {
 
     public AuthoritiesMapper(Environment environment) {
         this.environment = environment;
-        groupRoleMap = Maps.newHashMap();
+        groupRoleMap = new HashMap<>();
         initGroupRoleMapping();
     }
 
@@ -52,14 +51,17 @@ public class AuthoritiesMapper implements GrantedAuthoritiesMapper {
             if (groupRoleMap.get(ldapGroupName) != null) {
                 groupRoleMap.get(ldapGroupName).add(applicationRole);
             } else {
-                groupRoleMap.put(ldapGroupName, Sets.newHashSet(applicationRole));
+                // Create a mutable HashSet instead of an immutable Set.of()
+                Set<ApplicationRole> roles = new HashSet<>();
+                roles.add(applicationRole);
+                groupRoleMap.put(ldapGroupName, roles);
             }
         }
     }
 
     @Override
     public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {
-        Set<GrantedAuthority> roles = Sets.newHashSet();
+        Set<GrantedAuthority> roles = new HashSet<>();
 
         roles.add(ApplicationRole.ROLE_USER);
         for (GrantedAuthority authority : authorities) {

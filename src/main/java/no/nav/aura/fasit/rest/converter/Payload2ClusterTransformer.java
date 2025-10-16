@@ -91,7 +91,7 @@ public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPa
         
         for (String hostname : newNodes) {
             Optional<Node> nodeInEnvironment = environment.getNodes().stream().filter(n -> n.getHostname().equalsIgnoreCase(hostname)).findFirst();
-            if (!nodeInEnvironment.isPresent()) {
+            if (nodeInEnvironment.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Host " + hostname + " is not in environment " + environment.getName());
             }
             if(!nodesInCluster.contains(hostname)){

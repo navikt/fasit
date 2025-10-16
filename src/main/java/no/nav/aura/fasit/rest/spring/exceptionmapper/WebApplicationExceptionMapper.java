@@ -18,7 +18,7 @@ public class WebApplicationExceptionMapper {
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException exception) {
         log.info(exception.getReason());
         return ResponseEntity
-                .status(exception.getStatus().value())
+                .status(exception.getStatusCode().value())
                 .header("Content-Type", "text/plain")
                 .body(exception.getReason());
     }

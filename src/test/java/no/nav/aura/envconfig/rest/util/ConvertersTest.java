@@ -3,16 +3,15 @@ package no.nav.aura.envconfig.rest.util;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 import no.nav.aura.envconfig.client.PlatformTypeDO;
 import no.nav.aura.envconfig.model.infrastructure.PlatformType;
 import no.nav.aura.envconfig.util.SerializableFunction;
 
 import org.junit.jupiter.api.Test;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Sets;
 
 public class ConvertersTest {
 
@@ -37,7 +36,7 @@ public class ConvertersTest {
     }
 
     private <T, F> void checkEnumConversion(F[] values, Function<F, T> f) {
-        Set<T> set = Sets.newHashSet();
+        Set<T> set = new HashSet<>();
         for (F environmentClass : values) {
             set.add(f.apply(environmentClass));
         }

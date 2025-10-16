@@ -1,6 +1,5 @@
 package no.nav.aura.fasit.rest.converter;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -139,12 +138,12 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         List<String> missingRequiredProperties = supportedFields.stream().
                 filter(field -> !field.isOptional()).
                 filter(field -> !payloadProperties.contains(field.getName())).
-                map(field -> format("Missing required key in %s: %s", propType, field.getName())).
+                map(field -> "Missing required key in %s: %s".formatted(propType, field.getName())).
                 collect(toList());
 
         List<String> unsupportedProperties = payloadProperties.stream().
                 filter(propertyKey -> !supportedFieldNames.contains(propertyKey)).
-                map(propertyKey -> format("Unsupported key in %s: %s", propType, propertyKey))
+                map(propertyKey -> "Unsupported key in %s: %s".formatted(propType, propertyKey))
                 .collect(toList());
 
         validationMessages.addAll(missingRequiredProperties);
@@ -164,9 +163,9 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         }
 
         if (!valid) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("Invalid format for property %s: %s. Property must match %s format",
-					resourcePropertyField.getName(),
-					propToValidate, validationType));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid format for property %s: %s. Property must match %s format".formatted(
+                    resourcePropertyField.getName(),
+                    propToValidate, validationType));
         }
     }
 
@@ -174,8 +173,8 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
     private void validateEnum(PropertyField resourcePropertyField, String property) {
         List<String> validEnumValues = resourcePropertyField.getValues().stream().map(String::toLowerCase).collect(toList());
         if (!validEnumValues.contains(property.toLowerCase())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("Invalid enum value for %s. Use one of [%s]",
-					resourcePropertyField.getName().toLowerCase(), join(validEnumValues, ", ")));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid enum value for %s. Use one of [%s]".formatted(
+                    resourcePropertyField.getName().toLowerCase(), join(validEnumValues, ", ")));
         }
     }
 
@@ -185,7 +184,7 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         RegexValidator regexValidator = new RegexValidator(validationPattern);
 
         if (!regexValidator.isValid(propToValidate)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, format("property %s: %s does not match pattern %s", propertyKey, propToValidate, validationPattern));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "property %s: %s does not match pattern %s".formatted(propertyKey, propToValidate, validationPattern));
         }
     }
 

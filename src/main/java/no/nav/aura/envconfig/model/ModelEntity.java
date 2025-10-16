@@ -1,30 +1,36 @@
 package no.nav.aura.envconfig.model;
 
-import com.google.common.base.Optional;
-import no.nav.aura.envconfig.spring.User;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
+import java.util.Optional;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Type;
-import org.joda.time.DateTime;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
+import no.nav.aura.envconfig.spring.User;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
 public abstract class ModelEntity implements Serializable, Identifiable, Nameable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "app_seq", sequenceName = "hibernate_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "app_seq")
     @Column(name = "entid")
     private Long id;
 
-    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    private DateTime created;
+    private ZonedDateTime created;
 
-    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    private DateTime updated;
+    private ZonedDateTime updated;
 
     private String updatedBy;
 
@@ -50,19 +56,19 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
         return id == null;
     }
 
-    public DateTime getCreated() {
+    public ZonedDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(DateTime created) {
+    public void setCreated(ZonedDateTime created) {
         this.created = created;
     }
 
-    public DateTime getUpdated() {
+    public ZonedDateTime getUpdated() {
         return updated;
     }
 
-    public void setUpdated(DateTime updated) {
+    public void setUpdated(ZonedDateTime updated) {
         this.updated = updated;
     }
 
@@ -77,16 +83,15 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
     @PrePersist
     @PreUpdate
     protected void onMerge() {
-        DateTime now = DateTime.now();
-
-        if (isNew()) {
+    	ZonedDateTime now = ZonedDateTime.now();
+        if (isNew() || created == null) {
+			// If this is a new entity, or if created is not set, we set created to now
             setCreated(now);
         }
 
         String userName = User.getCurrentUser().getDisplayName();
         String ident = User.getCurrentUser().getIdentity();
-        String authorlabel = ident == null ? userName : String.format("%s (%s)", userName, ident);
-
+        String authorlabel = ident == null ? userName : "%s (%s)".formatted(userName, ident);
         setUpdated(now);
 
         setUpdatedBy(authorlabel);
@@ -107,7 +112,7 @@ public abstract class ModelEntity implements Serializable, Identifiable, Nameabl
 
     @SuppressWarnings("unchecked")
     public <T extends ModelEntity> ModelEntityIdentifier<T, ?> getIdentifier() {
-        return new ModelEntityIdentifier<>((Class<T>) this.getClass(), Optional.of(id), Optional.<Long> absent());
+        return new ModelEntityIdentifier<>((Class<T>) this.getClass(), Optional.of(id), Optional.empty());
     }
 
 }

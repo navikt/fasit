@@ -1,13 +1,11 @@
 package no.nav.aura.envconfig.spring;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.ModelEntity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -22,13 +20,18 @@ import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class, SpringSecurityTestConfig.class})
 @Transactional
+@Import(WebMvcAutoConfiguration.class)
 public abstract class SpringTest {
 
     @Inject
@@ -82,7 +85,7 @@ public abstract class SpringTest {
     }
     
     public <O> O runAsUserWithGroup(String userName, String password, String group, Function<Void, O> function) {
-        Authentication authentication = createAuthentication(userName, password, getRolesForUser(userName), Sets.newHashSet(group));
+        Authentication authentication = createAuthentication(userName, password, getRolesForUser(userName), Set.of(group));
         return runAs(authentication, function);
     }
 
@@ -92,7 +95,7 @@ public abstract class SpringTest {
 
     protected Authentication createAuthentication(String username, String password, Collection<? extends GrantedAuthority> roles, Set<String> adGroups) {
         LdapUserDetails ldapUserDetails = createLdapPrincipal(username, adGroups);
-        TestingAuthenticationToken n = new TestingAuthenticationToken(ldapUserDetails, password, Lists.newArrayList(roles));
+        TestingAuthenticationToken n = new TestingAuthenticationToken(ldapUserDetails, password, new ArrayList<>(roles));
         Authentication auth = authenticationManager.authenticate(n);
         auth.setAuthenticated(true);
         return auth;
@@ -102,11 +105,11 @@ public abstract class SpringTest {
     protected static LdapUserDetails createLdapPrincipal(String username, Set<String> groups) {
         LdapUserDetailsImpl.Essence p = new LdapUserDetailsImpl.Essence();
         p.setUsername(username);
-        p.setAuthorities(FluentIterable.from(groups).transform(new Function<String, GrantedAuthority>() {
-            public GrantedAuthority apply(String o) {
-                return new SimpleGrantedAuthority(o);
-            }
-        }).toList());
+        p.setAuthorities(
+                groups.stream()
+                    .map(o -> new SimpleGrantedAuthority(o))
+                    .collect(Collectors.toList())
+            );
         p.setDn(username);
         return p.createUserDetails();
     }

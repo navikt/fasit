@@ -3,8 +3,8 @@ package no.nav.aura.envconfig.spring;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +32,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
 import no.nav.aura.envconfig.FasitRepository;
@@ -89,17 +90,17 @@ public class SpringSecurityTestConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .csrf(csrf -> csrf
                 		.disable())
-                .authorizeRequests(requests -> requests
+                .authorizeHttpRequests(requests -> requests
                 		.dispatcherTypeMatchers(DispatcherType.REQUEST, DispatcherType.ERROR).permitAll() // allow access to error dispatcher and drop redirects
-                        .antMatchers("/conf/secrets/**").authenticated()
-                        .antMatchers("/api/v2/secrets/**").authenticated()
-                        .antMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
-                        .antMatchers(HttpMethod.GET, "/conf/**").permitAll()
-                        .antMatchers("/conf/**").authenticated()
-                        .antMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
-                        .antMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
-                        .antMatchers("/api/v2/**").authenticated()
-                        .antMatchers("/api/**").permitAll())	
+                        .requestMatchers("/conf/secrets/**").authenticated()
+                        .requestMatchers("/api/v2/secrets/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/conf/**").permitAll()
+                        .requestMatchers("/conf/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
+                        .requestMatchers("/api/v2/**").authenticated()
+                        .requestMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
                 		.authenticationEntryPoint(restEntryPoint))
                 .formLogin(login -> login
@@ -148,7 +149,6 @@ public class SpringSecurityTestConfig {
     PerformanceMeasureAspect getPerformanceMeasureAspect() {
         return new PerformanceMeasureAspect();
     }
-
     
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

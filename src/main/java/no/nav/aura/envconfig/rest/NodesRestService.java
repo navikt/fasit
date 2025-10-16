@@ -1,11 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.client.LifeCycleStatusDO;
@@ -43,6 +37,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static no.nav.aura.envconfig.rest.util.Converters.*;
 import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
@@ -85,7 +82,7 @@ public class NodesRestService {
         } else if (environmentClass != null) {
             EnvironmentClass envClass = toEnumOrNull(EnvironmentClass.class, environmentClass);
             if (envClass == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is not a valid envClass", environmentClass));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "%s is not a valid envClass".formatted(environmentClass));
             }
             nodes = nodeRepository.findNodesByEnvironmentClass(envClass);
         }
@@ -103,42 +100,22 @@ public class NodesRestService {
         return nodeListDO;
     }
 
-    private ImmutableList<Node> filterNodeList(Iterable<Node> nodes, String domainStr, String platformTypeStr) {
-        FluentIterable<Node> filteredNodes = FluentIterable.from(nodes);
+    private List<Node> filterNodeList(Iterable<Node> nodes, String domainStr, String platformTypeStr) {
+        Stream<Node> nodeStream = StreamSupport.stream(nodes.spliterator(), false);
 
         if (domainStr != null && !domainStr.isEmpty()) {
-            filteredNodes = applyFilter(filteredNodes, domainFilter(Domain.fromFqdn(domainStr)));
+            nodeStream = nodeStream.filter(node -> node.getDomain().equals(Domain.fromFqdn(domainStr)));
+
         }
         if (platformTypeStr != null && !platformTypeStr.isEmpty()) {
             final PlatformType platformType = toEnumOrNull(PlatformType.class, platformTypeStr);
             if (platformType == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("%s is an invalid platformtype, use %s", platformTypeStr, EnumSet.allOf(PlatformType.class)));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "%s is an invalid platformtype, use %s".formatted(platformTypeStr, EnumSet.allOf(PlatformType.class)));
             }
-            filteredNodes = applyFilter(filteredNodes, platformTypeFilter(platformType));
+            nodeStream = nodeStream.filter(node -> node.getPlatformType().equals(platformType));
+
         }
-        return filteredNodes.toList();
-    }
-
-    private FluentIterable<Node> applyFilter(FluentIterable<Node> nodesTofilter, Predicate<Node> predicate) {
-        return nodesTofilter.filter(predicate);
-    }
-
-    private Predicate<Node> domainFilter(final Domain domain) {
-        return new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-                return input.getDomain().equals(domain);
-            }
-        };
-    }
-
-    private Predicate<Node> platformTypeFilter(final PlatformType platformType) {
-        return new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-                return input.getPlatformType().equals(platformType);
-            }
-        };
+        return nodeStream.collect(Collectors.toList());
     }
 
     /**
@@ -197,10 +174,10 @@ public class NodesRestService {
     }
 
     private Optional<Cluster> findCluster(DeleteableEntity deleteme) {
-        if (deleteme instanceof Node) {
-            return Optional.fromNullable(nodeRepository.findClusterByNode((Node) deleteme));
+        if (deleteme instanceof Node node) {
+            return Optional.ofNullable(nodeRepository.findClusterByNode(node));
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private void deleteClusterIfEmpty(Optional<Cluster> cluster) {
@@ -304,10 +281,10 @@ public class NodesRestService {
                 Cluster cluster = firstAppInstance.getCluster();
                 if (!cluster.getDomain().equals(domain)) {
                 	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-							String.format("Cluster already exists in a different domain. " +
-									"Existing cluster: %s in %s New cluster in %s." +
-									" Fix this by manually deleting the cluster created in the wrong domain in Fasit",
-									cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
+                            ("Cluster already exists in a different domain. " +
+                                    "Existing cluster: %s in %s New cluster in %s." +
+                                    " Fix this by manually deleting the cluster created in the wrong domain in Fasit").formatted(
+                                    cluster.getName(), cluster.getDomain().getNameWithZone(), domain.getNameWithZone()));
                 }
                 return cluster;
 
@@ -382,8 +359,8 @@ public class NodesRestService {
         nodeDO.setPasswordRef(ref);
         nodeDO.setDomain(findDomainOrNull(node));
         nodeDO.setPlatformType(toPlatformTypeDO(node.getPlatformType()));
-        nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orNull());
-        Optional<Cluster> cluster = FluentIterable.from(node.getClusters()).first();
+        nodeDO.setIpAddress(resolveIpFrom(node.getHostname()).orElse(null));
+        Optional<Cluster> cluster = node.getClusters().stream().findFirst();
         if (cluster.isPresent() && !cluster.get().getApplications().isEmpty()) {
             Collection<Application> applications = cluster.get().getApplications();
             nodeDO.setApplicationMappingName(getApplicationMappingName(applications));
@@ -403,13 +380,9 @@ public class NodesRestService {
     }
 
     private String[] getApplicationNames(Collection<Application> applications) {
-        return FluentIterable.from(applications).transform(new Function<Application, String>() {
-
-            @Override
-            public String apply(Application input) {
-                return input.getName();
-            }
-        }).toArray(String.class);
+        return applications.stream()
+            .map(Application::getName)
+            .toArray(String[]::new);
     }
 
     private String getApplicationMappingName(Collection<Application> applications) {

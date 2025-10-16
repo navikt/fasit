@@ -4,15 +4,15 @@ import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
 import no.nav.aura.envconfig.model.ModelEntity;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.hibernate.envers.RevisionType;
-import org.joda.time.DateTime;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.ZonedDateTime;
 
 @SuppressWarnings("serial")
 public class FasitRevision<T extends ModelEntity> implements Serializable {
     private final long revision;
-    private final DateTime timestamp;
+    private final ZonedDateTime timestamp;
     private final String author;
     private final NavUser onBehalfOf;
     private final String authorId;
@@ -41,7 +41,7 @@ public class FasitRevision<T extends ModelEntity> implements Serializable {
         return revision;
     }
 
-    public DateTime getTimestamp() {
+    public ZonedDateTime getTimestamp() {
         return timestamp;
     }
 

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
@@ -41,7 +42,7 @@ public class RestClient {
     }
 
     void checkResponseAndThrowExeption(ResponseEntity<?> response, URI requestUrl) {
-        HttpStatus status = response.getStatusCode();
+        HttpStatusCode status = response.getStatusCode();
         if (status == HttpStatus.FORBIDDEN) {
             throw new SecurityException("Access forbidden to " + requestUrl);
         }

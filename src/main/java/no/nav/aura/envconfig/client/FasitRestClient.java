@@ -19,6 +19,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
@@ -361,8 +362,8 @@ public class FasitRestClient {
     public Set<ResourceElement> findUsedResourcesFromCache() {
         Set<ResourceElement> usedResources = new HashSet<>();
         for (Object cacheObject : cache.values()) {
-            if (cacheObject instanceof ResourceElement) {
-                usedResources.add((ResourceElement) cacheObject);
+            if (cacheObject instanceof ResourceElement element) {
+                usedResources.add(element);
             }
         }
 
@@ -485,7 +486,7 @@ public class FasitRestClient {
     }
 
     private <T> void checkResponse(ResponseEntity<?> response, URI requestUrl) {
-        HttpStatus status = response.getStatusCode();
+        HttpStatusCode status = response.getStatusCode();
         if (status == HttpStatus.FORBIDDEN) {
             throw new SecurityException("Access forbidden to " + requestUrl);
         }
@@ -507,8 +508,8 @@ public class FasitRestClient {
      * API exception in 2013?
      */
     private RuntimeException rethrow(Exception e) {
-        if (e instanceof RuntimeException) {
-            return (RuntimeException) e;
+        if (e instanceof RuntimeException exception) {
+            return exception;
         }
         return new RuntimeException(e);
     }

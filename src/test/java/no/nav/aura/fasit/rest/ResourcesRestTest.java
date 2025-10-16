@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.is;
 import java.net.URI;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -182,7 +182,7 @@ public class ResourcesRestTest extends RestTest {
         System.out.println("dbResource = " + resourceRepo.findAll().size());
         given()
                 .when()
-                .get("/api/v2/resources/")
+                .get("/api/v2/resources")
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -392,7 +392,7 @@ public class ResourcesRestTest extends RestTest {
 
         given()
                 .when()
-                .get("/api/v2/resources/?alias=newresource")
+                .get("/api/v2/resources?alias=newresource")
                 .then()
                 .statusCode(200)
                 .body("type", hasItem("baseurl"))
@@ -457,7 +457,7 @@ public class ResourcesRestTest extends RestTest {
 
         given()
                 .when()
-                .get("/api/v2/resources/?alias=newresource")
+                .get("/api/v2/resources?alias=newresource")
                 .then()
                 .statusCode(200)
                 .body("alias", hasItem("newresource"));

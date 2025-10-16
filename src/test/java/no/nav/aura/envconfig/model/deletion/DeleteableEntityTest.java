@@ -3,7 +3,6 @@ package no.nav.aura.envconfig.model.deletion;
 import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.util.TestHelper;
 
-import org.joda.time.DateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

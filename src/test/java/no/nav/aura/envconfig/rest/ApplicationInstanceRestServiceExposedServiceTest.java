@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.collect.Lists;
 import no.nav.aura.appconfig.exposed.ExposedEjb;
 import no.nav.aura.appconfig.exposed.ExposedService;
 import no.nav.aura.appconfig.exposed.ExposedSoap;
@@ -44,8 +43,10 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         testEnv.addCluster(cluster);
         Application app = new Application("app", "app", "no.nav.app");
         cluster.addApplication(app);
-        cluster.addNode(new Node("hostname.test.local", "username", "password"));
+        Node node = new Node("hostname.test.local", "username", "password");
+        cluster.addNode(node);
         testEnv.addCluster(cluster);
+        testEnv.addNode(node);
         testEnv = repository.store(testEnv);
         repository.store(new Resource("appUser", ResourceType.Credential, new Scope(EnvironmentClass.t)));
 
@@ -161,7 +162,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
         no.nav.aura.appconfig.Application application = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config-with-exposed-service.xml"));
         for (ExposedService exposedService : application.getExposedServices(ExposedService.class)) {
-            exposedService.setExportToZones(Lists.newArrayList(NetworkZone.ALL));
+            exposedService.setExportToZones(new ArrayList<>(Arrays.asList(NetworkZone.ALL)));
         }
 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(application, "1.0"));
@@ -183,7 +184,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
         no.nav.aura.appconfig.Application application = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config.xml"));
         for (ExposedService exposedService : application.getExposedServices(ExposedService.class)) {
-            exposedService.setExportToZones(Lists.newArrayList(NetworkZone.SBS));
+            exposedService.setExportToZones(new ArrayList<>(Arrays.asList(NetworkZone.SBS)));
         }
 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(application, "1.0"));

@@ -1,12 +1,7 @@
 package no.nav.aura.fasit.rest.config;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +14,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -30,7 +23,6 @@ import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuc
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import no.nav.aura.envconfig.filter.LdapUserLookup;
-import no.nav.aura.envconfig.spring.AuthoritiesMapper;
 import no.nav.aura.envconfig.spring.NAVLdapUserDetailsMapper;
 import no.nav.aura.envconfig.spring.SpringSecurityHandlersConfig;
 import no.nav.aura.fasit.rest.config.security.RestAuthenticationSuccessHandler;
@@ -55,17 +47,17 @@ public class SpringSecurityRestConfig {
         		.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .authorizeRequests(requests -> requests
+                .authorizeHttpRequests(requests -> requests
                 		.dispatcherTypeMatchers(DispatcherType.REQUEST, DispatcherType.ERROR).permitAll() // allow access to error dispatcher and drop redirects
-                        .antMatchers("/conf/secrets/**").authenticated()
-                        .antMatchers("/api/v2/secrets/**").authenticated()
-                        .antMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
-                        .antMatchers(HttpMethod.GET, "/conf/**").permitAll()
-                        .antMatchers("/conf/**").authenticated()
-                        .antMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
-                        .antMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
-                        .antMatchers("/api/v2/**").authenticated()
-                        .antMatchers("/api/**").permitAll())	
+                        .requestMatchers("/conf/secrets/**").authenticated()
+                        .requestMatchers("/api/v2/secrets/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/conf/environments/*/applications/*/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/conf/**").permitAll()
+                        .requestMatchers("/conf/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/v2/**").permitAll()
+                        .requestMatchers("/api/v2/**").authenticated()
+                        .requestMatchers("/api/**").permitAll())	
                 .httpBasic(basic -> basic
                 		.authenticationEntryPoint(restEntryPoint))
                 .csrf(csrf -> csrf

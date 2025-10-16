@@ -6,7 +6,7 @@ import no.nav.aura.envconfig.client.LifeCycleStatusDO;
 import no.nav.aura.envconfig.client.ResourceTypeDO;
 import no.nav.aura.envconfig.client.rest.PropertyElement.Type;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ public class ResourceElement {
     private String environmentClass;
     private DomainDO domain;
     private String environmentName;
-    @XmlElement(name = "scope.application")
+//    @XmlElement(name = "scope.application")
     private String application;
     @XmlElement(name = "property")
     private Set<PropertyElement> properties = new HashSet<>();

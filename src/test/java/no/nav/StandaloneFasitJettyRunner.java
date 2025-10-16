@@ -2,7 +2,11 @@ package no.nav;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.JPAFasitRepository;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
@@ -16,7 +20,7 @@ import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "no.nav.aura", excludeFilters = {@ComponentScan.Filter(Configuration.class ), @ComponentScan.Filter(SpringBootApplication.class)})
-@Import(StandaloneRunnerTestConfig.class)
+@Import({StandaloneRunnerTestOracleConfig.class, StandaloneRunnerTestConfig.class})
 public class StandaloneFasitJettyRunner implements WebServerFactoryCustomizer<JettyServletWebServerFactory> {
 
     private final ApplicationContext context;
@@ -26,10 +30,10 @@ public class StandaloneFasitJettyRunner implements WebServerFactoryCustomizer<Je
     public StandaloneFasitJettyRunner(ApplicationContext context) {
         assertNotNull(context, "Context can not be null");
         this.context = context;
-//        createTestData();
     }
 
-    @Override
+
+	@Override
     public void customize(JettyServletWebServerFactory container) {
         container.setPort(1337);
     }

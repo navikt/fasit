@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.base.Predicate;
 import no.nav.aura.appconfig.exposed.ExposedSoap;
 import no.nav.aura.appconfig.exposed.NetworkZone;
 import no.nav.aura.appconfig.resource.Webservice;
@@ -19,8 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+import java.util.function.Predicate;
 
-import static com.google.common.collect.Iterables.any;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -80,9 +79,9 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(4, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("appBaseUrl")));
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("appDb1")));
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsFutureResource("futureWS")), "futureWS not present");
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("appBaseUrl")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("appDb1")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsFutureResource("futureWS")), "futureWS not present");
         assertNotNull(newApplicationInstance.getAppconfigXml(), "appconfig xml");
         assertThat(newApplicationInstance.getAppconfigXml(), Matchers.containsString("name>app<"));
     }
@@ -102,8 +101,8 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(5, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("serviceGateway")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("serviceGateway")));
     }
 
     @Test
@@ -120,7 +119,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(4, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
     }
 
     @Test
@@ -136,7 +135,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         service.registerDeployedApplication("test", "app", deployedApplication);
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
     }
 
     @Test
@@ -154,7 +153,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
     }
 
     @Test
@@ -169,7 +168,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsFutureResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsFutureResource("myWS")));
     }
 
     @Test
@@ -188,7 +187,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         consumerAppConfig.getResources().add(createWebservice("myWS"));
         service.registerDeployedApplication("test", "consumer", new DeployedApplicationDO(consumerAppConfig, "1.0"));
         ApplicationInstance storedAppinstance = repository.getById(ApplicationInstance.class, consumerApplicationInstance.getID());
-        assertTrue(any(storedAppinstance.getResourceReferences(), containsFutureResource("myWS")));
+        assertTrue(storedAppinstance.getResourceReferences().stream().anyMatch(containsFutureResource("myWS")));
 
         // Deploy application with service and change futures to implementation
         no.nav.aura.appconfig.Application producerAppConfig = new no.nav.aura.appconfig.Application();
@@ -204,7 +203,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(producerAppConfig, "1.0"));
 
         storedAppinstance = repository.getById(ApplicationInstance.class, consumerApplicationInstance.getID());
-        assertTrue(any(storedAppinstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(storedAppinstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
     }
 
     @Test
@@ -226,7 +225,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         service.registerDeployedApplication("test2", "consumer", new DeployedApplicationDO(consumerAppConfig, "1.0"));
 
         ApplicationInstance storedAppinstance = repository.findApplicationInstancesBy(consumerApp).get(0);
-        assertTrue(any(storedAppinstance.getResourceReferences(), containsFutureResource("myWS")));
+        assertTrue(storedAppinstance.getResourceReferences().stream().anyMatch(containsFutureResource("myWS")));
 
         // Deploy application with service and change futures to implementation
         no.nav.aura.appconfig.Application producerAppConfig = new no.nav.aura.appconfig.Application();
@@ -241,7 +240,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(producerAppConfig, "1.0"));
 
         storedAppinstance = repository.findApplicationInstancesBy(consumerApp).get(0);
-        assertTrue(any(storedAppinstance.getResourceReferences(), containsFutureResource("myWS")));
+        assertTrue(storedAppinstance.getResourceReferences().stream().anyMatch(containsFutureResource("myWS")));
     }
 
     @Test
@@ -258,7 +257,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsFutureResource("myWs")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsFutureResource("myWs")));
     }
 
     @Test
@@ -276,7 +275,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
     }
 
     @Test
@@ -297,7 +296,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
         ResourceReference storedReRef = newApplicationInstance.getResourceReferences().iterator().next();
         assertEquals(resReference.getID(), storedReRef.getID(), "Resource ref is the same");
     }
@@ -320,7 +319,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("myWS")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("myWS")));
         ResourceReference storedReRef = newApplicationInstance.getResourceReferences().iterator().next();
         assertEquals(resReference.getID(), storedReRef.getID(), "Resource ref is the same");
     }
@@ -365,7 +364,7 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
         service.registerDeployedApplication("test", "app", deployedApplication);
 
         ApplicationInstance newApplicationInstance = repository.getById(ApplicationInstance.class, applicationInstance.getID());
-        assertTrue(any(newApplicationInstance.getResourceReferences(), containsResource("updatedWs")));
+        assertTrue(newApplicationInstance.getResourceReferences().stream().anyMatch(containsResource("updatedWs")));
         assertEquals(1, newApplicationInstance.getResourceReferences().size());
         ResourceReference storedReRef = newApplicationInstance.getResourceReferences().iterator().next();
         assertEquals(resReference.getID(), storedReRef.getID(), "Resource ref is the same");
@@ -380,19 +379,11 @@ public class ApplicationInstanceRestServiceUsedResourcesTest extends SpringTest 
     }
 
     private Predicate<ResourceReference> containsResource(final String alias) {
-        return new Predicate<ResourceReference>() {
-            public boolean apply(ResourceReference input) {
-                return alias.equalsIgnoreCase(input.getAlias()) && !input.isFuture();
-            }
-        };
+        return input -> alias.equalsIgnoreCase(input.getAlias()) && !input.isFuture();
     }
 
     private Predicate<ResourceReference> containsFutureResource(final String alias) {
-        return new Predicate<ResourceReference>() {
-            public boolean apply(ResourceReference input) {
-                return alias.equalsIgnoreCase(input.getAlias()) && input.isFuture();
-            }
-        };
+        return input -> alias.equalsIgnoreCase(input.getAlias()) && input.isFuture();
     }
 
     private ResourceElement resourceElementFrom(Resource resource) {

@@ -6,6 +6,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -14,8 +17,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.Lists;
 
 import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.auditing.FasitRevision;
@@ -50,9 +51,7 @@ public class NodeRestUrlTest extends RestTest {
 
         Application appInGrp1 = repository.store(new Application("myFirstAppInGroup"));
         Application appInGrp2 = repository.store(new Application("mySecondAppInGroup"));
-        repository.store(new ApplicationGroup("myAppGrp", Lists.newArrayList(
-                appInGrp1,
-                appInGrp2)));
+        repository.store(new ApplicationGroup("myAppGrp", new ArrayList<>(Arrays.asList(appInGrp1, appInGrp2))));
         Cluster groupCluster = utvEnv.addCluster(new Cluster("groupCluster", Domain.Devillo));
         groupCluster.addApplication(appInGrp1);
         groupCluster.addApplication(appInGrp2);

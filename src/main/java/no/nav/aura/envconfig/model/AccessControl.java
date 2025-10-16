@@ -6,16 +6,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 import org.apache.commons.lang3.StringUtils;
 
-@SuppressWarnings("serial")
 @Embeddable
 public class AccessControl implements Serializable {
 

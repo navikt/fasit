@@ -170,8 +170,7 @@ public class FasitKafkaProducer {
                     log.error("Event published with wrong format: " + ex.toString());
                     return;
                 }
-                log.info(String.format(
-                        "Published deployment-event to topic: %s:%s  %s. CorrelationId: %s",
+                log.info("Published deployment-event to topic: %s:%s  %s. CorrelationId: %s".formatted(
                         event.getApplication(),
                         event.getVersion(),
                         event.getSkyaEnvironment(),

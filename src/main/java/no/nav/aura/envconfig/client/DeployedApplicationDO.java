@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.envconfig.client.rest.ResourceElement;

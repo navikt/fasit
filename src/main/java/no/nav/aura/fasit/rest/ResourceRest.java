@@ -1,22 +1,20 @@
 package no.nav.aura.fasit.rest;
 
 import static java.lang.Long.parseLong;
-import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
 import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -328,11 +326,11 @@ public class ResourceRest extends AbstractResourceRest {
 
         if (filteredDuplicates.size() > 0) {
         	throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    format("Duplicate resource: \n" +
+                    ("Duplicate resource: \n" +
                             filteredDuplicates
                                     .stream()
                                     .map(r -> r.getID() + " " + r.getScope().getDisplayString())
-                                    .collect(joining("\n"))));
+                                    .collect(joining("\n"))).formatted());
         }
         
     }
@@ -341,7 +339,7 @@ public class ResourceRest extends AbstractResourceRest {
     // It is allowed to have a generic resource scoped to just an env class and multiple identical resources scoped to specific environments.
     // This is a step towards reducing the number of paralell test environments
     private List<Resource> filterDuplicateCandidates(Optional<Environment> environment, List<Resource> existingResources) {
-        if(!environment.isPresent()) {
+        if(environment.isEmpty()) {
             return existingResources
                     .stream()
                     .filter(r -> r.getScope().getEnvironmentName() == null)

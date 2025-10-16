@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Optional;
 
 @Component
@@ -81,7 +81,7 @@ public class ValidationHelpers {
 
     public Optional<Domain> domainFromZone(EnvironmentClass environmentClass, Optional<Environment> environment, Zone zone) {
         if (zone != null) {
-            if (environmentClass == null && !environment.isPresent()) {
+            if (environmentClass == null && environment.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zone without environmentClass or environment is not possible");
             }
 

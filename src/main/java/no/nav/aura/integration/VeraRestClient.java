@@ -27,8 +27,16 @@ public class VeraRestClient {
         this.restTemplate = new RestTemplate();
         veraUrl = url;
     }
+    
+    public VeraRestClient(String url, RestTemplate restTemplate) {
+        log.info("Using " + url + " as vera endpoint url");
+        this.restTemplate = restTemplate;
+        veraUrl = url;
+    }
 
     public void notifyVeraOfUndeployment(String applicationName, String environmentName, String undeployBy) {
+    	log.debug(undeployBy + " is undeploying " + applicationName + " in environment " + environmentName);
+    	log.debug("Vera URL: " + veraUrl);
         postToVera(UNDEPLOYMENT, veraUrl, createRequestBody(applicationName, null, environmentName, undeployBy, UNDEPLOYMENT), 1);
     }
 
@@ -43,6 +51,7 @@ public class VeraRestClient {
 
     private void postToVera(String deploymentMode, String url, Map<String, String> requestBody, int retries) {
         try {
+        	log.debug("Posting to VERA at " + url + " with body: " + requestBody);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
@@ -53,7 +62,7 @@ public class VeraRestClient {
                 log.info("Notified VERA of {} with info {} at endpoint {}", deploymentMode, requestBody, url);
             } else {
                 log.warn("Unable to update VERA, got response {} {}", 
-                        response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase());
+                        response.getStatusCode().value(), response.getStatusCode().toString());
             }
         } catch (Exception e) {
             if (retries < MAX_RETRIES) {

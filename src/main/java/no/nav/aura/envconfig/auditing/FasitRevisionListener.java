@@ -19,8 +19,8 @@ public class FasitRevisionListener implements EntityTrackingRevisionListener {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType, Object revisionEntity) {
+	@Override
+    public void entityChanged(Class entityClass, String entityName, Object entityId, RevisionType revisionType, Object revisionEntity) {
         if (!ModelEntity.class.isAssignableFrom(entityClass)) {
             log.debug("Skipping entity {}", entityName);
             return;

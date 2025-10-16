@@ -1,7 +1,7 @@
 package no.nav.aura.fasit.rest.spring.exceptionmapper;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -59,10 +59,10 @@ public class ValidationExeptionMapper{
         String valueStr = (value == null) ? "" : value.toString();
         
         if (valueStr.isEmpty()) {
-            return String.format("%s: %s Reason: %s", "parameter", parameter.toLowerCase(), v.getMessage().toLowerCase());
+            return "%s: %s Reason: %s".formatted("parameter", parameter.toLowerCase(), v.getMessage().toLowerCase());
         }
         
-        return String.format("%s: %s Reason: %s Value: %s", "parameter", parameter, v.getMessage(), valueStr);
+        return "%s: %s Reason: %s Value: %s".formatted("parameter", parameter, v.getMessage(), valueStr);
     }
     
 //    private String format(FieldError fe) {

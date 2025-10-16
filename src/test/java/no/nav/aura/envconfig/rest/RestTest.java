@@ -4,12 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import no.nav.StandaloneFasitJettyRunner;
+import no.nav.StandaloneRunnerTestConfig;
+import no.nav.StandaloneRunnerTestOracleConfig;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.spring.SecurityByPass;
 import no.nav.aura.envconfig.util.InsideJobService;
@@ -17,6 +18,7 @@ import no.nav.aura.envconfig.util.Producer;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.fasit.repository.ApplicationRepository;
 import no.nav.aura.fasit.repository.EnvironmentRepository;
+import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
 import no.nav.aura.fasit.rest.model.EntityPayload;
 import org.hibernate.envers.RevisionType;
@@ -29,10 +31,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,7 +42,8 @@ import java.util.Set;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = StandaloneFasitJettyRunner.class)
+//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestOracleConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnableTransactionManagement
 abstract public class RestTest {
@@ -71,6 +74,9 @@ abstract public class RestTest {
 	
 	@Inject
 	private ResourceRepository resourceRepository;
+	
+	@Inject
+	NodeRepository nodeRepository;
 	
 	@Inject
 	private ObjectMapper objectMapper;
@@ -134,22 +140,12 @@ abstract public class RestTest {
 	
 //    @Transactional
     protected void cleanupApplications() {
-    	List<ApplicationInstance> instances = entityManager.createQuery(
-			"SELECT DISTINCT ai FROM ApplicationInstance ai LEFT JOIN FETCH ai.application a LEFT JOIN FETCH ai.cluster c", 
-			ApplicationInstance.class).getResultList();
-    	
-		log.info("Found {} ApplicationInstances to clean up", instances.size());
-		for (ApplicationInstance instance : instances) {
-			log.info("Deleting application instance: {} in cluster: {}", instance.getName(), instance.getCluster().getName());
-			repository.delete(instance);
-		}
-		
         List<Application> applications = applicationRepository.findAll();
         log.info("Found {} applications to clean up", applications.size());
         for (Application app : applications) {
             log.info("Deleting application: {} with id: {}", app.getName(), app.getID());
             Application managedApp = entityManager.find(Application.class, app.getID());
-        	applicationRepository.delete(managedApp);
+        	repository.delete(managedApp);
         }
 	}
     
@@ -160,14 +156,23 @@ abstract public class RestTest {
 
 //    @Transactional
     protected void cleanupEnvironments() {
+//    	nodeRepository.deleteAll();
+//    	environmentRepo.deleteAll();
     	try {
         List<Environment> environments = environmentRepo.findAll();
+//        repository.findEnvironmentBy(null)
         log.info("Found {} environments to clean up", environments.size());
         for (Environment env : environments) {
+//        	for (Node node : env.getNodes()) {
+//        		env.removeNode(node);
+//        		repository.store(env);
+//        		repository.delete(node);
+//        	}
             repository.delete(env);
         }
-        environmentRepo.flush();
+//        environmentRepo.flush();
     	} catch (Exception e) {
+    		e.printStackTrace();
     		log.error("Error during environment cleanup: {}", e.getMessage());
     	}
     }

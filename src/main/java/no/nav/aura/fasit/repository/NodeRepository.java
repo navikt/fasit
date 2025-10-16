@@ -25,10 +25,12 @@ public interface NodeRepository extends JpaRepository<Node, Long>, JpaSpecificat
     @Query("select e from Environment e JOIN e.nodes n where n=:node")
     Environment findEnvironment(@Param("node") Node node);
 
-    @Query("select n from Node n where exists (select e from Environment e join e.nodes en where n = lower(en) and e.name = lower(:environmentName))")
+//    @Query("select n from Node n where exists (select e from Environment e join e.nodes en where n = lower(en) and e.name = lower(:environmentName))")
+    @Query("select n from Node n where n in (select en from Environment e join e.nodes en where lower(e.name) = lower(:environmentName))")
     List<Node> findNodesByEnvironmentName(@Param("environmentName") String environmentName);
 
-    @Query("select n from Node n where exists (select e from Environment e join e.nodes en where n = lower(en) and e.envClass = :envClass)")
+    //@Query("select n from Node n where exists (select e from Environment e join e.nodes en where n = lower(en) and e.envClass = :envClass)")
+    @Query("select n from Node n where n in (select en from Environment e join e.nodes en where e.envClass = :envClass)")
     List<Node> findNodesByEnvironmentClass(@Param("envClass") EnvironmentClass envClass);
 
     @Query("select n from Node n where lower(n.hostname)= lower(:hostname)")
