@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.gson.Gson;
 import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.client.*;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -31,9 +30,6 @@ import no.nav.aura.sensu.SensuClient;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-
-import javax.ws.rs.BadRequestException;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +51,7 @@ import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 public class ApplicationInstanceResource {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceResource.class);
+    private VeraRestClient vera;
     private FasitKafkaProducer fasitKafkaProducer;
     private FasitRepository repository;
     private ApplicationInstanceRepository instanceRepository;
@@ -68,11 +65,12 @@ public class ApplicationInstanceResource {
     }
 
     @Inject
-    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer) {
+    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer, VeraRestClient vera) {
         this.repository = repository;
         this.instanceRepository = instanceRepository;
         this.sensuClient = sensuClient;
         this.fasitKafkaProducer = fasitKafkaProducer;
+        this.vera = vera;
     }
 
     @POST
@@ -251,7 +249,7 @@ public class ApplicationInstanceResource {
                         "targetEnvironment", environmentName),
                 ImmutableMap.of("version", version));
 
-        fasitKafkaProducer.publishDeploymentEvent(applicationInstance, findEnvironment(environmentName));
+        vera.notifyVeraOfDeployment(applicationInstance, findEnvironment(environmentName));
 
         log.debug(format("Registered new application instance of application %s with version %s to environment %s", applicationName, version, environmentName));
         return applicationInstance;

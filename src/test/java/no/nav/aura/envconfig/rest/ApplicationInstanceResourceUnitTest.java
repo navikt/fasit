@@ -17,6 +17,7 @@ import no.nav.aura.fasit.client.model.MissingResource;
 import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
+import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
@@ -54,7 +55,7 @@ public class ApplicationInstanceResourceUnitTest {
     public void setUp() {
         repository = mock(JPAFasitRepository.class);
         instanceRepository = mock(ApplicationInstanceRepository.class);
-        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class), mock(VeraRestClient.class));
     }
 
     @Test

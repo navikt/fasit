@@ -1,6 +1,5 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
@@ -22,6 +21,7 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayloa
 import no.nav.aura.fasit.rest.model.RevisionPayload;
 import no.nav.aura.fasit.rest.security.AccessChecker;
 import no.nav.aura.integration.FasitKafkaProducer;
+import no.nav.aura.integration.VeraRestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -61,6 +61,8 @@ public class ApplicationInstanceRest {
     private ResourceRest resourceRest;
     @Inject
     private FasitKafkaProducer kafkaProducer;
+    @Inject
+    private VeraRestClient vera;
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceRest.class);
 
@@ -248,7 +250,7 @@ public class ApplicationInstanceRest {
 
         ApplicationInstance appInstance = new Payload2ApplicationInstanceTransformer(appInstanceBase, resourceRepository, revisionRepository).apply(payload);
         ApplicationInstance savedApplicationInstance = applicationInstanceRepository.save(appInstance);
-        kafkaProducer.publishDeploymentEvent(savedApplicationInstance, environment);
+        vera.notifyVeraOfDeployment(savedApplicationInstance, environment);
 
         return getTransformer().apply(appInstance);
 
@@ -285,7 +287,7 @@ public class ApplicationInstanceRest {
         lifeCycleSupport.update(updated, payload);
 
         ApplicationInstance savedApplicationInstance = applicationInstanceRepository.save(updated);
-        kafkaProducer.publishDeploymentEvent(savedApplicationInstance, validationHelpers.findEnvironment(payload.environment));
+        vera.notifyVeraOfDeployment(savedApplicationInstance, validationHelpers.findEnvironment(payload.environment));
 
         return getTransformer().apply(updated);
     }
