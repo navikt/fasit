@@ -45,7 +45,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
     @BeforeEach
     public void setUp() {
-        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class));
+        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class), mock(VeraRestClient.class));
         
         env = repository.store(new Environment("env", EnvironmentClass.p));
         node = repository.store(new Node("hostname.adeo.no", "bleep", "bloop"));

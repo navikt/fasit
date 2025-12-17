@@ -3,8 +3,10 @@ package no.nav.aura.fasit.rest.model;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.fasit.rest.model.PortPayload.PortType;
+import no.nav.aura.integration.VeraRestClient;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -13,6 +15,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ApplicationInstancePayload extends EntityPayload {
+    @Inject
+    VeraRestClient vera;
+
     @NotNull(message = "application name is required")
     public String application;
     @NotNull(message = "environment is required")

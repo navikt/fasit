@@ -10,7 +10,6 @@ import no.nav.aura.appconfig.Selftest;
 import no.nav.aura.appconfig.exposed.*;
 import no.nav.aura.appconfig.resource.EnvironmentDependentResource;
 import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.client.*;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -20,13 +19,10 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
 import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.hibernate.envers.RevisionType;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +62,9 @@ public class ApplicationInstanceRestService {
     @Inject
     private FasitKafkaProducer kafkaProducer;
 
+    @Inject
+    VeraRestClient vera;
+
     @Context
     private UriInfo uriInfo;
 
@@ -81,11 +80,11 @@ public class ApplicationInstanceRestService {
         // For cglib and @transactional
     }
 
-    public ApplicationInstanceRestService(FasitRepository repo, SensuClient sensuClient, FasitKafkaProducer kafkaProducer) {
+    public ApplicationInstanceRestService(FasitRepository repo, SensuClient sensuClient, FasitKafkaProducer kafkaProducer, VeraRestClient vera) {
         this.repo = repo;
         this.sensuClient = sensuClient;
         this.kafkaProducer = kafkaProducer;
-
+        this.vera = vera;
     }
 
     @GET
@@ -251,7 +250,7 @@ public class ApplicationInstanceRestService {
 
         ApplicationInstance savedAppInstance = repo.store(appInstance);
         sensuClient.sendEvent("fasit.deployments", ImmutableMap.of("deployedApplication", appName, "targetEnvironment", envName, "targetEnvironmentClass", System.getProperty("environment.class", "u")), ImmutableMap.of("version", appInstance.getVersion()));
-        kafkaProducer.publishDeploymentEvent(savedAppInstance, environment);
+        vera.notifyVeraOfDeployment(savedAppInstance, environment);
     }
 
     private String getSelftest(Application application) {

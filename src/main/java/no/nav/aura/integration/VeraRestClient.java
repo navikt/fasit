@@ -1,7 +1,9 @@
 package no.nav.aura.integration;
 
-import java.util.HashMap;
-import java.util.Map;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -9,9 +11,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VeraRestClient {
 
@@ -19,15 +20,25 @@ public class VeraRestClient {
 
     private static final Logger log = LoggerFactory.getLogger(VeraRestClient.class);
     private static final String UNDEPLOYMENT = "undeployment";
+    private static final String DEPLOYMENT = "deployment";
 
     private String veraUrl;
 
     private Client httpClient;
 
     public VeraRestClient(String url) {
-        log.info("Using " + url + " as vera endpoint url");
+        log.info("Using {} as vera endpoint url", url);
         httpClient = ClientBuilder.newClient();
         veraUrl = url;
+    }
+
+    public void notifyVeraOfDeployment(ApplicationInstance appInstance, Environment environment) {
+        String applicationName = appInstance.getApplication().getName();
+        String version = appInstance.getVersion();
+        String environmentName = environment.getName();
+        String deployBy = "aura (Service User (srvauraautodeploy))";
+
+        postToVera(DEPLOYMENT, veraUrl, createRequestBody(applicationName, version, environmentName, deployBy, DEPLOYMENT), 1);
     }
 
     public void notifyVeraOfUndeployment(String applicationName, String environmentName, String undeployBy) {
