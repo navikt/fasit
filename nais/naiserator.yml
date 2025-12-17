@@ -6,6 +6,13 @@ metadata:
   labels:
     team: "team-atom"
 spec:
+  accessPolicy:
+    outbound:
+      external:
+        - host: vera.nais.oera.no
+      rules:
+        - application: sensu
+          namespace: nais
   resources:
     limits:
        memory: 3Gi  # app will be killed if exceeding these limits
