@@ -24,7 +24,6 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.Tuple;
 import no.nav.aura.fasit.client.model.*;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -52,7 +51,6 @@ public class ApplicationInstanceResource {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceResource.class);
     private VeraRestClient vera;
-    private FasitKafkaProducer fasitKafkaProducer;
     private FasitRepository repository;
     private ApplicationInstanceRepository instanceRepository;
     private SensuClient sensuClient;
@@ -65,11 +63,10 @@ public class ApplicationInstanceResource {
     }
 
     @Inject
-    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, FasitKafkaProducer fasitKafkaProducer, VeraRestClient vera) {
+    public ApplicationInstanceResource(FasitRepository repository, ApplicationInstanceRepository instanceRepository, SensuClient sensuClient, VeraRestClient vera) {
         this.repository = repository;
         this.instanceRepository = instanceRepository;
         this.sensuClient = sensuClient;
-        this.fasitKafkaProducer = fasitKafkaProducer;
         this.vera = vera;
     }
 

@@ -19,7 +19,6 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
 import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.hibernate.envers.RevisionType;
@@ -60,9 +59,6 @@ public class ApplicationInstanceRestService {
     private SensuClient sensuClient;
 
     @Inject
-    private FasitKafkaProducer kafkaProducer;
-
-    @Inject
     VeraRestClient vera;
 
     @Context
@@ -80,10 +76,9 @@ public class ApplicationInstanceRestService {
         // For cglib and @transactional
     }
 
-    public ApplicationInstanceRestService(FasitRepository repo, SensuClient sensuClient, FasitKafkaProducer kafkaProducer, VeraRestClient vera) {
+    public ApplicationInstanceRestService(FasitRepository repo, SensuClient sensuClient, VeraRestClient vera) {
         this.repo = repo;
         this.sensuClient = sensuClient;
-        this.kafkaProducer = kafkaProducer;
         this.vera = vera;
     }
 

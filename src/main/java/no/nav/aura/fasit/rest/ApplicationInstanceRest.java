@@ -20,7 +20,6 @@ import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
 import no.nav.aura.fasit.rest.model.RevisionPayload;
 import no.nav.aura.fasit.rest.security.AccessChecker;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +58,6 @@ public class ApplicationInstanceRest {
     private EnvironmentRepository environmentRepository;
     @Inject
     private ResourceRest resourceRest;
-    @Inject
-    private FasitKafkaProducer kafkaProducer;
     @Inject
     private VeraRestClient vera;
 

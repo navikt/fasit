@@ -11,7 +11,6 @@ import no.nav.aura.envconfig.spring.SpringTest;
 import no.nav.aura.fasit.client.model.ExposedResource;
 import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
@@ -45,7 +44,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
     @BeforeEach
     public void setUp() {
-        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(FasitKafkaProducer.class), mock(VeraRestClient.class));
+        service = new ApplicationInstanceResource(repository, instanceRepository, mock(SensuClient.class), mock(VeraRestClient.class));
         
         env = repository.store(new Environment("env", EnvironmentClass.p));
         node = repository.store(new Node("hostname.adeo.no", "bleep", "bloop"));

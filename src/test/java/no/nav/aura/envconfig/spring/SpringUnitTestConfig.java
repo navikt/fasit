@@ -2,17 +2,14 @@ package no.nav.aura.envconfig.spring;
 
 import javax.sql.DataSource;
 
-import com.bettercloud.vault.Vault;
 import no.nav.aura.envconfig.util.InsideJobService;
 
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.sensu.SensuClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import static org.mockito.Mockito.mock;

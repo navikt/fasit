@@ -3,7 +3,6 @@ package no.nav.aura.fasit.rest.config;
 import com.bettercloud.vault.Vault;
 import no.nav.aura.envconfig.spring.SpringSecurityTestConfig;
 import no.nav.aura.envconfig.util.InsideJobService;
-import no.nav.aura.integration.FasitKafkaProducer;
 import no.nav.aura.integration.VeraRestClient;
 import no.nav.aura.sensu.SensuClient;
 import org.slf4j.Logger;

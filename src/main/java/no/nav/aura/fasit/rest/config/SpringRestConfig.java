@@ -6,7 +6,6 @@ import no.nav.aura.envconfig.spring.SpringDomainConfig;
 import no.nav.aura.envconfig.spring.SpringSecurityConfig;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.rest.ResourceRest;
-import no.nav.aura.integration.spring.KafkaSpringConfig;
 import no.nav.aura.integration.spring.VeraSpringConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         SpringSecurityRestConfig.class,
         SpringDomainConfig.class,
         SpringRepositoryConfig.class,
-        KafkaSpringConfig.class,
         VeraSpringConfig.class,
 })
 public class SpringRestConfig {
