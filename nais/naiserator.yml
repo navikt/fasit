@@ -29,8 +29,6 @@ spec:
     {{#each ingresses}}
     - "{{this}}"
     {{/each}}
-  kafka:
-    pool: {{ KAFKA_POOL }}
   env:
     - name: "LOG_OUTPUT"
       value: "JSON"
@@ -60,8 +58,6 @@ spec:
       value: {{ ROLE_PROD_OPERATIONS_GROUPS }}
     - name: "ROLE_SUPERUSER_GROUPS"
       value: {{ ROLE_SUPERUSER_GROUPS }}
-    - name: "KAFKA_DEPLOYMENT_EVENT_TOPIC"
-      value: {{ KAFKA_DEPLOYMENT_EVENT_TOPIC }}
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "deployment.environment.name={{ENVIRONMENT_CLASS}}"
 

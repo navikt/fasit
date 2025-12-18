@@ -46,12 +46,5 @@ echo "ROLE_PROD_OPERATIONS.groups=$ROLE_PROD_OPERATIONS_GROUPS" >> $CONFIG_DIR/c
 # RoleMapping fasit.superuser
 echo "ROLE_SUPERUSER.groups=$ROLE_SUPERUSER_GROUPS" >> $CONFIG_DIR/config.properties
 
-# Kafka configuration from Kafkarator
-echo "kafka.servers=$KAFKA_BROKERS" >> $CONFIG_DIR/config.properties
-echo "kafka.credstore.password=$KAFKA_CREDSTORE_PASSWORD" >> $CONFIG_DIR/config.properties
-echo "kafka.keystore.path=$KAFKA_KEYSTORE_PATH" >> $CONFIG_DIR/config.properties
-echo "kafka.truststore.path=$KAFKA_TRUSTSTORE_PATH" >> $CONFIG_DIR/config.properties
-echo "kafka.deployment.event.topic=$KAFKA_DEPLOYMENT_EVENT_TOPIC" >> $CONFIG_DIR/config.properties
-
 # Start the server
 exec java ${DEFAULT_JVM_OPTS} ${JAVA_OPTS} -Dfasit.configDir=$CONFIG_DIR -jar /app/app.jar ${RUNTIME_OPTS} $@

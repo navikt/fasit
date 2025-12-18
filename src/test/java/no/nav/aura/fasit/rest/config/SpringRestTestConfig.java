@@ -40,11 +40,6 @@ public class SpringRestTestConfig {
     }
 
     @Bean
-    public FasitKafkaProducer fasitKafkaProducer() {
-        return mock(FasitKafkaProducer.class);
-    }
-
-    @Bean
     public Vault vaultClient() {
         return mock(Vault.class);
     }

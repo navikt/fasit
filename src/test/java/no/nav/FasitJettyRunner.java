@@ -162,14 +162,6 @@ public class FasitJettyRunner {
         System.setProperty("environment.name", "dev");
         System.setProperty("environment.class", "u");
 
-        // Used for Kafka integration
-        System.setProperty("publish.deployment.events.to.kafka", "false");
-        System.setProperty("kafka.servers", "localhost:9092");
-        System.setProperty("kafka.sasl.enabled", "false");
-        System.setProperty("kafka.username", "tull");
-        System.setProperty("kafka.password", "fjas");
-        System.setProperty("kafka.deployment.event.topic", "deployment-event");
-
         System.setProperty("vault.url", "https://avaulturl.com");
         System.setProperty("systemuser.srvfasit.username", "srvfasit");
         System.setProperty("systemuser.srvfasit.password", "secret");
