@@ -16,7 +16,7 @@
   "LDAP_BASEDN": "dc=adeo,dc=no",
   "LDAP_URL": "ldaps://ldapgw.adeo.no",
   "VAULT_URL": "https://vault.adeo.no",
-  "DEPLOYLOG_V1_URL": "https://vera.nais.oera.no/api/v1/deploylog",
+  "DEPLOYLOG_V1_URL": "https://vera.intern.nav.no/api/v1/deploylog",
   "ROLE_OPERATIONS_GROUPS": "0000-GA-env-config-TestAdmin,0000-GA-fasit-prod-selfservice",
   "ROLE_PROD_OPERATIONS_GROUPS": "0000-GA-env-config-ProdAdmin,0000-GA-fasit-prod-selfservice",
   "ROLE_SUPERUSER_GROUPS": "0000-ga-fasit-superuser",
