@@ -33,28 +33,23 @@ public class VeraRestClient {
     }
 
     public void notifyVeraOfDeployment(ApplicationInstance appInstance, Environment environment) {
-        String applicationName = appInstance.getApplication().getName();
-        String version = appInstance.getVersion();
-        String environmentName = environment.getName();
-        String deployBy = "aura (Service User (srvauraautodeploy))";
+        Map<String, String> map = new HashMap<>();
+        map.put("application", appInstance.getApplication().getName());
+        map.put("environment", environment.getName());
+            map.put("version", appInstance.getVersion());
+        map.put("deployedBy", "aura (Service User (srvauraautodeploy))");
+        map.put("deployTime", appInstance.getDeployDate().toString());
 
-        postToVera(DEPLOYMENT, veraUrl, createRequestBody(applicationName, version, environmentName, deployBy), 1);
+        postToVera(DEPLOYMENT, veraUrl, map, 1);
     }
 
     public void notifyVeraOfUndeployment(String applicationName, String environmentName, String undeployBy) {
-        postToVera(UNDEPLOYMENT, veraUrl, createRequestBody(applicationName, null, environmentName, undeployBy), 1);
-    }
-
-    private Map<String, String> createRequestBody(String applicationName, String version, String environmentName, String user) {
         Map<String, String> map = new HashMap<>();
         map.put("application", applicationName);
         map.put("environment", environmentName);
-        if (version != null) {
-            map.put("version", version);
-        }
-        map.put("deployedBy", user);
+        map.put("deployedBy", undeployBy);
 
-        return map;
+        postToVera(UNDEPLOYMENT, veraUrl, map, 1);
     }
 
     private void postToVera(String deploymentMode, String url, Map<String, String> requestBody, int retries) {
