@@ -6,7 +6,6 @@ import no.nav.aura.envconfig.util.InsideJobService;
 
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
 import no.nav.aura.sensu.SensuClient;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -32,13 +31,6 @@ public class SpringUnitTestConfig {
     @Bean(name = "dataSource")
     public DataSource dataSource() {
         return TestDatabaseHelper.createDataSource("h2", "jdbc:h2:mem:spring", "sa", "");
-    }
-
-    @Bean
-    public FasitKafkaProducer fasitKafkaProducer() {
-        //return new FasitKafkaProducer();
-        KafkaProducer kafkaProducerMock = mock(KafkaProducer.class);
-        return new FasitKafkaProducer(kafkaProducerMock);
     }
 
     @Bean
