@@ -38,17 +38,20 @@ public class VeraRestClient {
         String environmentName = environment.getName();
         String deployBy = "aura (Service User (srvauraautodeploy))";
 
-        postToVera(DEPLOYMENT, veraUrl, createRequestBody(applicationName, version, environmentName, deployBy, DEPLOYMENT), 1);
+        postToVera(DEPLOYMENT, veraUrl, createRequestBody(applicationName, version, environmentName, deployBy), 1);
     }
 
     public void notifyVeraOfUndeployment(String applicationName, String environmentName, String undeployBy) {
-        postToVera(UNDEPLOYMENT, veraUrl, createRequestBody(applicationName, null, environmentName, undeployBy, UNDEPLOYMENT), 1);
+        postToVera(UNDEPLOYMENT, veraUrl, createRequestBody(applicationName, null, environmentName, undeployBy), 1);
     }
 
-    private Map<String, String> createRequestBody(String applicationName, String version, String environmentName, String user, String deploymentMode) {
+    private Map<String, String> createRequestBody(String applicationName, String version, String environmentName, String user) {
         Map<String, String> map = new HashMap<>();
         map.put("application", applicationName);
         map.put("environment", environmentName);
+        if (version != null) {
+            map.put("version", version);
+        }
         map.put("deployedBy", user);
 
         return map;
