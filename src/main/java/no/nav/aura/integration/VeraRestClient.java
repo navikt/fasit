@@ -33,12 +33,18 @@ public class VeraRestClient {
     }
 
     public void notifyVeraOfDeployment(ApplicationInstance appInstance, Environment environment) {
+        String platform = appInstance.getCluster().getNodes().stream().findFirst()
+                .map(node -> node.getPlatformType().toString().toLowerCase())
+                .orElse("unknown");
+
         Map<String, String> map = new HashMap<>();
         map.put("application", appInstance.getApplication().getName());
-        map.put("environment", environment.getName());
-            map.put("version", appInstance.getVersion());
         map.put("deployedBy", "aura (Service User (srvauraautodeploy))");
         map.put("deployTime", appInstance.getDeployDate().toString());
+        map.put("deploymentSystem", "aura");
+        map.put("environment", environment.getName());
+        map.put("platform", platform);
+        map.put("version", appInstance.getVersion());
 
         postToVera(DEPLOYMENT, veraUrl, map, 1);
     }
