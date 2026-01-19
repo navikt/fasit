@@ -27,6 +27,7 @@ public class VeraRestClient {
     private final RestTemplate restTemplate;
 
     public VeraRestClient(String url) {
+        log.info("Using {} as vera endpoint url", url);
         this.restTemplate = new RestTemplate();
         veraUrl = url;
     }

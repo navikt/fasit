@@ -356,7 +356,7 @@ public class ApplicationInstanceRestTest extends RestTest {
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("$.size", greaterThan(1))
+                .body("$", hasSize(greaterThan(1)))
                 .body("revisiontype", hasItem("mod"));
     }
 
