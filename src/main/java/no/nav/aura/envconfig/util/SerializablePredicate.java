@@ -1,8 +1,8 @@
 package no.nav.aura.envconfig.util;
 
 import java.io.Serializable;
+import java.util.function.Predicate;
 
-import com.google.common.base.Predicate;
 
 @SuppressWarnings("serial")
 public abstract class SerializablePredicate<T> implements Predicate<T>, Serializable {

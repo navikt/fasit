@@ -12,12 +12,12 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.Tuple;
 import org.hibernate.envers.RevisionType;
 
-import com.google.common.base.Optional;
 
 import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface FasitRepository {

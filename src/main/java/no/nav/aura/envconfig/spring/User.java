@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import no.nav.aura.envconfig.ApplicationRole;
 
@@ -13,10 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.ldap.userdetails.LdapUserDetails;
-
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
 
 @SuppressWarnings("serial")
 public final class User implements Serializable {
@@ -30,8 +27,8 @@ public final class User implements Serializable {
     private User(String identity, String displayName, Collection<String> roles, Collection<String> groups, boolean authenticated) {
         this.identity = identity;
         this.displayName = displayName;
-        this.roles = ImmutableSet.copyOf(roles);
-        this.groups = ImmutableSet.copyOf(groups);
+        this.roles = Set.copyOf(roles);
+        this.groups = Set.copyOf(groups);
         this.authenticated = authenticated;
     }
 
@@ -103,7 +100,7 @@ public final class User implements Serializable {
         return groups;
     }
 
-    private static ImmutableSet<String> getRoles(Authentication auth) {
+    private static Set<String> getRoles(Authentication auth) {
         return extractStringSetFromGrantedAuthority(auth.getAuthorities());
     }
 
@@ -111,18 +108,19 @@ public final class User implements Serializable {
         if (auth.getPrincipal() instanceof LdapUserDetails) {
             return extractStringSetFromGrantedAuthority(((LdapUserDetails) auth.getPrincipal()).getAuthorities());
         } else {
-            return ImmutableSet.of();
+            return Set.of();
         }
     }
 
-    private static ImmutableSet<String> extractStringSetFromGrantedAuthority(Collection<? extends GrantedAuthority> grantedAuthorities) {
-        return FluentIterable.from(grantedAuthorities)
-                .transform(new Function<GrantedAuthority, String>() {
-                    public String apply(GrantedAuthority grantedAuthority) {
-                        return grantedAuthority.getAuthority().toUpperCase();
-                    }
-                })
-                .toSet();
+    private static Set<String> extractStringSetFromGrantedAuthority(Collection<? extends GrantedAuthority> grantedAuthorities) {
+    	if (grantedAuthorities == null || grantedAuthorities.isEmpty()) {
+			return Set.of();
+		}
+		
+		return grantedAuthorities.stream()
+				.map(GrantedAuthority::getAuthority)
+				.map(String::toUpperCase)
+				.collect(Collectors.toSet());
     }
 
     @Override

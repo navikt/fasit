@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.collect.ImmutableMap;
 import no.nav.aura.envconfig.client.ResourceTypeDO;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -97,7 +96,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
         RegisterApplicationInstancePayload payload1 = new RegisterApplicationInstancePayload(app.getName(), "1.0", env.getName());
         payload1.setNodes(Arrays.asList(node.getName()));
-        Map<String, String> properties = ImmutableMap.of("url", "http://someservice/");
+        Map<String, String> properties = Map.of("url", "http://someservice/");
         String alias = "restService";
         ExposedResource exposedResource = new ExposedResource(ResourceTypeDO.RestService, alias, properties);
         exposedResource.setDomain("adeo.no");
@@ -123,7 +122,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
         RegisterApplicationInstancePayload payload = new RegisterApplicationInstancePayload(app.getName(), "1.0", env.getName());
         payload.setNodes(Arrays.asList(node.getName()));
-        Map<String, String> properties = ImmutableMap.of("url", "http://someservice/");
+        Map<String, String> properties = Map.of("url", "http://someservice/");
         String alias = "restService";
         ExposedResource exposedResource = new ExposedResource(ResourceTypeDO.RestService, alias, properties);
         exposedResource.setAccessAdGroups("somegroup");
@@ -157,7 +156,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
         RegisterApplicationInstancePayload payload = new RegisterApplicationInstancePayload(app.getName(), "1.0", env.getName());
         payload.setNodes(Arrays.asList(node.getName()));
-        Map<String, String> properties = ImmutableMap.of("url", "http://someservice/");
+        Map<String, String> properties = Map.of("url", "http://someservice/");
         String alias = "restService";
         payload.getExposedResources().add(new ExposedResource(ResourceTypeDO.RestService, alias, properties));
 
@@ -185,7 +184,7 @@ public class ApplicationInstanceResourceSpringTest extends SpringTest {
 
         RegisterApplicationInstancePayload payload = new RegisterApplicationInstancePayload(app.getName(), "1.0", env.getName());
         payload.setNodes(Arrays.asList(node.getName()));
-        Map<String, String> properties = ImmutableMap.of();
+        Map<String, String> properties = Map.of();
         payload.getExposedResources().add(new ExposedResource(ResourceType.Queue.name(), alias,resource.getID(),  properties));
 
         service.registerApplicationInstance(payload.toJson());

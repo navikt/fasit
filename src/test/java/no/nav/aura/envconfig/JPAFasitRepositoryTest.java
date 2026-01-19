@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig;
 
-import com.google.common.collect.Lists;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -82,11 +81,17 @@ public class JPAFasitRepositoryTest {
     
     @AfterEach
     public void tearDown() {
-    	repository.delete(nodeTestLocal);
-    	repository.delete(clusterTestLocal);
-    	repository.delete(t1);
-    	repository.delete(singleApplicationGroup);
-		repository.delete(application);
+        repository.delete(t1);
+        repository.delete(singleApplicationGroup);
+        repository.delete(application);
+//    	clusterTestLocal.removeNode(nodeTestLocal);
+//        repository.store(clusterTestLocal);
+//
+//    	repository.delete(nodeTestLocal);
+//    	repository.delete(clusterTestLocal);
+//    	repository.delete(t1);
+//    	repository.delete(singleApplicationGroup);
+//		repository.delete(application);
 	}
 
     @Test
@@ -347,9 +352,9 @@ public class JPAFasitRepositoryTest {
         repository.store(createResource("test1", "http://host:80/ptui", "pa"));
         repository.store(createResource("test1", "http://host:80/hark", "pb"));
         Resource newResource = createResource("annen", "http://host:80/hark", "pa");
-        assertEquals(Lists.newArrayList(original), repository.findDuplicateProperties(newResource));
+        assertEquals(new ArrayList<>(Arrays.asList(original)), repository.findDuplicateProperties(newResource));
         newResource = repository.store(newResource);
-        assertEquals(Lists.newArrayList(original), repository.findDuplicateProperties(newResource));
+        assertEquals(new ArrayList<>(Arrays.asList(original)), repository.findDuplicateProperties(newResource));
     }
 
     private Resource createResource(String alias, String url, String userName) {
@@ -467,7 +472,7 @@ public class JPAFasitRepositoryTest {
         Collection<ApplicationGroup> applicationGroups = repository.getApplicationGroups();
         assertEquals(2, applicationGroups.size());
         ApplicationGroup applicationGroup = applicationGroups.iterator().next();
-        assertTrue(applicationGroups.containsAll(Lists.newArrayList(singleApplicationGroup, multiApplicationGroup)));
+        assertTrue(applicationGroups.containsAll(new ArrayList<>(Arrays.asList(singleApplicationGroup, multiApplicationGroup))));
     }
 
     @Test
@@ -624,5 +629,15 @@ public class JPAFasitRepositoryTest {
         }
 
         return environmentNames;
+    }
+    
+    private Cluster findClusterContainingNode(Node node) {
+        Collection<Cluster> allClusters = repository.getAll(Cluster.class);
+        for (Cluster cluster : allClusters) {
+            if (cluster.getNodes().contains(node)) {
+                return cluster;
+            }
+        }
+        return null;
     }
 }

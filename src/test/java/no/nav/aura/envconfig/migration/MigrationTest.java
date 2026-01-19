@@ -3,6 +3,7 @@ package no.nav.aura.envconfig.migration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.google.common.collect.Lists;
 
 /**
  * Kept only as template for future database refactorings. Usage:
@@ -193,7 +193,7 @@ public abstract class MigrationTest {
             public Long run() {
                 String sqlp1 = "insert into " + table + " (";
                 String sqlp2 = " values (";
-                List<Object> values = Lists.newArrayList();
+                List<Object> values = new ArrayList<>();	
                 for (int i = 0; i < os.length; i += 2) {
                     sqlp1 += ((String) os[i]) + ", ";
                     Object value = os[i + 1];

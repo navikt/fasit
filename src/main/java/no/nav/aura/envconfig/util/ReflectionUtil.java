@@ -1,14 +1,13 @@
 package no.nav.aura.envconfig.util;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import no.nav.aura.envconfig.model.ModelEntity;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public abstract class ReflectionUtil {
 
@@ -17,7 +16,7 @@ public abstract class ReflectionUtil {
 
     @SuppressWarnings("unchecked")
     public static List<Field> getDeclaredFieldsWithSupers(Class<? extends ModelEntity> clazz) {
-        List<Field> list = Lists.newArrayList(clazz.getDeclaredFields());
+        List<Field> list =  new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         if (ModelEntity.class.isAssignableFrom(clazz.getSuperclass())) {
             list.addAll(getDeclaredFieldsWithSupers((Class<? extends ModelEntity>) clazz.getSuperclass()));
         }
@@ -25,7 +24,7 @@ public abstract class ReflectionUtil {
     }
 
     public static void doRecursively(ModelEntity entity, Consumer<ModelEntity> effect) {
-        doRecursively(entity, effect, Sets.<Integer> newHashSet());
+        doRecursively(entity, effect, Set.<Integer> of());
     }
 
     private static void doRecursively(ModelEntity entity, Consumer<ModelEntity> effect, Set<Integer> touched) {
