@@ -5,13 +5,15 @@ import static no.nav.aura.envconfig.model.infrastructure.Domain.OeraT;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import no.nav.aura.envconfig.model.application.Application;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.Sets;
 
 public class ScopeableBestMatchTest {
 
@@ -48,45 +50,45 @@ public class ScopeableBestMatchTest {
 
     @Test
     public void verifyBestMatch() {
-        Resource bestMatch = completeScope.singleBestMatch(Sets.newHashSet(resource_envclass, resource_envclass_domain, resource_envclass_name, resource_envclass_app, resource_envclass_domain_envname,
+        Resource bestMatch = completeScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass, resource_envclass_domain, resource_envclass_name, resource_envclass_app, resource_envclass_domain_envname,
                 resource_envclass_domain_app
-                , resource_envclass_name_multiapp, resource_fullscope));
+                , resource_envclass_name_multiapp, resource_fullscope)));
         assertEquals(resource_fullscope, bestMatch);
     }
 
     @Test
     public void verifyBestMatchOtherOrder() {
-        Resource bestMatch = completeScope.singleBestMatch(Sets.newHashSet(resource_fullscope, resource_envclass_domain, resource_envclass_name, resource_envclass_app,
-                resource_envclass_domain_envname, resource_envclass_domain_app, resource_envclass, resource_envclass_name_multiapp));
+        Resource bestMatch = completeScope.singleBestMatch(new HashSet<>(Set.of(resource_fullscope, resource_envclass_domain, resource_envclass_name, resource_envclass_app,
+                resource_envclass_domain_envname, resource_envclass_domain_app, resource_envclass, resource_envclass_name_multiapp)));
         assertEquals(resource_fullscope, bestMatch);
     }
 
     @Test
     public void verifyNoFullMatch() {
         Scope completeScope = new Scope(u).domain(Devillo).envName(ENVNAME).application(APPLICATION);
-        Resource bestMatch = completeScope.singleBestMatch(Sets.newHashSet(resource_envclass, resource_envclass_domain, resource_envclass_name, resource_envclass_app, resource_envclass_domain_envname,
-                resource_envclass_domain_app, resource_envclass_name_multiapp));
+        Resource bestMatch = completeScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass, resource_envclass_domain, resource_envclass_name, resource_envclass_app, resource_envclass_domain_envname,
+                resource_envclass_domain_app, resource_envclass_name_multiapp)));
         assertEquals(resource_envclass_name_multiapp, bestMatch);
     }
 
     @Test
     public void singleElementCollection() {
         Scope searchScope = new Scope(u).domain(Devillo).envName(ENVNAME).application(APPLICATION);
-        Resource bestMatch = searchScope.singleBestMatch(Sets.newHashSet(resource_envclass));
+        Resource bestMatch = searchScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass)));
         assertEquals(resource_envclass, bestMatch);
     }
 
     @Test
     public void verifyDomainOverClass() {
         Scope completeScope = new Scope(u).domain(Devillo).envName(ENVNAME).application(APPLICATION);
-        Resource bestMatch = completeScope.singleBestMatch(Sets.newHashSet(resource_envclass, resource_envclass_domain));
+        Resource bestMatch = completeScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass, resource_envclass_domain)));
         assertEquals(resource_envclass_domain, bestMatch);
     }
 
     @Test
     public void verifyEnvNameOverClass() {
         Scope completeScope = new Scope(u).domain(Devillo).envName(ENVNAME).application(APPLICATION);
-        Resource bestMatch = completeScope.singleBestMatch(Sets.newHashSet(resource_envclass_name, resource_envclass));
+        Resource bestMatch = completeScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass_name, resource_envclass)));
         assertEquals(resource_envclass_name, bestMatch);
     }
 
@@ -94,7 +96,7 @@ public class ScopeableBestMatchTest {
     public void illegalScopeInInput() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             Scope completeScope = new Scope(u).domain(Devillo).envName(ENVNAME).application(APPLICATION);
-            completeScope.singleBestMatch(Sets.newHashSet(resource_envclass_name, resource_illegal));
+            completeScope.singleBestMatch(new HashSet<>(Set.of(resource_envclass_name, resource_illegal)));
         });
     }
 

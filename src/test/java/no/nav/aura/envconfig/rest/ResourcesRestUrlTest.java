@@ -1,7 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import io.restassured.http.ContentType;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.client.rest.PropertyElement;
@@ -20,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import jakarta.persistence.NoResultException;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.expect;
 import static io.restassured.RestAssured.given;
@@ -543,11 +543,8 @@ public class ResourcesRestUrlTest extends RestTest {
         return resource;
     }
 
-    private ImmutableMap<String, PropertyElement> index(ResourceElement resource) {
-        return Maps.uniqueIndex(resource.getProperties(), new SerializableFunction<PropertyElement, String>() {
-            public String process(PropertyElement input) {
-                return input.getName();
-            }
-        });
+    private Map<String, PropertyElement> index(ResourceElement resource) {
+    	return resource.getProperties().stream()
+						.collect(Collectors.toMap(PropertyElement::getName, property -> property));
     }
 }

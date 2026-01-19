@@ -2,6 +2,7 @@ package no.nav.aura.fasit.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -18,9 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 
 @SpringJUnitConfig(classes = {SpringOraclePerformanceTestConfig.class})
 @Transactional
@@ -58,7 +56,7 @@ public abstract class NodeRepositoryPerformanceTest {
         System.out.print((System.currentTimeMillis() - startTime) + " ");
         for (Node node : nodes) {
 
-            Optional<Cluster> cluster = FluentIterable.from(node.getClusters()).first();
+            Optional<Cluster> cluster = node.getClusters().stream().findFirst(); 
             if (cluster.isPresent() && !cluster.get().getApplications().isEmpty()) {
                 Collection<Application> applications = cluster.get().getApplications();
             }

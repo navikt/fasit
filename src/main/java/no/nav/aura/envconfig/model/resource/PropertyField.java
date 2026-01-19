@@ -1,12 +1,10 @@
 package no.nav.aura.envconfig.model.resource;
 
-import com.google.common.collect.Lists;
-import no.nav.aura.envconfig.util.SerializableFunction;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class PropertyField {
 
@@ -55,14 +53,14 @@ public class PropertyField {
         return new PropertyField(name, Type.SECRET);
     }
 
-    @SuppressWarnings("serial")
     public static PropertyField enumeration(String name, Class<? extends Enum<?>> enumClass) {
         List<? extends Enum<?>> constants = Arrays.asList(enumClass.getEnumConstants());
-        return new PropertyField(name, Type.ENUM, Lists.transform(constants, new SerializableFunction<Enum<?>, String>() {
-            public String process(Enum<?> input) {
-                return input.name();
-            }
-        }));
+        List<String> props = constants.stream()
+				.map(input -> input.name())
+				.collect(Collectors.toList());
+        
+        
+        return new PropertyField(name, Type.ENUM, props);
     }
 
     public PropertyField optional() {

@@ -2,7 +2,7 @@ package no.nav.aura.envconfig.util;
 
 import java.io.Serializable;
 
-import com.google.common.base.Function;
+import java.util.function.Function;
 
 @SuppressWarnings("serial")
 public abstract class SerializableFunction<F, T> implements Function<F, T>, Serializable {

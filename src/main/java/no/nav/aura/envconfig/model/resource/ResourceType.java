@@ -1,8 +1,5 @@
 package no.nav.aura.envconfig.model.resource;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -147,7 +144,7 @@ public enum ResourceType {
 
     private ResourceType(ResourceTypeDocumentation documentation, PropertyField... properties) {
         this.documentation = documentation;
-        propertyFields = Lists.newArrayList(properties);
+        propertyFields = new ArrayList<>(Arrays.asList(properties));
     }
 
     public List<PropertyField> getResourcePropertyFields() {
@@ -215,12 +212,12 @@ public enum ResourceType {
     /**
      * Typer som bor på en enkelt server
      */
-    public static Set<ResourceType> serverDependentResourceTypes = ImmutableSet.of(DeploymentManager, OpenAm);
+    public static Set<ResourceType> serverDependentResourceTypes = Set.of(DeploymentManager, OpenAm);
 
     /**
      * Typer som kan bli eksponert fra en applikasjon, men som "lever" på ett annet sted
      */
-    public static Set<ResourceType> externalExposedResourceTypes = ImmutableSet.of(Queue);
+    public static Set<ResourceType> externalExposedResourceTypes = Set.of(Queue);
 
     public ResourceTypeDocumentation getResourceDocumentation() {
         return documentation;
