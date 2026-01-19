@@ -23,7 +23,10 @@ import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.util.Base64;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -58,6 +61,7 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
+import no.nav.aura.fasit.rest.model.ResourcePayload.FilePayload;
 import no.nav.aura.fasit.rest.model.ScopePayload;
 import no.nav.aura.fasit.rest.model.SecretPayload;
 
@@ -402,7 +406,38 @@ public class ResourcesRestTest extends RestTest {
                 .body("scope.environment", hasItem("u1"))
                 .body("scope.application", hasItem("fasit"));
     }
+    
+    @Test
+	public void createCertificateResource() throws IOException {
+    	ResourcePayload newResourcePayload = new ResourcePayload();
+		newResourcePayload.type = ResourceType.Certificate;
+		newResourcePayload.alias = "myCertificate";
+		newResourcePayload.addProperty("keystorealias", "myKeystoreAlias");
+        newResourcePayload.secrets.put("keystorepassword", SecretPayload.withValue("keystorepassword"));
+		newResourcePayload.scope = new ScopePayload().environmentClass(u).environment("u1").application("fasit");
+		String fileContent = getKeystoreDataUriFromClasspath("keystore/keystore_junit.jceks");
+		newResourcePayload.files.put("keystore", new FilePayload("keystore", null, fileContent ));
 
+		createResource(newResourcePayload)
+				.then()
+				.statusCode(201)
+				.header("location", containsString("resources"));
+
+		given()
+				.when()
+				.get("/api/v2/resources?alias=myCertificate")
+				.then()
+				.statusCode(200)
+				.body("type", hasItem("certificate"))
+				.body("alias", hasItem("myCertificate"))
+				.body("properties.keystorealias", hasItem("myKeystoreAlias"))
+				.body("files.keystore.filename", hasItem("keystore"))
+				.body("scope.environmentclass", hasItem("u"))
+				.body("scope.environment", hasItem("u1"))
+				.body("scope.application", hasItem("fasit"));
+    }
+
+    
     @Test
     public void createResourceWithVaultSecret() {
         ResourcePayload newResourcePayload = new ResourcePayload();
@@ -723,5 +758,19 @@ public class ResourcesRestTest extends RestTest {
                 .extract().path("links.%s", link);
         return URI.create(path);
 
+    }
+
+    /**
+     * Loads a file from the classpath (src/test/resources) and returns a data URI string for PKCS12 keystores.
+     */
+    private String getKeystoreDataUriFromClasspath(String resourcePath) throws IOException {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                throw new IOException("Resource not found: " + resourcePath);
+            }
+            byte[] bytes = is.readAllBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
+            return "data:application/x-pkcs12;base64," + base64;
+        }
     }
 }

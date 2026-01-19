@@ -10,16 +10,22 @@ import static org.hamcrest.Matchers.hasXPath;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterAll;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -28,9 +34,8 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.http.HttpStatus;
 
 import io.restassured.http.ContentType;
-import io.restassured.path.xml.XmlPath;
-import io.restassured.response.Response;
 import jakarta.persistence.NoResultException;
+import jakarta.ws.rs.core.MediaType;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.client.rest.PropertyElement;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
@@ -54,6 +59,7 @@ public class ResourcesRestUrlTest extends RestTest {
 
     private static Environment environment;
     private static Application application;
+    
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -207,6 +213,33 @@ public class ResourcesRestUrlTest extends RestTest {
         FasitRevision<Resource> headrevision = getHeadrevision(Resource.class, resource.getId());
         assertEquals("mycomment", headrevision.getMessage());
     }
+    
+    @Test
+    @Disabled
+    public void postMultiPartResourceOK() {
+        given().multiPart("alias", "newAlias2")
+                .multiPart("type", "Credential")
+                .multiPart("scope.environmentclass", "u")
+                .multiPart("scope.environmentname", "")
+                .multiPart("scope.domain", "devillo.no")
+                .multiPart("scope.application", "")
+                .multiPart("username", "user")
+                .multiPart("password", "secret")
+                .multiPart("keystorepassword", "keystoresecret")
+                .multiPart("keystore.filename", "file.jks")
+                .multiPart("keystore.file", "keystore.jks", "dilldalldull".getBytes())
+                .multiPart("applicationCertificateAlias", "certAlias")
+                .auth().preemptive().basic("prodadmin", "prodadmin")
+                .queryParam("entityStoreComment", "mycomment")
+                .expect()
+                .statusCode(HttpStatus.OK.value())
+                .when()
+                .post("/conf/resources");
+
+        ResourceElement resource = checkResource("newAlias2", ResourceType.Credential, true);
+        FasitRevision<Resource> headrevision = getHeadrevision(Resource.class, resource.getId());
+        assertEquals("mycomment", headrevision.getMessage());
+    }
 
     @Test
     public void putResourceWithoutAccess() {
@@ -350,7 +383,7 @@ public class ResourcesRestUrlTest extends RestTest {
     }
 
     @Test
-    @Disabled
+//    @Disabled
     public void putResourceCertificate() {
         checkResource("myCertificate", ResourceType.Certificate, false);
 
