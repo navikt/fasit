@@ -46,13 +46,11 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 import no.nav.aura.envconfig.FasitRepository;
-
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.ClusterDO;
 import no.nav.aura.envconfig.client.NodeDO;
 import no.nav.aura.envconfig.client.PlatformTypeDO;
 import no.nav.aura.envconfig.client.ResourceDO;
-
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
