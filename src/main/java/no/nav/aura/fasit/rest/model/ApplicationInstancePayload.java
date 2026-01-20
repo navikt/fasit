@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.fasit.rest.model.PortPayload.PortType;
-import no.nav.aura.integration.VeraRestClient;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import jakarta.validation.Valid;
@@ -15,8 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ApplicationInstancePayload extends EntityPayload {
-    @Inject
-    VeraRestClient vera;
 
     @NotNull(message = "application name is required")
     public String application;
