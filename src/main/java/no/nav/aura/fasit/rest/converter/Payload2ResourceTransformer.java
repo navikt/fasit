@@ -30,7 +30,7 @@ import no.nav.aura.fasit.rest.model.ResourcePayload;
 import no.nav.aura.fasit.rest.model.ScopePayload;
 
 public class Payload2ResourceTransformer extends FromPayloadTransformer<ResourcePayload, Resource> {
-
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(Payload2ResourceTransformer.class);
     private ValidationHelpers validationHelpers;
     private final Optional<Resource> defaultValue;
 
@@ -72,8 +72,18 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         });
 
         payload.files.forEach((propertyName, filePayload) -> {
-            String fileContent = payload.files.get(propertyName).fileContent.split(",")[1];
+        	log.info("Adding file property {} with filename {} to resource {}", propertyName, filePayload.filename, resource.getAlias());
+            String fileContent;
+            try {
+            	fileContent = filePayload.fileContent.split(",")[1];
+            } catch (ArrayIndexOutOfBoundsException e) {
+            	fileContent = filePayload.fileContent;
+			} catch (NullPointerException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File content is missing for property %s".formatted(propertyName));
+			}
+            log.info("Decoded file content for property {}: {}", propertyName, fileContent);
             byte[] decode = Base64.getDecoder().decode(fileContent);
+            log.info("Decoded byte array length for property {}: {}", propertyName, decode.length);
             resource.putFile(propertyName, new FileEntity(payload.files.get(propertyName).filename, new ByteArrayInputStream(decode)));
         });
 

@@ -436,7 +436,49 @@ public class ResourcesRestTest extends RestTest {
 				.body("scope.environment", hasItem("u1"))
 				.body("scope.application", hasItem("fasit"));
     }
+    
+    @Test
+    public void createCertificateResourceFromString() throws IOException {
+    	Application myapp = applicationRepository.save(new Application("dummy"));
+		String fileContent = getKeystoreDataUriFromClasspath("keystore/keystore_junit.jceks");
 
+    	String payload = "{\"type\":\"Certificate\",\"alias\":\"srvdummy\",\"scope\":{\"environmentclass\":\"u\",\"application\":\"dummy\"},\"properties\":{\"keystorealias\":\"app-key\"},\"secrets\":{\"keystorepassword\":{\"value\":\"keystoreTestPassword\"}},\"files\":{\"keystore\":{\"filename\":\"srvdummy_u_u.jks\",\"filecontent\":\"" + fileContent + "\"}}}";
+    	given()
+			.auth().preemptive().basic("user", "user")
+			.contentType(ContentType.JSON)
+			.body(payload)
+			.when()
+			.post("/api/v2/resources")
+			.then()
+			.statusCode(201)
+			.header("location", containsString("resources"));
+    	
+    	given()
+			.when()
+			.get("/api/v2/resources?alias=srvdummy")
+			.then()
+			.statusCode(200)
+			.body("type", hasItem("certificate"))
+			.body("alias", hasItem("srvdummy"))
+			.body("properties.keystorealias", hasItem("app-key"))
+			.body("files.keystore.filename", hasItem("keystore"))
+			.body("scope.environmentclass", hasItem("u"))
+			.body("scope.application", hasItem("dummy"));
+    }
+    @Test
+    public void createCertificateResourceFromIncompleteStringRequireBadRequest() throws IOException {
+    	Application myapp = applicationRepository.save(new Application("dummy"));
+
+    	String payload = "{\"type\":\"Certificate\",\"alias\":\"srvdummy\",\"properties\":{\"badRequestAlias\":\"app-key\"},\"files\":{\"keystore\":{\"filename\":\"srvdummy_u_u.jks\"}}}";
+    	given()
+			.auth().preemptive().basic("user", "user")
+			.contentType(ContentType.JSON)
+			.body(payload)
+			.when()
+			.post("/api/v2/resources")
+			.then()
+			.statusCode(400);
+    }
     
     @Test
     public void createResourceWithVaultSecret() {
