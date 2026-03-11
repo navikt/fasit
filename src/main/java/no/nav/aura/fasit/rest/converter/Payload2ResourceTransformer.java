@@ -73,7 +73,14 @@ public class Payload2ResourceTransformer extends FromPayloadTransformer<Resource
         });
 
         payload.files.forEach((propertyName, filePayload) -> {
-            String fileContent = payload.files.get(propertyName).fileContent.split(",")[1];
+            String fileContent;
+            try {
+            	fileContent = filePayload.fileContent.split(",")[1];
+            } catch (ArrayIndexOutOfBoundsException e) {
+            	fileContent = filePayload.fileContent;
+			} catch (NullPointerException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File content is missing for property %s".formatted(propertyName));
+			}
             byte[] decode = Base64.getDecoder().decode(fileContent);
             resource.putFile(propertyName, new FileEntity(payload.files.get(propertyName).filename, new ByteArrayInputStream(decode)));
         });
