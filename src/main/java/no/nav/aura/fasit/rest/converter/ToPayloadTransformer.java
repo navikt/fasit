@@ -5,8 +5,6 @@ import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.fasit.rest.model.EntityPayload;
 
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.function.Function;
 
 abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends EntityPayload> implements Function<T, R> {
@@ -17,8 +15,8 @@ abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends Entity
     @Override
     public R apply(T from) {
         R to = transform(from);
-        to.created = toLocalDateTime(from.getCreated());
-        to.updated = toLocalDateTime(from.getUpdated());
+        to.created = from.getCreated().toLocalDateTime();
+        to.updated = from.getUpdated().toLocalDateTime();
         to.id = from.getID();
         to.lifecycle.status = from.getLifeCycleStatus();
 
@@ -28,10 +26,6 @@ abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends Entity
             to.accessControl.adGroups = accessControl.getAdGroupsAsList();
         }
         return to;
-    }
-
-    private static LocalDateTime toLocalDateTime(ZonedDateTime zdt) {
-        return zdt != null ? zdt.toLocalDateTime() : LocalDateTime.now();
     }
 
 }
