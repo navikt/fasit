@@ -17,11 +17,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import no.nav.aura.envconfig.spring.User;
-import org.hibernate.envers.Audited;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
-@Audited
 public abstract class ModelEntity implements Serializable, Identifiable, Nameable {
 
     @Id
