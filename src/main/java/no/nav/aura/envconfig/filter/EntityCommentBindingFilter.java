@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class EntityCommentBindingFilter implements Filter {
@@ -18,7 +18,6 @@ public class EntityCommentBindingFilter implements Filter {
 
     private UserLookup userLookup;
 
-    @SuppressWarnings("unchecked")
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         userLookup = WebApplicationContextUtils.getRequiredWebApplicationContext(filterConfig.getServletContext()).getBean(UserLookup.class);

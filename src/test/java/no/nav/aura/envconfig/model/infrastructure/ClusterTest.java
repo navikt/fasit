@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.spring.SpringTest;
@@ -9,8 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -28,9 +28,13 @@ public class ClusterTest extends SpringTest {
         cluster = new Cluster("mycluster", Domain.Devillo);
         cluster.addApplication(new Application("hei"));
         cluster.addApplication(new Application("hopp"));
-        cluster.addNode(new Node("host.devillo.no", "root", "password"));
-        cluster.addNode(new Node("post.devillo.no", "rot", "pass"));
+        Node node1 = new Node("host.devillo.no", "root", "password");
+        cluster.addNode(node1);
+        Node node2 = new Node("post.devillo.no", "rot", "pass");
+        cluster.addNode(node2);
         environment.addCluster(cluster);
+        environment.addNode(node1);
+        environment.addNode(node2);
         environment = repository.store(environment);
         cluster = TestHelper.assertAndGetSingle(environment.getClusters());
     }
@@ -119,8 +123,8 @@ public class ClusterTest extends SpringTest {
 
     @Test
     public void invalidUrlFails() throws Exception {
-        HashSet<String> invalidUrls = Sets.newHashSet("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com",
-                "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90");
+        HashSet<String> invalidUrls = new HashSet<>(Set.of("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "httttp://d34asdf.oera-t.com", "http;//d34aqwsdf.oera-t.com",
+                "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90"));
 
         for (String url : invalidUrls) {
             try {

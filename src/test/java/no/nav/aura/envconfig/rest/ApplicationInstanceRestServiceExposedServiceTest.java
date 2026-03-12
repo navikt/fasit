@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.collect.Lists;
 import no.nav.aura.appconfig.exposed.ExposedEjb;
 import no.nav.aura.appconfig.exposed.ExposedService;
 import no.nav.aura.appconfig.exposed.ExposedSoap;
@@ -13,13 +12,12 @@ import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.spring.SpringTest;
 import no.nav.aura.integration.VeraRestClient;
-import no.nav.aura.sensu.SensuClient;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
-import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,15 +36,17 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
     @BeforeEach
     public void setup()  {
-        service = new ApplicationInstanceRestService(repository, mock(SensuClient.class), mock(VeraRestClient.class));
+        service = new ApplicationInstanceRestService(repository, mock(VeraRestClient.class));
         testEnv = new Environment("test", EnvironmentClass.t);
         Cluster cluster = new Cluster("myCluster", Domain.TestLocal);
         cluster.setLoadBalancerUrl(loadBalancer);
         testEnv.addCluster(cluster);
         Application app = new Application("app", "app", "no.nav.app");
         cluster.addApplication(app);
-        cluster.addNode(new Node("hostname.test.local", "username", "password"));
+        Node node = new Node("hostname.test.local", "username", "password");
+        cluster.addNode(node);
         testEnv.addCluster(cluster);
+        testEnv.addNode(node);
         testEnv = repository.store(testEnv);
         repository.store(new Resource("appUser", ResourceType.Credential, new Scope(EnvironmentClass.t)));
 
@@ -72,8 +72,8 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         assertEquals(ResourceType.WebserviceEndpoint, exposed.getType(), "Exposed type");
         assertEquals("myService", exposed.getAlias(), "Exposed name");
         assertEquals(loadBalancer + "/minurl/something", exposed.getProperties().get("endpointUrl"), "Exposed endpoint");
-        assertEquals("http://maven.adeo.no/nexus/content/groups/public/no/nav/tjenester/fim/nav-fim-echo-tjenestespesifikasjon/0.0.1/nav-fim-echo-tjenestespesifikasjon-0.0.1.zip", exposed
-                .getProperties().get("wsdlUrl"), "Exposed wsdl");
+        assertEquals("http://maven.adeo.no/nexus/content/groups/public/no/nav/tjenester/fim/nav-fim-echo-tjenestespesifikasjon/0.0.1/nav-fim-echo-tjenestespesifikasjon-0.0.1.zip", 
+        			exposed.getProperties().get("wsdlUrl"), "Exposed wsdl");
         assertEquals(EnvironmentClass.t, exposed.getScope().getEnvClass(), "scope class");
         assertEquals(Domain.TestLocal, exposed.getScope().getDomain(), "scope domain");
         assertEquals("test", exposed.getScope().getEnvironmentName(), "scope envionment");
@@ -162,7 +162,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
         no.nav.aura.appconfig.Application application = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config-with-exposed-service.xml"));
         for (ExposedService exposedService : application.getExposedServices(ExposedService.class)) {
-            exposedService.setExportToZones(Lists.newArrayList(NetworkZone.ALL));
+            exposedService.setExportToZones(new ArrayList<>(Arrays.asList(NetworkZone.ALL)));
         }
 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(application, "1.0"));
@@ -184,7 +184,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
         no.nav.aura.appconfig.Application application = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config.xml"));
         for (ExposedService exposedService : application.getExposedServices(ExposedService.class)) {
-            exposedService.setExportToZones(Lists.newArrayList(NetworkZone.SBS));
+            exposedService.setExportToZones(new ArrayList<>(Arrays.asList(NetworkZone.SBS)));
         }
 
         service.registerDeployedApplication("test", "app", new DeployedApplicationDO(application, "1.0"));
@@ -311,7 +311,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
 
         no.nav.aura.appconfig.Application newApplication = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config.xml"));
 
-        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, BadRequestException.class, "yourService of type WebserviceEndpoint already exists ");
+        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, ResponseStatusException.class, "yourService of type WebserviceEndpoint already exists ");
     }
 
     public void failOnVerifyingApplicationWithExposedEjbSameAliasSameScopeDifferentApplication() {
@@ -332,7 +332,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         ejb.setName("yourEjb");
         newApplication.getExposedServices().add(ejb);
 
-        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, BadRequestException.class, "yourEjb of type EJB already exists ");
+        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, ResponseStatusException.class, "yourEjb of type EJB already exists ");
     }
 
     @Test
@@ -340,7 +340,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         Resource existingWebservice = new Resource("yourService", ResourceType.WebserviceEndpoint, new Scope(EnvironmentClass.t).envName(testEnv.getName()).domain(Domain.TestLocal));
         repository.store(existingWebservice);
         no.nav.aura.appconfig.Application newApplication = no.nav.aura.appconfig.Application.instance(getClass().getResourceAsStream("app-config.xml"));
-        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, BadRequestException.class, "A resource can not be registrered more than once in the same scope");
+        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, ResponseStatusException.class, "A resource can not be registrered more than once in the same scope");
     }
 
     @Test
@@ -434,7 +434,7 @@ public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest
         exposed.setName("yourService");
         exposed.setExportToZones(Arrays.asList(NetworkZone.ALL));
         newApplication.getExposedServices().add(exposed);
-        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, BadRequestException.class, "already exists in Fasit and is not exposed by application ");
+        verifyAndAssertExeption(testEnv.getName(), newApplication.getName(), newApplication, ResponseStatusException.class, "already exists in Fasit and is not exposed by application ");
 
         // ok with other zone
         exposed.setExportToZones(new ArrayList<NetworkZone>());

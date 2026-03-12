@@ -18,11 +18,11 @@ public class DataIntegrityRulesEvaluator {
 
     public void checkConsistency(ModelEntity entity) {
         Result result = Result.ok();
-        if (entity instanceof ApplicationInstance) {
-            result = onlyOneApplicationPrEnvironment(repository, (ApplicationInstance) entity);
+        if (entity instanceof ApplicationInstance instance) {
+            result = onlyOneApplicationPrEnvironment(repository, instance);
         }
-        if (entity instanceof Cluster) {
-            result = uniqueClusterNameInEnvironment(repository, (Cluster) entity);
+        if (entity instanceof Cluster cluster) {
+            result = uniqueClusterNameInEnvironment(repository, cluster);
         }
         if (!result.isOk()) {
             throw new IllegalArgumentException(result.getMessage());

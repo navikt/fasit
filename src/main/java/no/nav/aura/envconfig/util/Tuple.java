@@ -2,12 +2,11 @@ package no.nav.aura.envconfig.util;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Ordering;
 
 @SuppressWarnings("serial")
 public class Tuple<F, S> implements Serializable {
@@ -35,7 +34,7 @@ public class Tuple<F, S> implements Serializable {
     }
 
     @SuppressWarnings("rawtypes")
-    public static <F extends Comparable> Comparator<? super Tuple<? extends F, ?>> fstComparator(final Ordering<Comparable> comparator) {
+    public static <F extends Comparable> Comparator<? super Tuple<? extends F, ?>> fstComparator(final Comparator<Comparable> comparator) {
         return new Comparator<Tuple<? extends F, ?>>() {
             public int compare(Tuple<? extends F, ?> o1, Tuple<? extends F, ?> o2) {
                 return comparator.compare(o1.fst, o2.fst);
@@ -48,12 +47,9 @@ public class Tuple<F, S> implements Serializable {
         return "Tuple(" + fst + ", " + snd + ")";
     }
 
-    public static <F, S> FluentIterable<F> fsts(Iterable<Tuple<F, S>> iterable) {
-        return FluentIterable.from(iterable).transform(new SerializableFunction<Tuple<F, S>, F>() {
-            public F process(Tuple<F, S> input) {
-                return input.fst;
-            }
-        });
+    public static <F, S> Stream<F> fsts(Iterable<Tuple<F, S>> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false)
+        		.map(tuple -> tuple.fst);
     };
 
 }

@@ -4,6 +4,9 @@ import no.nav.aura.envconfig.auditing.NavUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.ldap.filter.EqualsFilter;
+import org.springframework.ldap.filter.Filter;
+import org.springframework.ldap.support.LdapNameBuilder;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -13,6 +16,8 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.LdapName;
+
 import java.util.Hashtable;
 
 public class LdapUserLookup implements UserLookup {
@@ -41,10 +46,13 @@ public class LdapUserLookup implements UserLookup {
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, bindUser);
         env.put(Context.SECURITY_CREDENTIALS, bindUserPassword);
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.INITIAL_CONTEXT_FACTORY, com.sun.jndi.ldap.LdapCtxFactory.class.getName());
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, ldapUrl);
-        env.put("com.sun.jndi.ldap.connect.pool", "true");
+        // Connection pooling is intentionally disabled: pooled connections can become
+        // unbound/stale (LDAP error 000004DC) after idle timeouts in containerised
+        // environments, causing spurious 500 errors.  A fresh bind per request is safe
+        // and avoids this race condition.
+        env.put("com.sun.jndi.ldap.connect.pool", "false");
 
     }
 
@@ -66,9 +74,15 @@ public class LdapUserLookup implements UserLookup {
             SearchControls searchControls = new SearchControls();
             searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
             // Support search for both AD ident (x123456) and UPN first@last.nav.no
-            final String searchAttribute = id.contains("@") ? "userprincipalname" : "cn";
+            Filter filter;
+            if (id.contains("@")) {
+                filter = new EqualsFilter("userprincipalname", id);
+            } else {
+                filter = new EqualsFilter("cn", id);
+            }
+            LdapName baseDn = LdapNameBuilder.newInstance(ldapSearchBase).build();
 
-            NamingEnumeration<SearchResult> searchResults = ldapCtx.search(ldapSearchBase, String.format("(%s=%s)", searchAttribute, id), searchControls);
+            NamingEnumeration<SearchResult> searchResults = ldapCtx.search(baseDn.toString(), filter.encode(), searchControls);
             if (searchResults.hasMore()) {
                 user.setExists(true);
                 SearchResult searchResult = searchResults.next();

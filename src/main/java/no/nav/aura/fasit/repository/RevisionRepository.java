@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
@@ -18,9 +18,11 @@ import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
 import no.nav.aura.envconfig.model.ModelEntity;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
 
 import static java.util.stream.Collectors.*;
 
+@Component
 public class RevisionRepository {
     
     @PersistenceContext

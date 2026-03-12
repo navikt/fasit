@@ -1,47 +1,54 @@
 package no.nav.aura.fasit.rest.search;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
-import no.nav.aura.fasit.rest.config.SpringRepositoryConfig;
-import no.nav.aura.fasit.rest.model.SearchResultPayload;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
+import static no.nav.aura.fasit.rest.search.SearchResultType.APPLICATION;
+import static no.nav.aura.fasit.rest.search.SearchResultType.CLUSTER;
+import static no.nav.aura.fasit.rest.search.SearchResultType.ENVIRONMENT;
+import static no.nav.aura.fasit.rest.search.SearchResultType.INSTANCE;
+import static no.nav.aura.fasit.rest.search.SearchResultType.NODE;
+import static no.nav.aura.fasit.rest.search.SearchResultType.RESOURCE;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import javax.inject.Inject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static no.nav.aura.fasit.rest.search.SearchResultType.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.transaction.annotation.Transactional;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {SpringUnitTestConfig.class, SpringRepositoryConfig.class})
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
+import no.nav.aura.fasit.rest.model.SearchResultPayload;
+
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional
 @Rollback
 public class SearchRepositoryTest {
 
-    @Inject
+    @Autowired
     private FasitRepository repository;
-    @Inject
+    @Autowired
     private SearchRepository searchRepository;
     private URI baseUri;
     private Resource someResource;
-    private List<Long> storedAppInstanceIds = new ArrayList();
+    private List<Long> storedAppInstanceIds = new ArrayList<>();
 
     public SearchRepositoryTest() throws URISyntaxException {
     }
@@ -49,8 +56,8 @@ public class SearchRepositoryTest {
     @BeforeEach
     public void setup() throws URISyntaxException {
         baseUri  = new URI("somebaseuri.con");
-        Environment someEnvironment = new Environment("someEnvironment", EnvironmentClass.u);
-        Environment someMoreEnvironment = new Environment("someMoreEnvironment", EnvironmentClass.u);
+        Environment someEnvironment = repository.store(new Environment("someEnvironment", EnvironmentClass.u));
+        Environment someMoreEnvironment = repository.store(new Environment("someMoreEnvironment", EnvironmentClass.u));
         Cluster someCluster = repository.store(new Cluster("someCluster", Domain.Adeo));
         Cluster notDeployToCluster = repository.store(new Cluster("notDeployedToCluster", Domain.Devillo));
         notDeployToCluster.addApplication(repository.store(new Application("notDeployedApplication")));
@@ -64,7 +71,7 @@ public class SearchRepositoryTest {
         someCluster.addNode(someNode);
         someEnvironment.addCluster(someCluster);
         someEnvironment.addNode(someNode);
-        repository.store(differentNode);
+        someEnvironment.addNode(differentNode);
         repository.store(someEnvironment);
         repository.store(someMoreEnvironment);
 
@@ -87,6 +94,7 @@ public class SearchRepositoryTest {
             storedAppInstanceIds.add(savedAppInstance.getID());
         }
     }
+    
 
     @Test
     public void matches() throws URISyntaxException {

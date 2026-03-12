@@ -6,12 +6,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Optional;
+import java.util.function.Function;
 
 import no.nav.aura.envconfig.util.ArrayHelper;
 import no.nav.aura.envconfig.util.SerializableFunction;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 
 public abstract class SecurityByPass {
 
@@ -54,7 +54,7 @@ public abstract class SecurityByPass {
     }
 
     private static void modifyByPassValue(int increment) {
-        byPassEnabled.set(Optional.fromNullable(byPassEnabled.get()).or(0) + increment);
+        byPassEnabled.set(Optional.ofNullable(byPassEnabled.get()).orElse(0) + increment);
     }
 
     public static boolean isByPassEnabled() {

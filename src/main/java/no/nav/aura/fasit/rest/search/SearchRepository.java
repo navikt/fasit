@@ -7,18 +7,18 @@ import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.fasit.rest.*;
 import no.nav.aura.fasit.rest.model.LifecyclePayload;
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.*;
+
 import java.net.URI;
 import java.util.*;
 
@@ -29,7 +29,6 @@ import static no.nav.aura.fasit.rest.search.SearchResultType.*;
 
 @Component
 public class SearchRepository {
-
     enum SearchType {
         NAVIGATION, SEARCH
     }
@@ -112,7 +111,6 @@ public class SearchRepository {
             List<? extends DeleteableEntity> clusters = findMatches(Cluster.class, "name", searchString, maxCount - entities.size());
             entities.addAll(toSearchResults(clusters, searchType, CLUSTER, baseUri));
         }
-
         return new HashSet(entities.subList(0, Math.min(entities.size(), maxCount)));
     }
 
@@ -124,7 +122,6 @@ public class SearchRepository {
         if (environment == null) {
             return new HashSet();
         }
-
         List<ApplicationInstance> actualInstances = environment.getApplicationInstances().stream()
                 .filter(instance -> instance.getApplication().getName().contains(applicationName))
                 .collect(toList());
@@ -178,28 +175,42 @@ public class SearchRepository {
                 Cluster cluster = ((ApplicationInstance) entity).getCluster();
                 resultPayload.detailedInfo.put("environment", getEnvironmentBy(cluster).getName());
             }
-            Optional.ofNullable(entity.getUpdated()).ifPresent(updated -> resultPayload.lastChange = updated.getMillis());
+            Optional.ofNullable(entity.getUpdated()).ifPresent(updated -> resultPayload.lastChange = updated.toInstant().toEpochMilli());
         }
         return resultPayload;
     }
 
     private URI generateLink(URI baseUri, SearchResultType searchResultType, DeleteableEntity entity) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUri(baseUri);
+
         switch (searchResultType) {
             case APPLICATION:
-                return UriBuilder.fromUri(baseUri).path(ApplicationRest.class).path(ApplicationRest.class, "getApplication").build(entity.getName());
+                return builder.path("/api/v2/applications/{name}")
+                        .buildAndExpand(entity.getName())
+                        .toUri();
             case NODE:
-                return UriBuilder.fromUri(baseUri).path(NodesRest.class).path(NodesRest.class, "getNode").build(entity.getName());
+                return builder.path("/api/v2/nodes/{name}")
+                        .buildAndExpand(entity.getName())
+                        .toUri();
             case APPCONFIG:
             case INSTANCE:
-                return UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getApplicationInstance").build(entity.getID());
+                return builder.path("/api/v2/applicationinstances/{id}")
+                        .buildAndExpand(entity.getID())
+                        .toUri();
             case RESOURCE:
-                return UriBuilder.fromUri(baseUri).path(ResourceRest.class).path(ResourceRest.class, "getResource").build(entity.getID());
+                return builder.path("/api/v2/resources/{id}")
+                        .buildAndExpand(entity.getID())
+                        .toUri();
             case ENVIRONMENT:
-                return UriBuilder.fromUri(baseUri).path(EnvironmentRest.class).path(EnvironmentRest.class, "getEnvironment").build(entity.getName());
+                return builder.path("/api/v2/environments/{name}")
+                        .buildAndExpand(entity.getName())
+                        .toUri();
             case CLUSTER:
                 Cluster cluster = (Cluster) entity;
                 String environment = getEnvironmentBy(cluster).getName();
-                return UriBuilder.fromUri(baseUri).path(ClusterRest.class).path(ClusterRest.class, "getCluster").build(environment, cluster.getName());
+                return builder.path("/api/v2/environments/{env}/clusters/{name}")
+                        .buildAndExpand(environment, cluster.getName())
+                        .toUri();
         }
         return baseUri;
     }
@@ -242,7 +253,6 @@ public class SearchRepository {
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<? extends DeleteableEntity> query = builder.createQuery(entityClass);
         Path<String> namePath = query.from(entityClass).get(fieldName);
-
         return em.createQuery(query.where(builder.like(builder.lower(namePath), "%" + search.toLowerCase() + "%"))).setMaxResults(maxCount).getResultList();
     }
 

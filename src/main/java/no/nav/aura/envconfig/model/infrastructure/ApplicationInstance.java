@@ -2,12 +2,12 @@ package no.nav.aura.envconfig.model.infrastructure;
 
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import org.hibernate.annotations.Type;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
-import org.joda.time.DateTime;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,8 +46,7 @@ public class ApplicationInstance extends DeleteableEntity implements Environment
 
     private String selftestPagePath;
 
-    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    private DateTime deployDate;
+    private ZonedDateTime deployDate;
 
     @Lob
     private String appconfigXml;
@@ -146,12 +145,12 @@ public class ApplicationInstance extends DeleteableEntity implements Environment
         return cluster.getDomain();
     }
 
-    public DateTime getDeployDate() {
+    public ZonedDateTime getDeployDate() {
         return deployDate;
     }
 
-    public void setDeployDate(DateTime deployDate) {
-        this.deployDate = deployDate;
+    public void setDeployDate(ZonedDateTime dateTime) {
+        this.deployDate = dateTime;
     }
 
     public void setExposedServices(Set<ExposedServiceReference> exposedServices) {

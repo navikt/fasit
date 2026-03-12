@@ -1,13 +1,17 @@
 package no.nav.aura.envconfig.client;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.Set;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import no.nav.aura.envconfig.client.adapter.ZonedDateTimeAdapter;
 
 @XmlRootElement(name = "application")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -17,7 +21,9 @@ public class ApplicationInstanceDO {
     private URI ref;
     private String name;
     private String version;
-    private Date lastDeployment;
+    
+    @XmlJavaTypeAdapter(ZonedDateTimeAdapter.class)
+    private ZonedDateTime lastDeployment;
     private String deployedBy;
     private String selftestPagePath;
     private URI appConfigRef;
@@ -31,7 +37,7 @@ public class ApplicationInstanceDO {
     public ApplicationInstanceDO() {
     }
 
-    public ApplicationInstanceDO(String appName, String envName, UriBuilder uriBuilder) {
+    public ApplicationInstanceDO(String appName, String envName, UriComponentsBuilder uriBuilder) {
         this.ref = uriBuilder.path("environments/{env}/applications/{appname}").build(envName, appName);
         this.name = appName;
         this.envName = envName;
@@ -45,7 +51,7 @@ public class ApplicationInstanceDO {
         return version;
     }
 
-    public Date getLastDeployment() {
+    public ZonedDateTime getLastDeployment() {
         return lastDeployment;
     }
 
@@ -89,7 +95,7 @@ public class ApplicationInstanceDO {
         this.selftestPagePath = selftestPagePath;
     }
 
-    public void setLastDeployment(Date lastDeployment) {
+    public void setLastDeployment(ZonedDateTime lastDeployment) {
         this.lastDeployment = lastDeployment;
     }
 

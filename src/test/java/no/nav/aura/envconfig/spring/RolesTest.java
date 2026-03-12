@@ -8,11 +8,12 @@ import static no.nav.aura.envconfig.spring.Roles.hasRestrictedAccess;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.google.common.collect.Sets;
 
 import no.nav.aura.envconfig.ApplicationRole;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
@@ -23,7 +24,7 @@ import no.nav.aura.envconfig.model.resource.Scope;
 public class RolesTest extends SpringTest {
 
     private void setupUser(String adgroup, ApplicationRole... roles) {
-        Authentication auth = createAuthentication("user", "user", Sets.newHashSet(roles), Sets.newHashSet(adgroup));
+        Authentication auth = createAuthentication("user", "user", Set.of(roles), Set.of(adgroup));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

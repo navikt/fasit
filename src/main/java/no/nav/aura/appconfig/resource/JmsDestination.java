@@ -1,6 +1,6 @@
 package no.nav.aura.appconfig.resource;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 
 /**
  * @author v137023

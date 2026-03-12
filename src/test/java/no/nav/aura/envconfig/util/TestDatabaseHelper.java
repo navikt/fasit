@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -13,17 +14,15 @@ import javax.sql.DataSource;
 
 import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 public abstract class TestDatabaseHelper {
 
@@ -51,14 +50,15 @@ public abstract class TestDatabaseHelper {
     public static DataSource createDataSource(String type, String url, String username, String password) {
         if ("h2".equalsIgnoreCase(type)) {
             System.setProperty("useH2", "true");
+            System.setProperty("envconfDB.dbtype", "h2");
             BasicDataSource ds = new BasicDataSource();
             ds.setUrl(url);
             ds.setUsername(username);
             ds.setPassword(password);
-            ds.setMaxWait(20000);
+            ds.setMaxWait(Duration.ofMillis(20000));
             ds.setMinIdle(0);
-            ds.setMinEvictableIdleTimeMillis(10000);
-            System.out.println("using database " + ds.getUsername() + "@" + ds.getUrl());
+            ds.setMinEvictableIdle(Duration.ofMillis(10000));
+            System.out.println("using database " + ds.getUserName() + "@" + ds.getUrl());
 
             Resource script = new DefaultResourceLoader().getResource("org/springframework/session/jdbc/schema-h2.sql");
             System.out.println("Using spring session script " + script.getFilename());
@@ -74,10 +74,10 @@ public abstract class TestDatabaseHelper {
             ds.setUrl(url);
             ds.setUsername(username);
             ds.setPassword(password);
-            ds.setMaxWait(20000);
+            ds.setMaxWait(Duration.ofMillis(20000));
             ds.setMinIdle(0);
-            ds.setMinEvictableIdleTimeMillis(10000);
-            System.out.println("using database " + ds.getUsername() + "@" + ds.getUrl());
+            ds.setMinEvictableIdle(Duration.ofMillis(10000));
+            System.out.println("using database " + ds.getUserName() + "@" + ds.getUrl());
             return ds;
         }
     }
@@ -96,11 +96,13 @@ public abstract class TestDatabaseHelper {
 
     private static void updateDatabaseSchema(DataSource dataSource, boolean annihilate, String... locations) {
         if (annihilate) {
-            Flyway flyway = new Flyway();
-            flyway.setDataSource(dataSource);
-            flyway.setLocations(locations);
-            flyway.setValidateOnMigrate(false);
-            flyway.clean();
+        	Flyway flyway = Flyway.configure()
+                    .dataSource(dataSource)
+                    .locations(locations)
+                    .validateOnMigrate(false)
+                    .load();
+        	flyway.clean();
+            MigrateResult result = flyway.migrate();
         }
 
         // Skip migrations if in-memory/H2, our scripts are not compatible

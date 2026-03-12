@@ -1,14 +1,17 @@
 package no.nav.aura.fasit.rest.model;
 
-import javax.validation.constraints.NotNull;
-
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+
+import jakarta.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EnvironmentPayload extends EntityPayload {
 
     @NotNull(message = "name is required")
     public String name;
     @NotNull(message = "environmentclass is required")
+    @JsonProperty("environmentclass")
     public EnvironmentClass environmentClass;
   
     public EnvironmentPayload() {

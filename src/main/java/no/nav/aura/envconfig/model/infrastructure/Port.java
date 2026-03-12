@@ -3,7 +3,7 @@ package no.nav.aura.envconfig.model.infrastructure;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
@@ -13,7 +13,8 @@ import java.io.Serializable;
 public class Port implements Serializable {
 
     @Id
-    @GeneratedValue()
+    @SequenceGenerator(name = "hibernate_sequence", sequenceName = "hibernate_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hibernate_sequence")
     @Column(name = "port_entid")
     public Long id;
 

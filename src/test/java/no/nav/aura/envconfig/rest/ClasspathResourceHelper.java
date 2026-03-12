@@ -1,10 +1,9 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-
-import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ClasspathResourceHelper {
     public static String getStringFromFileOnClassPath(String path) {
@@ -13,8 +12,9 @@ public class ClasspathResourceHelper {
             if (payloadFile == null) {
                 throw new RuntimeException("Unable to find classpath URL for resource, " + path);
             }
-            return Resources.toString(payloadFile, Charsets.UTF_8);
-        } catch (IOException e) {
+            return new String(Files.readAllBytes(Path.of(payloadFile.toURI())), StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
             throw new RuntimeException("Unable to fetch resource, " + path + " from classpath");
         }
     }

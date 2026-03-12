@@ -1,12 +1,5 @@
 package no.nav.aura.fasit.rest.converter;
 
-import java.net.URI;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.Zone;
@@ -16,19 +9,25 @@ import no.nav.aura.fasit.rest.NodesRest;
 import no.nav.aura.fasit.rest.model.ClusterPayload;
 import no.nav.aura.fasit.rest.model.Link;
 
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class Cluster2PayloadTransformer extends ToPayloadTransformer<Cluster, ClusterPayload> {
 
     private Environment environment;
     private URI baseUri;
 
-    public Cluster2PayloadTransformer(UriInfo uriInfo, Environment environment) {
-        this.baseUri = uriInfo.getBaseUri();
+    public Cluster2PayloadTransformer(URI baseUri, Environment environment) {
+        this.baseUri = baseUri;
 
         this.environment = environment;
     }
 
-    public Cluster2PayloadTransformer(UriInfo uriInfo, Environment environment, Long currentRevision) {
-        this.baseUri = uriInfo.getBaseUri();
+    public Cluster2PayloadTransformer(URI baseUri, Environment environment, Long currentRevision) {
+        this.baseUri = baseUri;
         this.environment = environment;
         this.revision = currentRevision;
     }
@@ -38,8 +37,10 @@ public class Cluster2PayloadTransformer extends ToPayloadTransformer<Cluster, Cl
         ClusterPayload payload = new ClusterPayload();
         payload.id = cluster.getID();
         payload.addLink("self", ClusterRest.clusterUrl(baseUri, environment, cluster));
-        payload.addLink("revisions", UriBuilder.fromUri(baseUri).path(ClusterRest.class).path(ClusterRest.class, "getRevisions").build(environment.getName(), cluster.getName()));
-
+        payload.addLink("revisions", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/environments/{envName}/clusters/{clusterName}/revisions")
+                .buildAndExpand(environment.getName(), cluster.getName())
+                .toUri());
         payload.clusterName = cluster.getName();
         payload.environment = environment.getName();
         payload.environmentClass = environment.getEnvClass();

@@ -12,12 +12,12 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.Tuple;
 import org.hibernate.envers.RevisionType;
 
-import com.google.common.base.Optional;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface FasitRepository {
@@ -61,6 +61,9 @@ public interface FasitRepository {
     @Nullable
     ApplicationInstance findApplicationInstanceByExposedResourceId(Long resourceId);
 
+    @Nullable
+    ApplicationInstance findApplicationInstanceByResourceId(Long resourceId);
+
     Set<Cluster> findClustersBy(ApplicationGroup applicationGroup);
 
     Node findNodeBy(String hostName);
@@ -68,6 +71,8 @@ public interface FasitRepository {
     List<Resource> findDuplicateProperties(Resource resource);
 
     List<Resource> findOverlappingResourceScope(Resource resource);
+
+    List<Resource> findResourceBy(Scope scope);
 
     List<Tuple<Long, RevisionType>> getRevisionsFor(Class<? extends ModelEntity> entityClass, Long entityId);
 

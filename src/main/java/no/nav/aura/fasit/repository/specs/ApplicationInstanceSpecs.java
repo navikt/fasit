@@ -7,12 +7,11 @@ import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.domain.Specifications;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
 import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
@@ -43,7 +42,7 @@ public class ApplicationInstanceSpecs {
     }
 
     public static Specification<ApplicationInstance> findByEnvironmentAndApplication(final Environment environment, Application application) {
-        return Specifications
+        return Specification
                 .where(findByEnvironment(environment))
                 .and(findByApplication(application));
     }

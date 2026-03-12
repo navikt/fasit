@@ -2,16 +2,16 @@ package no.nav.aura.envconfig.model.resource;
 
 import java.io.Serializable;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.ManyToOne;
 
 import no.nav.aura.envconfig.model.Scopeable;
 import no.nav.aura.envconfig.model.application.Application;
@@ -19,11 +19,11 @@ import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
-import no.nav.aura.envconfig.model.infrastructure.Zone;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.google.common.collect.Lists;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import static no.nav.aura.envconfig.model.infrastructure.Zone.FSS;
 import static no.nav.aura.envconfig.model.infrastructure.Zone.SBS;
@@ -185,7 +185,7 @@ public class Scope implements Serializable {
 
         verifyScopeCorrectness(collection);
 
-        List<T> elements = Lists.newArrayList(collection);
+        List<T> elements = new ArrayList<>(collection);
         if (elements.isEmpty()) {
             throw new IllegalArgumentException("Cant find best match for a empty collection");
         }
@@ -200,7 +200,7 @@ public class Scope implements Serializable {
         T bestMatch = elements.get(0);
         T nextBestMatch = elements.get(1);
         if (bestMatch.getScope().calculateScopeWeight() == nextBestMatch.getScope().calculateScopeWeight()) {
-            throw new IllegalArgumentException(MessageFormat.format("Input contains at least two resources of type {0} with same scope {1} \n Input: {2}", bestMatch.getClass(), bestMatch.getScope(), collection));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, MessageFormat.format("Input contains at least two resources of type {0} with same scope {1} \n Input: {2}", bestMatch.getClass(), bestMatch.getScope(), collection));
         } else {
             return bestMatch;
         }

@@ -1,6 +1,6 @@
 package no.nav.aura.gc.spring;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.util.Effect;

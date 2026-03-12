@@ -1,6 +1,5 @@
 package no.nav.aura.envconfig;
 
-import com.google.common.collect.Lists;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
 import no.nav.aura.envconfig.model.infrastructure.*;
@@ -10,14 +9,13 @@ import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 import no.nav.aura.envconfig.util.TestHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -32,8 +30,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringUnitTestConfig.class })
+@SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional
 @Rollback
 public class JPAFasitRepositoryTest {
@@ -54,8 +51,8 @@ public class JPAFasitRepositoryTest {
     public void setup() throws Exception {
         String appName = "tsys";
 
-        application = (Application) repository.store(new Application(appName));
-        singleApplicationGroup = (ApplicationGroup) repository.store(new ApplicationGroup(appGroupWithOneApplication, application));
+        application = repository.store(new Application(appName));
+        singleApplicationGroup = repository.store(new ApplicationGroup(appGroupWithOneApplication, application));
 
         multiApplicationGroup = repository.store(new ApplicationGroup(appGroupWithMultipleApplications));
         multiApplicationGroup.addApplication(createApplication("myFirstApp"));
@@ -81,6 +78,21 @@ public class JPAFasitRepositoryTest {
         nodeTestLocal = TestHelper.assertAndGetSingle(t1.getNodes());
         repository.store(clusterOeraT);
     }
+    
+    @AfterEach
+    public void tearDown() {
+        repository.delete(t1);
+        repository.delete(singleApplicationGroup);
+        repository.delete(application);
+//    	clusterTestLocal.removeNode(nodeTestLocal);
+//        repository.store(clusterTestLocal);
+//
+//    	repository.delete(nodeTestLocal);
+//    	repository.delete(clusterTestLocal);
+//    	repository.delete(t1);
+//    	repository.delete(singleApplicationGroup);
+//		repository.delete(application);
+	}
 
     @Test
     public void findEnvironment() {
@@ -117,7 +129,7 @@ public class JPAFasitRepositoryTest {
 
     @Test
     public void verifyStorageResource() throws Exception {
-        Application myapp = (Application) repository.store(new Application("myApp"));
+        Application myapp = repository.store(new Application("myApp"));
 
         Scope scope = new Scope(EnvironmentClass.u);
         scope.domain(Domain.Devillo);
@@ -127,7 +139,7 @@ public class JPAFasitRepositoryTest {
         Resource res = new Resource("myResource", ResourceType.BaseUrl, scope);
         res.putPropertyAndValidate("url", "http://value");
         Resource stored = repository.store(res);
-        assertTrue(stored.getScope().getApplication() != null);
+        assertNotNull(stored.getScope().getApplication());
     }
 
     @Test
@@ -135,7 +147,9 @@ public class JPAFasitRepositoryTest {
         Environment envZone = repository.findEnvironmentBy("t1");
         assertEquals(1, envZone.getClusters().iterator().next().getNodes().size(), "nodes");
         String clusterName = "tsys";
-        envZone.findClusterByName(clusterName).addNode(new Node("a1236.test.local", "srvyo", "pass"));
+        Node node =new Node("a1236.test.local", "srvyo", "pass");
+        envZone.findClusterByName(clusterName).addNode(node);
+        envZone.addNode(node);
         repository.store(envZone);
         envZone = getEnvironment();
         assertEquals(2, envZone.getClusters().iterator().next().getNodes().size(), "nodes");
@@ -177,7 +191,9 @@ public class JPAFasitRepositoryTest {
         Environment environment = getEnvironment();
         Cluster cluster = getCluster(environment);
         assertEquals(1, cluster.getNodes().size());
-        cluster.addNode(new Node("heihost.test.local", "sa", "password"));
+        Node node = new Node("heihost.test.local", "sa", "password");
+        cluster.addNode(node);
+        environment.addNode(node);
         repository.store(environment);
         assertEquals(2, getCluster(getEnvironment()).getNodes().size());
     }
@@ -186,8 +202,7 @@ public class JPAFasitRepositoryTest {
         assertNotNull(environment);
         Set<Cluster> clusters = environment.getClusters();
         assertEquals(1, clusters.size());
-        Cluster cluster = clusters.iterator().next();
-        return cluster;
+        return clusters.iterator().next();
     }
 
     @Test
@@ -259,7 +274,6 @@ public class JPAFasitRepositoryTest {
         Environment environment = repository.store(new Environment("NyttEnv", EnvironmentClass.u));
         Node node = new Node("der", "han", "pass", environment.getEnvClass(), PlatformType.JBOSS);
         environment.addNode(node);
-        repository.store(environment);
         Cluster cluster = new Cluster("C", Domain.Devillo);
         cluster.addNode(node);
         cluster.setName("C");
@@ -273,7 +287,8 @@ public class JPAFasitRepositoryTest {
         assertNotNull(node, "found node");
         assertNull(repository.findNodeBy("shouldnotbefound"), "should not be found");
         repository.delete(node);
-        assertNull(repository.findNodeBy("node1.test.local"), "deleted");
+        Node node2 = repository.findNodeBy("node1.test.local");
+        assertNull(node2, "deleted");
     }
 
     @Test
@@ -286,7 +301,7 @@ public class JPAFasitRepositoryTest {
         Cluster cluster = new Cluster("tull", Domain.Devillo);
         cluster.addApplication(application);
         environment.addCluster(cluster);
-        environment.addNode(new Node(UUID.randomUUID().toString(), "root", "pass", environment.getEnvClass(), PlatformType.JBOSS));
+        environment.addNode(cluster, new Node(UUID.randomUUID().toString(), "root", "pass", environment.getEnvClass(), PlatformType.JBOSS));
         repository.store(environment);
         return repository.findApplicationInstancesBy(application);
     }
@@ -341,9 +356,9 @@ public class JPAFasitRepositoryTest {
         repository.store(createResource("test1", "http://host:80/ptui", "pa"));
         repository.store(createResource("test1", "http://host:80/hark", "pb"));
         Resource newResource = createResource("annen", "http://host:80/hark", "pa");
-        assertEquals(Lists.newArrayList(original), repository.findDuplicateProperties(newResource));
+        assertEquals(new ArrayList<>(Arrays.asList(original)), repository.findDuplicateProperties(newResource));
         newResource = repository.store(newResource);
-        assertEquals(Lists.newArrayList(original), repository.findDuplicateProperties(newResource));
+        assertEquals(new ArrayList<>(Arrays.asList(original)), repository.findDuplicateProperties(newResource));
     }
 
     private Resource createResource(String alias, String url, String userName) {
@@ -383,8 +398,9 @@ public class JPAFasitRepositoryTest {
     public void findOverlappingResourceScope_complete() {
         Scope scope = new Scope(t1).application(application);
         Resource resource = repository.store(new Resource("a", ResourceType.DataSource, scope));
+        Application appTull = repository.store(new Application("tull"));
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(null))).size());
-        assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(new Application("tull")))).size());
+        assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).application(appTull))).size());
         assertEquals(1, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).domain(null))).size());
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).domain(Domain.TestLocal))).size());
         assertEquals(0, repository.findOverlappingResourceScope(new Resource("a", ResourceType.DataSource, new Scope(scope).envName(null))).size());
@@ -461,7 +477,7 @@ public class JPAFasitRepositoryTest {
         Collection<ApplicationGroup> applicationGroups = repository.getApplicationGroups();
         assertEquals(2, applicationGroups.size());
         ApplicationGroup applicationGroup = applicationGroups.iterator().next();
-        assertTrue(applicationGroups.containsAll(Lists.newArrayList(singleApplicationGroup, multiApplicationGroup)));
+        assertTrue(applicationGroups.containsAll(new ArrayList<>(Arrays.asList(singleApplicationGroup, multiApplicationGroup))));
     }
 
     @Test
@@ -588,7 +604,7 @@ public class JPAFasitRepositoryTest {
 
     private Application createApplication(String applicationName) {
         Application entity = new Application(applicationName);
-        return (Application) repository.store(entity);
+        return repository.store(entity);
     }
 
     @Test
@@ -618,5 +634,15 @@ public class JPAFasitRepositoryTest {
         }
 
         return environmentNames;
+    }
+    
+    private Cluster findClusterContainingNode(Node node) {
+        Collection<Cluster> allClusters = repository.getAll(Cluster.class);
+        for (Cluster cluster : allClusters) {
+            if (cluster.getNodes().contains(node)) {
+                return cluster;
+            }
+        }
+        return null;
     }
 }

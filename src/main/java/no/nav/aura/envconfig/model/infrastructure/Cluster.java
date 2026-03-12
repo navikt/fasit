@@ -1,7 +1,5 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.application.Application;
@@ -11,8 +9,10 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
@@ -28,10 +28,14 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
 
     @Enumerated(EnumType.STRING)
     private Domain domain;
+    
+    @ManyToOne
+    @JoinColumn(name = "env_id")
+    private Environment environment;
 
     @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST })
     @JoinTable(name = "clusters_node", joinColumns = @JoinColumn(name = "clusters_entid"), inverseJoinColumns = { @JoinColumn(name = "nodes_entid") })
-    private List<Node> nodes = new ArrayList<Node>();
+    private Set<Node> nodes = new HashSet<Node>();
 
     @Fetch(FetchMode.SUBSELECT)
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -56,7 +60,7 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
 
     @Override
     public Map<String, Object> getEnityProperties() {
-        Map<String, Object> properties = new HashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put("zone", domain.getZone());
         properties.put("nodes", nodes.stream().map(n -> n.getHostname()).collect(toList()));
         properties.put("applications", applications.stream().map(a -> a.getName()).collect(toList()));
@@ -72,12 +76,20 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
         this.name = name;
     }
 
-    public Set<Node> getNodes() {
-        return Sets.newHashSet(nodes);
+    
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+
+	public Set<Node> getNodes() {
+        return new HashSet<Node>(nodes);
     }
 
     public void addNode(Node node) {
-        nodes.add(node);
+		if (!nodes.contains(node)) {
+			nodes.add(node);
+			node.getClusters().add(this);
+		}
 
     }
 
@@ -90,7 +102,7 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public Set<ApplicationInstance> getApplicationInstances() {
-        return Sets.newHashSet(applications);
+        return new HashSet<ApplicationInstance>(applications);
     }
 
     public ApplicationInstance addApplication(Application app) {
@@ -111,10 +123,15 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public void removeNode(Node node) {
-        nodes.remove(node);
+    	nodes.remove(node);
+    	node.getClusters().remove(this);
     }
 
-    public String getLoadBalancerUrl() {
+    public void removeEnvironment() {
+		this.environment = null;
+	}
+
+	public String getLoadBalancerUrl() {
         return loadBalancerUrl;
     }
 
@@ -140,7 +157,8 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public void removeNodeById(final Long id) {
-        boolean removed = Iterables.removeIf(nodes, node -> node.getID().equals(id));
+        boolean removed = nodes.removeIf(node -> node.getID().equals(id));
+        		
         if (!removed) {
             throw new RuntimeException("Unable to remove node " + id + " from cluster " + toString());
         }
@@ -155,7 +173,7 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public void removeApplicationByApplicationId(final Long id) {
-        boolean removed = Iterables.removeIf(applications, applicationInstance -> applicationInstance.getApplication().getID().equals(id));
+        boolean removed = applications.removeIf(applicationInstance -> applicationInstance.getApplication().getID().equals(id)); 
         if (!removed) {
             throw new RuntimeException("Unable to remove application " + id + " from cluster " + toString());
         }

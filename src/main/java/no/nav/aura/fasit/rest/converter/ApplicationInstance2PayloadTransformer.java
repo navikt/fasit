@@ -1,33 +1,36 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.infrastructure.*;
+import static java.util.stream.Collectors.toSet;
+import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Port;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.fasit.rest.ApplicationInstanceRest;
-import no.nav.aura.fasit.rest.ResourceRest;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.MissingResourcePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
 import no.nav.aura.fasit.rest.model.Link;
 import no.nav.aura.fasit.rest.model.PortPayload;
-import org.joda.time.DateTime;
-
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
-import static no.nav.aura.fasit.rest.ClusterRest.clusterUrl;
 
 public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer<ApplicationInstance, ApplicationInstancePayload> {
-
-    private URI baseUri;
+    
+	private URI baseUri;
     private ApplicationInstanceRepository applicationInstanceRepository;
     private Boolean showUsage = true;
 
@@ -45,9 +48,16 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
     @Override
     protected ApplicationInstancePayload transform(final ApplicationInstance instance) {
         ApplicationInstancePayload payload = new ApplicationInstancePayload(showUsage);
-        payload.addLink("self", UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getApplicationInstance").build(instance.getID()));
-        payload.addLink("revisions", UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path(ApplicationInstanceRest.class, "getRevisions").build(instance.getID()));
+        payload.addLink("self", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applicationinstances/{id}")
+                .buildAndExpand(instance.getID())
+                .toUri());
 
+        payload.addLink("revisions", UriComponentsBuilder.fromUri(baseUri)
+                .path("/api/v2/applicationinstances/{id}/revisions")
+                .buildAndExpand(instance.getID())
+                .toUri());
+        
         final String selfTestPath = instance.getSelftestPagePath();
 
         payload.application = instance.getApplication().getName();
@@ -85,17 +95,25 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
                     .filter(rr -> rr.isFuture())
                     .forEach(rr -> payload.missingresources.add(createMissingPayload(rr)));
         }
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUri(baseUri);
+
         if (revision != null) {
-            payload.appconfig = new ApplicationInstancePayload.AppconfigPayload(UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path("{id}/revisions/" + revision + "/appconfig").build(instance.getID()));
+            URI uri = builder.path("/api/v2/applicationinstances/{id}/revisions/{revision}/appconfig")
+                    .buildAndExpand(instance.getID(), revision)
+                    .toUri();
+            payload.appconfig = new ApplicationInstancePayload.AppconfigPayload(uri);
         } else {
-            payload.appconfig = new ApplicationInstancePayload.AppconfigPayload(UriBuilder.fromUri(baseUri).path(ApplicationInstanceRest.class).path("{id}/appconfig").build(instance.getID()));
+            URI uri = builder.path("/api/v2/applicationinstances/{id}/appconfig")
+                    .buildAndExpand(instance.getID())
+                    .toUri();
+            payload.appconfig = new ApplicationInstancePayload.AppconfigPayload(uri);
         }
         return payload;
 
     }
 
     private Set<String> addSelfTestUrls(String selfTestPath, Cluster cluster, int httpsPort){
-        Set<String> selfTestUrls = new HashSet();
+        Set<String> selfTestUrls = new HashSet<>();
 
         if(selfTestPath != null) {
             String loadBalancerUrl = cluster.getLoadBalancerUrl();
@@ -105,7 +123,7 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             }
             selfTestUrls.addAll(cluster.getNodes()
                     .stream()
-                    .map(n -> normalize(format("https://%s:%d/%s", n.getHostname(), httpsPort, selfTestPath)))
+                    .map(n -> normalize("https://%s:%d/%s".formatted(n.getHostname(), httpsPort, selfTestPath)))
                     .collect(Collectors.toList()));
         }
 
@@ -144,14 +162,17 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
             payload.id = resource.getID();
             payload.scope = Resource2PayloadTransformer.transform(resource.getScope());
             payload.type = resource.getType();
-            DateTime updated = resource.getUpdated();
+            ZonedDateTime updated = resource.getUpdated();
             if(updated != null ) {
-                payload.lastChange = updated.getMillis();
+                payload.lastChange = updated.toInstant().toEpochMilli();
             }
 
             payload.lastUpdateBy = resource.getUpdatedBy();
             // TODO med revision
-            payload.ref = UriBuilder.fromUri(baseUri).path(ResourceRest.class).path(ResourceRest.class, "getResource").build(resource.getID());
+            payload.ref = UriComponentsBuilder.fromUri(baseUri)
+							.path("/api/v2/resources/{resourceId}/revisions/{revision}")
+							.buildAndExpand(resource.getID(), resourceRef.getRevision())
+							.toUri();
         } else {
             payload.deleted = true;
         }
@@ -166,10 +187,12 @@ public class ApplicationInstance2PayloadTransformer extends ToPayloadTransformer
         payload.scope = Resource2PayloadTransformer.transform(exposedResource.getScope());
         payload.type = exposedResource.getType();
         payload.revision = exposed.getRevision();
-        payload.lastChange = exposedResource.getUpdated().getMillis();
+        payload.lastChange = exposedResource.getUpdated().toInstant().toEpochMilli();
         payload.lastUpdateBy = exposedResource.getUpdatedBy();
-        payload.ref = UriBuilder.fromUri(baseUri).path(ResourceRest.class).path(ResourceRest.class, "getResource").build(exposedResource.getID());
-
+        payload.ref = UriComponentsBuilder.fromUri(baseUri)
+						.path("/api/v2/resources/{resourceId}")
+						.buildAndExpand(exposedResource.getID())
+						.toUri();
         return payload;
     }
 

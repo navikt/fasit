@@ -1,34 +1,36 @@
 package no.nav.aura.envconfig.rest;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationDO;
 import no.nav.aura.envconfig.client.ApplicationGroupDO;
+import no.nav.aura.envconfig.client.ApplicationGroupListDO;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import javax.ws.rs.NotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import java.util.Set;
-
-@Path("/conf/applicationGroups")
-@Component
+@RestController
+@RequestMapping("/conf/applicationGroups")
 public class ApplicationGroupRestService {
 
-    @Autowired
     private FasitRepository repo;
 
     public ApplicationGroupRestService() {
     }
 
+    @Inject
     public ApplicationGroupRestService(FasitRepository repo) {
         this.repo = repo;
     }
@@ -40,25 +42,27 @@ public class ApplicationGroupRestService {
      * @return info om applikasjonen
      * @HTTP 404 hvis applikasjonen ikke finnes i envconfig
      */
-    @GET
-    @Path("/{applicationGroup}")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public ApplicationGroupDO getApplicationGroupInfo(@PathParam("applicationGroup") String applicationGroupName) {
+    @GetMapping(
+            value = "/{applicationGroup}",
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE}
+        )
+    public ResponseEntity<ApplicationGroupDO> getApplicationGroupInfo(@PathVariable("applicationGroup") String applicationGroupName) {
         ApplicationGroup applicationGroup = repo.findApplicationGroupByName(applicationGroupName);
 
         if (applicationGroup == null) {
-            throw new NotFoundException("Application group " + applicationGroupName + " not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Application group " + applicationGroupName + " not found");
+
         }
 
-        return new ApplicationGroupDO(applicationGroup.getName(), transformApplications(applicationGroup.getApplications()));
+        return ResponseEntity.ok(
+                new ApplicationGroupDO(applicationGroup.getName(), transformApplications(applicationGroup.getApplications()))
+            );
     }
 
     private Set<ApplicationDO> transformApplications(Set<Application> applications) {
-        return Sets.newHashSet(Collections2.transform(applications, new Function<Application, ApplicationDO>() {
-            public ApplicationDO apply(Application input) {
-                return new ApplicationDO(input.getName(), input.getGroupId(), input.getArtifactId(), input.getPortOffset());
-            }
-        }));
+    	return applications.stream()
+			.map(application -> new ApplicationDO(application.getName(), application.getGroupId(), application.getArtifactId(), application.getPortOffset()))
+			.collect(Collectors.toSet());
     }
 
     /**
@@ -67,23 +71,25 @@ public class ApplicationGroupRestService {
      * @return List with evry application group
      * @HTTP 404 if no application groups found
      */
-    @GET
-    @Path("/")
-    @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public Set<ApplicationGroupDO> getApplicationGroups() {
+    @GetMapping(
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE}
+        )
+    public ApplicationGroupListDO getApplicationGroups() {
         final Set<ApplicationGroup> applicationGroups = repo.getApplicationGroups();
 
         if (applicationGroups == null || applicationGroups.isEmpty()) {
-            throw new NotFoundException("No applications found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No applications found");
+
         }
 
-        return Sets.newHashSet(Collections2.transform(applicationGroups,
-                new Function<ApplicationGroup, ApplicationGroupDO>() {
-                    public ApplicationGroupDO apply(ApplicationGroup applicationGroup) {
-                        return new ApplicationGroupDO(
-                                applicationGroup.getName(),
-                                transformApplications(applicationGroup.getApplications()));
-                    }
-                }));
+        List<ApplicationGroupDO> result = applicationGroups.stream()
+				.map(applicationGroup -> new ApplicationGroupDO(
+						applicationGroup.getName(),
+						transformApplications(applicationGroup.getApplications())))
+				.collect(Collectors.toList());
+
+        ApplicationGroupListDO applicationGroupList = new ApplicationGroupListDO(result);
+        return applicationGroupList;
+
     }
 }

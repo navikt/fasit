@@ -1,14 +1,17 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
+import no.nav.aura.envconfig.JPABooleanToNumberConverter;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @SuppressWarnings("serial")
 @Entity
@@ -18,12 +21,15 @@ import javax.persistence.*;
 public class ResourceReference extends ModelEntity implements Reference {
 
     @ManyToOne(optional = true, cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "resource_entid")
     private Resource resource;
 
     private String alias;
-
-    private Boolean future;
+    
+    @Column(name = "future")
+    @Convert(converter = JPABooleanToNumberConverter.class)
+    private Boolean future = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "resource_type")
