@@ -46,10 +46,13 @@ public class LdapUserLookup implements UserLookup {
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, bindUser);
         env.put(Context.SECURITY_CREDENTIALS, bindUserPassword);
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, ldapUrl);
-        env.put("com.sun.jndi.ldap.connect.pool", "true");
+        // Connection pooling is intentionally disabled: pooled connections can become
+        // unbound/stale (LDAP error 000004DC) after idle timeouts in containerised
+        // environments, causing spurious 500 errors.  A fresh bind per request is safe
+        // and avoids this race condition.
+        env.put("com.sun.jndi.ldap.connect.pool", "false");
 
     }
 
