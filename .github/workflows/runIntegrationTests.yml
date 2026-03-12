@@ -3,7 +3,7 @@ name: Run integration tests when pull request is created
 on:
   pull_request:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
