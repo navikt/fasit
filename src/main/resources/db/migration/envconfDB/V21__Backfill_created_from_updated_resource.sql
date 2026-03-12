@@ -1,8 +1,6 @@
--- ModelEntity (superclass) was not @Audited, so created/updated were never written to any _aud table.
--- Adding @Audited to ModelEntity fixes this going forward.
--- This script adds the missing columns to all affected audit tables and backfills from the live tables.
-
--- resource_table_aud
+-- resource_table_aud is missing the created/updated columns that were added to resource_table in V1_4.
+-- Hibernate Envers reconstructs the entity from this audit table, so created is always null when
+-- fetching a historic revision, causing NPE in ToPayloadTransformer.
 ALTER TABLE resource_table_aud ADD
 (
     created   TIMESTAMP(6),
@@ -17,6 +15,7 @@ SET (created, updated) = (
     FROM resource_table rt
     WHERE rt.entid = aud.entid
 )
+
 WHERE aud.created IS NULL;
 
 UPDATE resource_table_aud
