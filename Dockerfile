@@ -24,4 +24,4 @@ USER apprunner
 EXPOSE 8080
 
 #ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/run-java.sh"]
+CMD ["sh", "/run-java.sh"]
