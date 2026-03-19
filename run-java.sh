@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Metrics
 
 CONFIG_DIR=/tmp/config
