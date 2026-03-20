@@ -1,4 +1,4 @@
-FROM azul/zulu-openjdk-alpine:17-latest
+FROM azul/zulu-openjdk-alpine:21-latest
 
 RUN apk update
 RUN addgroup -S apprunner -g 1069 && adduser -S apprunner -G apprunner -u 1069

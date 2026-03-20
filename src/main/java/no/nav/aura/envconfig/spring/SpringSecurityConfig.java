@@ -36,11 +36,6 @@ public class SpringSecurityConfig {
     }
 
     @Bean
-    PerformanceMeasureAspect getPerformanceMeasureAspect() {
-        return new PerformanceMeasureAspect();
-    }
-
-    @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
     	log.info("Creating AuthenticationManager");
         return authenticationConfiguration.getAuthenticationManager();
