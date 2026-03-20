@@ -12,7 +12,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check whether there are commits from the sandbox branch in this branch
         # if: github.ref != 'refs/heads/sandbox'
         shell: bash
