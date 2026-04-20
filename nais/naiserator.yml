@@ -60,6 +60,8 @@ spec:
       value: {{ ROLE_SUPERUSER_GROUPS }}
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "deployment.environment.name={{ENVIRONMENT_CLASS}}"
+    - name: JDK_JAVA_OPTIONS
+      value: " $(JAVA_PROXY_OPTIONS) -Djavax.net.ssl.trustStore=$(NAV_TRUSTSTORE_PATH) -Djavax.net.ssl.trustStorePassword=$(NAV_TRUSTSTORE_PASSWORD)"
 
   vault:
     enabled: true
