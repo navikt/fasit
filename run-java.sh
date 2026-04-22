@@ -46,5 +46,7 @@ echo "ROLE_PROD_OPERATIONS.groups=$ROLE_PROD_OPERATIONS_GROUPS" >> $CONFIG_DIR/c
 # RoleMapping fasit.superuser
 echo "ROLE_SUPERUSER.groups=$ROLE_SUPERUSER_GROUPS" >> $CONFIG_DIR/config.properties
 
+JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStore=${NAV_TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${NAV_TRUSTSTORE_PASSWORD}"
+
 # Start the server
 exec java ${DEFAULT_JVM_OPTS} ${JAVA_OPTS} -Dfasit.configDir=$CONFIG_DIR -jar /app/app.jar ${RUNTIME_OPTS} $@
