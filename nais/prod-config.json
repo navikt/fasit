@@ -24,5 +24,9 @@
   "ldap-user-vault-path": "serviceuser/data/prod/srvssolinux",
   "fasit-user-vault-path": "serviceuser/data/prod/srvfasit",
   "keystore-vault-path": "certificate/data/prod/fasit-keystore",
-  "kafka-user-vault-path": "credential/data/prod/fasit_kafka_user"
+  "kafka-user-vault-path": "credential/data/prod/fasit_kafka_user",
+  "replicas": {
+    "min": 2,
+    "max": 2
+  }
 }
