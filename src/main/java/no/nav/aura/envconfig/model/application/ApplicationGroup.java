@@ -29,7 +29,7 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 @Table(name = "application_group")
 @Audited
 public class ApplicationGroup extends ModelEntity implements AccessControlled {
-			
+
     @Column(name = "group_name", unique = true)
     private String name;
 

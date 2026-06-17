@@ -1,8 +1,6 @@
-
 package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
