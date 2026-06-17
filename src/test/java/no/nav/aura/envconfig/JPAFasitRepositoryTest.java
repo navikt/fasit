@@ -528,7 +528,7 @@ public class JPAFasitRepositoryTest {
     @Test
     public void whenRemovingUnknownApplicationId_exceptionShouldBeThrown() {
         Assertions.assertThrows(RuntimeException.class, () -> {
-            long nonExistingId = 1234;
+            long nonExistingId = 123456;
             multiApplicationGroup.removeApplicationByApplicationId(nonExistingId);
         });
 

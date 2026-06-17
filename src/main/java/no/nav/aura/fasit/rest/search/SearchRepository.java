@@ -55,8 +55,6 @@ public class SearchRepository {
             }
         }
 
-
-
          searchResults.addAll(findMatches(searchString, maxCount, SearchType.SEARCH, typeFilter, baseUri));
 
         if (searchResults.size() < maxCount && (typeFilter.equals(ALL) || typeFilter.equals(RESOURCE))) {
@@ -270,7 +268,8 @@ public class SearchRepository {
 
 
     protected Set<SearchResultPayload> searchInAppConfig(String queryString, int maxResults, URI baseUri) {
-        Query query = em.createNativeQuery("select DISTINCT * from applicationinstance where dbms_lob.instr(lower(appconfigxml),'" + queryString.toLowerCase() + "')> 0", ApplicationInstance.class);
+        Query query = em.createNativeQuery("select DISTINCT * from applicationinstance where dbms_lob.instr(lower(appconfigxml), :searchString) > 0", ApplicationInstance.class);
+        query.setParameter("searchString", queryString.toLowerCase());
         query.setMaxResults(maxResults);
         List<ApplicationInstance> results = query.getResultList();
 
