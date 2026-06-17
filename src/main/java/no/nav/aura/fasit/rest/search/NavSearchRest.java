@@ -4,11 +4,13 @@ import no.nav.aura.fasit.rest.model.SearchResultPayload;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;
@@ -39,6 +41,12 @@ private final static Logger log = LoggerFactory.getLogger(NavSearchRest.class);
             @RequestParam(name = "maxcount", defaultValue = "20") Integer maxCount) {
         URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
         String decodedSearchString = URLDecoder.decode(query, StandardCharsets.UTF_8);
+        if (decodedSearchString.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not be blank");
+        }
+        if (decodedSearchString.length() > 200) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not exceed 200 characters");
+        }
         return searchRepository.navigationSearch(decodedSearchString, maxCount, baseUri);
     }
 }
