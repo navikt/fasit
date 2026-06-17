@@ -1,10 +1,15 @@
 package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;
@@ -18,6 +23,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/search")
 public class SearchRest {
+	private final static Logger log = LoggerFactory.getLogger(SearchRest.class);
 
     @Inject
     private SearchRepository searchRepository;
@@ -35,6 +41,12 @@ public class SearchRest {
     		@RequestParam(name = "q") String query,
     		@RequestParam(name ="maxcount", defaultValue = "100") Integer maxCount,
     		@RequestParam(name = "type", defaultValue = "ALL") SearchResultType type) {
+        if (query == null || query.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not be blank");
+        }
+        if (query.length() > 200) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not exceed 200 characters");
+        }
         URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
         return searchRepository.search(query, maxCount, type, baseUri);
     }
