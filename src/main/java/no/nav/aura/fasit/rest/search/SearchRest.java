@@ -1,9 +1,8 @@
+
 package no.nav.aura.fasit.rest.search;
 
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,6 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/search")
 public class SearchRest {
-	private final static Logger log = LoggerFactory.getLogger(SearchRest.class);
 
     @Inject
     private SearchRepository searchRepository;

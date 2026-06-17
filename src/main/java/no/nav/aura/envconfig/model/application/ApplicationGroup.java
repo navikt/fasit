@@ -11,8 +11,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -31,7 +29,6 @@ import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 @Table(name = "application_group")
 @Audited
 public class ApplicationGroup extends ModelEntity implements AccessControlled {
-	private final static Logger log = LoggerFactory.getLogger(ApplicationGroup.class);
 			
     @Column(name = "group_name", unique = true)
     private String name;
