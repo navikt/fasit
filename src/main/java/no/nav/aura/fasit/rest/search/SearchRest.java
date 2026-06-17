@@ -37,9 +37,6 @@ public class SearchRest {
     		@RequestParam(name = "q") String query,
     		@RequestParam(name ="maxcount", defaultValue = "100") Integer maxCount,
     		@RequestParam(name = "type", defaultValue = "ALL") SearchResultType type) {
-        if (query == null || query.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not be blank");
-        }
         if (query.length() > 200) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not exceed 200 characters");
         }

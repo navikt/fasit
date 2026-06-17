@@ -41,9 +41,6 @@ private final static Logger log = LoggerFactory.getLogger(NavSearchRest.class);
             @RequestParam(name = "maxcount", defaultValue = "20") Integer maxCount) {
         URI baseUri = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUri();
         String decodedSearchString = URLDecoder.decode(query, StandardCharsets.UTF_8);
-        if (decodedSearchString.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not be blank");
-        }
         if (decodedSearchString.length() > 200) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must not exceed 200 characters");
         }
