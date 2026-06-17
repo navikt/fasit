@@ -125,10 +125,6 @@ public class ApplicationGroup extends ModelEntity implements AccessControlled {
     }
 
     public void removeApplicationByApplicationId(final Long id) {
-    	log.info("Removing application with id {} from application group {}", id, name);
-    	for (Application application : applications) {
-			log.info("Application in group: {} with id: {}", application.getName(), application.getID());
-		}
     	boolean  removed = applications.removeIf(application -> application.getID().equals(id));
     	
         if (!removed) {
