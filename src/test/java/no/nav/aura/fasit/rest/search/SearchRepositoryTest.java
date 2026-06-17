@@ -230,20 +230,20 @@ public class SearchRepositoryTest extends RestTest {
     public void searchInAppConfigWithSqlMetaCharactersDoesNotThrow() {
         given().queryParam("q", "poc_test'").queryParam("maxcount", 10).queryParam("type", "APPCONFIG")
             .when().get("/api/v1/search")
-            .then().log().all().statusCode(HttpStatus.OK.value());
+            .then().statusCode(HttpStatus.OK.value());
 
         given().queryParam("q", "'; DROP TABLE applicationinstance; --").queryParam("maxcount", 10).queryParam("type", "APPCONFIG")
             .when().get("/api/v1/search")
-            .then().log().all().statusCode(HttpStatus.OK.value());
+            .then().statusCode(HttpStatus.OK.value());
 
         given().queryParam("q", "test' OR '1'='1").queryParam("maxcount", 10).queryParam("type", "APPCONFIG")
             .when().get("/api/v1/search")
-            .then().log().all().statusCode(HttpStatus.OK.value());
+            .then().statusCode(HttpStatus.OK.value());
         
         
         given().queryParam("q", "other").queryParam("maxcount", 5).queryParam("type", "INSTANCE")
         .when().get("/api/v1/search")
-        .then().log().all().statusCode(HttpStatus.OK.value()).body("$", hasSize(1));
+        .then().statusCode(HttpStatus.OK.value()).body("$", hasSize(1));
     }
 
     @Test
