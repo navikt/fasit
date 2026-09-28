@@ -5,7 +5,8 @@
      "https://fasit.nais.adeo.no/rest",
      "https://fasit.adeo.no/conf/",
      "https://fasit.adeo.no/api",
-     "https://fasit.adeo.no/rest"
+     "https://fasit.adeo.no/rest",
+     "https://fasit.prod-fss-pub.nais.io/api"
   ],
   "ENVIRONMENT_NAME": "p",
   "ENVIRONMENT_CLASS": "p",
