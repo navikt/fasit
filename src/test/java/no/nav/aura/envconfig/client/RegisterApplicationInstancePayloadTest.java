@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,12 +13,12 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.Error;
 
 import no.nav.aura.fasit.client.model.AppConfig;
 import no.nav.aura.fasit.client.model.AppConfig.Format;
@@ -40,13 +41,13 @@ public class RegisterApplicationInstancePayloadTest {
         payload.setAppConfig(new AppConfig(Format.xml, "<xml> ass </xml>"));
         System.out.println(payload.toJson());
 
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
         InputStream schemaStream = getClass().getResourceAsStream("/registerApplicationInstanceSchema.json");
-        JsonSchema schema = factory.getSchema(schemaStream);
+        Schema schema = factory.getSchema(schemaStream);
 
-        ObjectMapper mapper = new ObjectMapper();
+        JsonMapper mapper = new JsonMapper();
         JsonNode jsonNode = mapper.readTree(payload.toJson());
-        Set<ValidationMessage> validationResult = schema.validate(jsonNode);
+        List<Error> validationResult = schema.validate(jsonNode);
 
         assertTrue(validationResult.isEmpty(), "JSON Schema validation failed: " + validationResult);
     }

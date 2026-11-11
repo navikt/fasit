@@ -20,9 +20,10 @@ import org.junit.jupiter.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -78,12 +79,12 @@ public class ApplicationInstanceResourceUnitTest {
     @Test
     public void acceptsValidPayload() {
         String validPayload = no.nav.aura.envconfig.rest.ClasspathResourceHelper.getStringFromFileOnClassPath("/payloads/registerapplicationinstance-max.json");
-        Set<ValidationMessage> validationMessages = ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", validPayload);
+        List<Error> validationMessages = ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", validPayload);
         
         assertTrue(validationMessages.isEmpty(), 
                    "Valid payload should not produce validation messages, but got: " + 
                    validationMessages.stream()
-                      .map(ValidationMessage::getMessage)
+                      .map(Error::getMessage)
                       .collect(Collectors.joining(", ")));
     }
 

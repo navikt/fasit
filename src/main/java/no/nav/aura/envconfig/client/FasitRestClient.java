@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -23,6 +24,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -49,6 +52,7 @@ public class FasitRestClient {
     public FasitRestClient(String baseUrl, String username, String password) {
         this.baseUrl = URI.create(baseUrl);
         this.restTemplate = new RestTemplate();
+        preferXmlForJaxbTypes(restTemplate);
         restTemplate.setErrorHandler(new FasitResponseErrorHandler());
         restTemplate.getInterceptors().add((request, body, execution) -> {
             String auth = username + ":" + password;
@@ -66,6 +70,14 @@ public class FasitRestClient {
         log.info("using rest based envconfig client with url : {} and user {}", baseUrl, username);
     }
   
+    // The client DOs are JAXB-annotated; Spring 7 no longer ranks the JAXB converter ahead of JSON
+    private static void preferXmlForJaxbTypes(RestTemplate restTemplate) {
+        List<HttpMessageConverter<?>> converters = new java.util.ArrayList<>(restTemplate.getMessageConverters());
+        converters.removeIf(c -> c instanceof Jaxb2RootElementHttpMessageConverter);
+        converters.add(0, new Jaxb2RootElementHttpMessageConverter());
+        restTemplate.setMessageConverters(converters);
+    }
+
     public UriComponentsBuilder getBaseUrl() {
         return UriComponentsBuilder.fromUri(baseUrl);
     }
@@ -528,7 +540,7 @@ public class FasitRestClient {
     
     private static class FasitResponseErrorHandler extends DefaultResponseErrorHandler {
         @Override
-        public void handleError(ClientHttpResponse response) throws IOException {
+        public void handleError(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
             // Let the checkResponse method handle the error
         }
     }
