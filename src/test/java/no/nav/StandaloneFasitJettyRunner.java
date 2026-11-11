@@ -1,11 +1,11 @@
 package no.nav;
 
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
+import static java.util.Objects.requireNonNull;
 
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
+import org.springframework.boot.jetty.servlet.JettyServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
@@ -24,7 +24,7 @@ public class StandaloneFasitJettyRunner implements WebServerFactoryCustomizer<Je
 
     @Inject
     public StandaloneFasitJettyRunner(ApplicationContext context) {
-        assertNotNull(context, "Context can not be null");
+        requireNonNull(context, "Context can not be null");
         this.context = context;
     }
 
