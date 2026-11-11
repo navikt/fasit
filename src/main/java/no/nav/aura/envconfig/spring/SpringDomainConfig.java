@@ -34,6 +34,9 @@ import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.JPAFasitRepository;
 import no.nav.aura.envconfig.auditing.MdcEnrichmentFilter;
 import no.nav.aura.envconfig.filter.EntityCommentBindingFilter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import no.nav.aura.envconfig.filter.HttpMetricFilter;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 
@@ -96,8 +99,8 @@ public class SpringDomainConfig {
     
     
     @Bean
-    Filter httpMetricFilter() {
-		return new HttpMetricFilter();
+    Filter httpMetricFilter(ObjectProvider<MeterRegistry> meterRegistry) {
+		return new HttpMetricFilter(meterRegistry.getIfAvailable(SimpleMeterRegistry::new));
 	}
     
     

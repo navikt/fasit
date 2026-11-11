@@ -25,6 +25,9 @@ spec:
     path: "/conf/isalive"
     initialDelay: 90
     timeout: 2
+  prometheus:
+    enabled: true
+    path: "/actuator/prometheus"
   ingresses: # Optional. List of ingress URLs that will route HTTP traffic to the application.
     {{#each ingresses}}
     - "{{this}}"

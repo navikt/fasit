@@ -1,6 +1,11 @@
 package no.nav.aura.envconfig.filter;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,7 +14,34 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class HttpMetricFilterTest {
 
-    private HttpMetricFilter filter = new HttpMetricFilter();
+    private HttpMetricFilter filter = new HttpMetricFilter(new SimpleMeterRegistry());
+
+    @Test
+    public void countsRequestsByResponseFormatWithoutQueryParams() throws Exception {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        HttpMetricFilter metricFilter = new HttpMetricFilter(registry);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/conf/applications/myapp");
+        request.setQueryString("secret=abc");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        metricFilter.doFilter(request, response, (req, res) -> {
+            ((MockHttpServletResponse) res).setContentType("application/xml");
+        });
+
+        Counter counter = registry.get("fasit_api_requests")
+                .tags("uri", "/conf/applications/{name}", "method", "GET", "status", "200", "format", "xml")
+                .counter();
+        assertThat(counter.count(), is(1.0));
+        assertThat(counter.getId().getTags().stream().anyMatch(t -> t.getValue().contains("secret")), is(false));
+    }
+
+    @Test
+    public void unmappedUrisAreNotCounted() throws Exception {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        new HttpMetricFilter(registry).doFilter(new MockHttpServletRequest("GET", "/actuator/prometheus"),
+                new MockHttpServletResponse(), (req, res) -> { });
+        assertThat(registry.getMeters().isEmpty(), is(true));
+    }
 
     @Test
     public void unknownUriReturnsNull() {
