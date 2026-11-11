@@ -3,7 +3,7 @@
     "https://fasit.nais.preprod.local/conf/",
     "https://fasit.nais.preprod.local/api",
     "https://fasit.nais.preprod.local/rest",
-    "https://fasit.dev.intern.nav.no/api",
+    "https://fasit.intern.dev.nav.no/api",
     "https://fasit.dev-fss-pub.nais.io/api"
   ],
   "ENVIRONMENT_NAME": "dev",
