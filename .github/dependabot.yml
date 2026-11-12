@@ -9,7 +9,24 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  groups:
+    # Boot and springdoc have to move together
+    spring-boot:
+      patterns:
+        - "org.springframework.boot:*"
+        - "org.springdoc:*"
+    # Everything else: minor and patch updates in one PR, majors stay separate
+    maven-minor-patch:
+      patterns:
+        - "*"
+      update-types:
+        - "minor"
+        - "patch"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
     interval: "weekly"
+  groups:
+    github-actions:
+      patterns:
+        - "*"
