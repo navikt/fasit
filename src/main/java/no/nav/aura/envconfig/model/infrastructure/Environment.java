@@ -1,11 +1,8 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import no.nav.aura.envconfig.model.AccessControl;
-import no.nav.aura.envconfig.model.AccessControlled;
-import no.nav.aura.envconfig.model.Scopeable;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import no.nav.aura.envconfig.model.resource.Scope;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.Audited;
 import org.slf4j.Logger;
@@ -13,10 +10,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Nullable;
-import jakarta.persistence.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import no.nav.aura.envconfig.model.AccessControl;
+import no.nav.aura.envconfig.model.AccessControlled;
+import no.nav.aura.envconfig.model.Scopeable;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
+import no.nav.aura.envconfig.model.resource.Scope;
 
 @SuppressWarnings("serial")
 @Entity

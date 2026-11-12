@@ -1,8 +1,5 @@
 package no.nav.aura.fasit.rest.config;
 
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +19,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletResponse;
 import no.nav.aura.envconfig.filter.LdapUserLookup;
 import no.nav.aura.envconfig.spring.NAVLdapUserDetailsMapper;
 import no.nav.aura.envconfig.spring.SpringSecurityHandlersConfig;

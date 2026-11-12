@@ -3,6 +3,7 @@ package no.nav.aura.envconfig.filter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -10,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class HttpMetricFilter implements Filter {
 
@@ -29,6 +31,12 @@ public class HttpMetricFilter implements Filter {
     private static final String REST_NAVSEARCH_API = "/api/v1/navsearch";
 
 
+    private final MeterRegistry registry;
+
+    public HttpMetricFilter(MeterRegistry registry) {
+        this.registry = registry;
+    }
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
@@ -38,13 +46,35 @@ public class HttpMetricFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String uri = mapToTimedService(httpRequest.getRequestURI());
 
-        if (uri != null) {
-//            long start = System.currentTimeMillis();
+        if (uri == null) {
             chain.doFilter(request, response);
-//            long end = System.currentTimeMillis();
-        } else {
-            chain.doFilter(request, response);
+            return;
         }
+
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            HttpServletResponse httpResponse = (HttpServletResponse) response;
+            registry.counter("fasit_api_requests",
+                    "uri", uri,
+                    "method", httpRequest.getMethod(),
+                    "status", String.valueOf(httpResponse.getStatus()),
+                    "format", formatOf(httpResponse.getContentType())).increment();
+        }
+    }
+
+    protected static String formatOf(String contentType) {
+        if (contentType == null) {
+            return "none";
+        }
+        String type = contentType.toLowerCase();
+        if (type.contains("json")) {
+            return "json";
+        }
+        if (type.contains("xml")) {
+            return "xml";
+        }
+        return "other";
     }
 
 
@@ -178,14 +208,6 @@ public class HttpMetricFilter implements Filter {
         String[] split = uri.split("/");
         return Arrays.copyOfRange(split, 1, split.length);
     }
-
-//    private static Map<String, Object> createEventTags(HttpServletRequest request, HttpServletResponse response, String uri) {
-//        Map<String, Object> tags = Maps.newHashMap();
-//        tags.put("uri", uri);
-//        tags.put("method", request.getMethod());
-//        tags.put("statuscode", response.getStatus());
-//        return tags;
-//    }
 
     @Override
     public void destroy() {

@@ -1,14 +1,11 @@
 package no.nav.aura.envconfig;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Collection;
 import java.util.Set;
-
-import jakarta.inject.Inject;
-import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hamcrest.Matchers;
@@ -19,6 +16,8 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;

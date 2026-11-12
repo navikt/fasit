@@ -1,5 +1,17 @@
 package no.nav.aura.fasit.rest.converter;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
 import no.nav.aura.envconfig.model.infrastructure.Port;
@@ -10,18 +22,6 @@ import no.nav.aura.fasit.repository.RevisionRepository;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.MissingResourcePayload;
 import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.ResourceRefPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toSet;
-
-import java.time.ZonedDateTime;
 
 public class Payload2ApplicationInstanceTransformer extends FromPayloadTransformer<ApplicationInstancePayload, ApplicationInstance> {
 

@@ -1,5 +1,38 @@
 package no.nav.aura.fasit.rest.search;
 
+import static java.util.stream.Collectors.toList;
+import static no.nav.aura.fasit.rest.search.SearchRepository.SearchType.NAVIGATION;
+import static no.nav.aura.fasit.rest.search.SearchRepository.SearchType.SEARCH;
+import static no.nav.aura.fasit.rest.search.SearchResultType.ALL;
+import static no.nav.aura.fasit.rest.search.SearchResultType.APPCONFIG;
+import static no.nav.aura.fasit.rest.search.SearchResultType.APPLICATION;
+import static no.nav.aura.fasit.rest.search.SearchResultType.CLUSTER;
+import static no.nav.aura.fasit.rest.search.SearchResultType.ENVIRONMENT;
+import static no.nav.aura.fasit.rest.search.SearchResultType.INSTANCE;
+import static no.nav.aura.fasit.rest.search.SearchResultType.NODE;
+import static no.nav.aura.fasit.rest.search.SearchResultType.RESOURCE;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
@@ -9,23 +42,6 @@ import no.nav.aura.envconfig.model.infrastructure.Node;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.fasit.rest.model.LifecyclePayload;
 import no.nav.aura.fasit.rest.model.SearchResultPayload;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.*;
-
-import java.net.URI;
-import java.util.*;
-
-import static java.util.stream.Collectors.toList;
-import static no.nav.aura.fasit.rest.search.SearchRepository.SearchType.NAVIGATION;
-import static no.nav.aura.fasit.rest.search.SearchRepository.SearchType.SEARCH;
-import static no.nav.aura.fasit.rest.search.SearchResultType.*;
 
 @Component
 public class SearchRepository {
@@ -44,7 +60,7 @@ public class SearchRepository {
     public Set<SearchResultPayload> search(String searchString, Integer maxCount, SearchResultType typeFilter, URI baseUri) {
         Set<SearchResultPayload> searchResults = new HashSet();
 
-        if (NumberUtils.isNumber(searchString)) {
+        if (NumberUtils.isCreatable(searchString)) {
             Long id = Long.valueOf(searchString);
             if(typeFilter.equals(ALL) || typeFilter.equals(RESOURCE)) {
                 getById(Resource.class, id).ifPresent(resource -> searchResults.add(toSearchResult(resource, SEARCH, RESOURCE, baseUri)));

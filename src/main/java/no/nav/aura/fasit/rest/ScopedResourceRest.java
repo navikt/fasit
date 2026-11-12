@@ -1,5 +1,23 @@
 package no.nav.aura.fasit.rest;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
@@ -17,23 +35,6 @@ import no.nav.aura.fasit.rest.converter.Resource2PayloadTransformer;
 import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
 import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.inject.Inject;
-import java.util.List;
-import java.util.function.Predicate;
-
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 @RestController
 @RequestMapping(path = "/api/v2/scopedresource")

@@ -1,5 +1,8 @@
 package no.nav.aura.envconfig.model.resource;
 
+import static no.nav.aura.envconfig.model.infrastructure.Zone.FSS;
+import static no.nav.aura.envconfig.model.infrastructure.Zone.SBS;
+
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -7,26 +10,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
-
 import no.nav.aura.envconfig.model.Scopeable;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-import static no.nav.aura.envconfig.model.infrastructure.Zone.FSS;
-import static no.nav.aura.envconfig.model.infrastructure.Zone.SBS;
 
 /**
  * Scoping av ressurser og andre objekter i forhold til milj�, navn domene og appliaksjoner. Denne brukes b�de ved lagring, s�k

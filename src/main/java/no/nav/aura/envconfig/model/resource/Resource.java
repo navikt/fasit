@@ -1,12 +1,12 @@
 package no.nav.aura.envconfig.model.resource;
 
-import no.nav.aura.envconfig.JPABooleanToNumberConverter;
-import no.nav.aura.envconfig.model.AccessControl;
-import no.nav.aura.envconfig.model.AccessControlled;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.Scopeable;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import no.nav.aura.envconfig.model.secrets.Secret;
+import static java.util.stream.Collectors.toList;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -14,13 +14,27 @@ import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
-import jakarta.persistence.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
+import no.nav.aura.envconfig.JPABooleanToNumberConverter;
+import no.nav.aura.envconfig.model.AccessControl;
+import no.nav.aura.envconfig.model.AccessControlled;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.Scopeable;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
+import no.nav.aura.envconfig.model.secrets.Secret;
 
 @SuppressWarnings("serial")
 @Entity

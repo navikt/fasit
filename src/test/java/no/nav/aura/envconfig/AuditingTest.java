@@ -1,18 +1,23 @@
 package no.nav.aura.envconfig;
 
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
-import no.nav.aura.envconfig.util.Effect;
-import no.nav.aura.envconfig.util.SerializableFunction;
-import no.nav.aura.envconfig.util.Tuple;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
+
 import org.hibernate.envers.RevisionType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -28,15 +33,19 @@ import org.springframework.transaction.support.TransactionTemplate;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
+import no.nav.aura.envconfig.util.Effect;
+import no.nav.aura.envconfig.util.SerializableFunction;
+import no.nav.aura.envconfig.util.Tuple;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 public class AuditingTest {

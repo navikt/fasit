@@ -1,20 +1,25 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.fasit.repository.NodeRepository;
-import no.nav.aura.fasit.rest.ClusterRest;
-import no.nav.aura.fasit.rest.model.Link;
-import no.nav.aura.fasit.rest.model.NodePayload;
-import no.nav.aura.fasit.rest.model.SecretPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.util.UriComponentsBuilder;
+import static java.util.stream.Collectors.toSet;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.Zone;
+import no.nav.aura.fasit.repository.NodeRepository;
+import no.nav.aura.fasit.rest.ClusterRest;
+import no.nav.aura.fasit.rest.model.Link;
+import no.nav.aura.fasit.rest.model.NodePayload;
+import no.nav.aura.fasit.rest.model.SecretPayload;
 
 public class Node2PayloadTransformer extends ToPayloadTransformer<Node, NodePayload> {
     private static final Logger log = LoggerFactory.getLogger(Node2PayloadTransformer.class);

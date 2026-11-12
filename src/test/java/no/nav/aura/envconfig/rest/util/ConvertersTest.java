@@ -1,17 +1,17 @@
 package no.nav.aura.envconfig.rest.util;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.junit.jupiter.api.Test;
+
 import no.nav.aura.envconfig.client.PlatformTypeDO;
 import no.nav.aura.envconfig.model.infrastructure.PlatformType;
 import no.nav.aura.envconfig.util.SerializableFunction;
-
-import org.junit.jupiter.api.Test;
 
 public class ConvertersTest {
 

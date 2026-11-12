@@ -1,7 +1,24 @@
 package no.nav.aura.envconfig.client;
 
 import no.nav.aura.appconfig.LoadBalancer;
-import no.nav.aura.appconfig.resource.*;
+import no.nav.aura.appconfig.resource.ApplicationCertificate;
+import no.nav.aura.appconfig.resource.ApplicationProperties;
+import no.nav.aura.appconfig.resource.BaseUrl;
+import no.nav.aura.appconfig.resource.Channel;
+import no.nav.aura.appconfig.resource.Cics;
+import no.nav.aura.appconfig.resource.Credential;
+import no.nav.aura.appconfig.resource.DBTypeAware;
+import no.nav.aura.appconfig.resource.Ejb;
+import no.nav.aura.appconfig.resource.EmailAddress;
+import no.nav.aura.appconfig.resource.FileLibrary;
+import no.nav.aura.appconfig.resource.Ldap;
+import no.nav.aura.appconfig.resource.MemoryParameters;
+import no.nav.aura.appconfig.resource.QueueManager;
+import no.nav.aura.appconfig.resource.Resource;
+import no.nav.aura.appconfig.resource.Rest;
+import no.nav.aura.appconfig.resource.SmtpServer;
+import no.nav.aura.appconfig.resource.Soap;
+import no.nav.aura.appconfig.resource.Webservice;
 import no.nav.aura.appconfig.security.RoleMapping;
 
 public enum ResourceTypeDO {

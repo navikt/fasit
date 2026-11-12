@@ -1,7 +1,9 @@
 package no.nav.aura.envconfig.model;
 
-import no.nav.aura.envconfig.auditing.FasitRevisionListener;
-import no.nav.aura.envconfig.auditing.NavUser;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
+import java.util.Date;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
@@ -12,10 +14,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
-
-import java.io.Serializable;
-import java.time.ZonedDateTime;
-import java.util.Date;
+import no.nav.aura.envconfig.auditing.FasitRevisionListener;
+import no.nav.aura.envconfig.auditing.NavUser;
 
 @SuppressWarnings("serial")
 @Entity

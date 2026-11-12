@@ -1,12 +1,12 @@
 package no.nav.aura.envconfig.spring;
 
+import java.util.Collection;
+
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-
-import java.util.Collection;
 
 
 public class NAVLdapUserDetailsMapper extends LdapUserDetailsMapper {

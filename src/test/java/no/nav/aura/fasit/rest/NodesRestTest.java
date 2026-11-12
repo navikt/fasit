@@ -1,15 +1,15 @@
 package no.nav.aura.fasit.rest;
 
-import io.restassured.http.ContentType;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.rest.RestTest;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.repository.EnvironmentRepository;
-import no.nav.aura.fasit.rest.model.Link;
-import no.nav.aura.fasit.rest.model.NodePayload;
-import no.nav.aura.fasit.rest.model.SecretPayload;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.startsWith;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,10 +18,22 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.rest.RestTest;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.repository.EnvironmentRepository;
+import no.nav.aura.fasit.rest.model.Link;
+import no.nav.aura.fasit.rest.model.NodePayload;
+import no.nav.aura.fasit.rest.model.SecretPayload;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class NodesRestTest extends RestTest {

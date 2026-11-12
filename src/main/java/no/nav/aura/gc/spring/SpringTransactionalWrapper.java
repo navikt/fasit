@@ -1,10 +1,5 @@
 package no.nav.aura.gc.spring;
 
-import jakarta.inject.Inject;
-
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.util.Effect;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -13,6 +8,10 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import jakarta.inject.Inject;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
+import no.nav.aura.envconfig.util.Effect;
 
 /**
  * Class to be able to use new transactions when using spring transactions with proxy.

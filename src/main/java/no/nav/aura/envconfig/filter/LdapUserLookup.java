@@ -1,12 +1,6 @@
 package no.nav.aura.envconfig.filter;
 
-import no.nav.aura.envconfig.auditing.NavUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
-import org.springframework.ldap.filter.EqualsFilter;
-import org.springframework.ldap.filter.Filter;
-import org.springframework.ldap.support.LdapNameBuilder;
+import java.util.Hashtable;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -18,7 +12,14 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
 
-import java.util.Hashtable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.ldap.filter.EqualsFilter;
+import org.springframework.ldap.filter.Filter;
+import org.springframework.ldap.support.LdapNameBuilder;
+
+import no.nav.aura.envconfig.auditing.NavUser;
 
 public class LdapUserLookup implements UserLookup {
     private static final Logger log = LoggerFactory.getLogger(LdapUserLookup.class);

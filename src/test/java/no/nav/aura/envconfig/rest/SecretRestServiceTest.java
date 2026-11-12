@@ -1,5 +1,29 @@
 package no.nav.aura.envconfig.rest;
 
+import static io.restassured.RestAssured.given;
+import static no.nav.aura.envconfig.ApplicationRole.ROLE_ANONYMOUS;
+import static no.nav.aura.envconfig.ApplicationRole.ROLE_OPERATIONS;
+import static no.nav.aura.envconfig.ApplicationRole.ROLE_PROD_OPERATIONS;
+import static no.nav.aura.envconfig.ApplicationRole.ROLE_USER;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.p;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.q;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import no.nav.aura.envconfig.ApplicationRole;
@@ -11,23 +35,6 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static io.restassured.RestAssured.given;
-import static no.nav.aura.envconfig.ApplicationRole.*;
-import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SecretRestServiceTest extends RestTest {
     private final static Logger log = LoggerFactory.getLogger(SecretRestServiceTest.class);

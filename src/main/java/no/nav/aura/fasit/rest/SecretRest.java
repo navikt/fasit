@@ -2,8 +2,6 @@ package no.nav.aura.fasit.rest;
 
 import java.net.URI;
 
-import jakarta.inject.Inject;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.envconfig.spring.AccessException;
 import no.nav.aura.envconfig.spring.User;

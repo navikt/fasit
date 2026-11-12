@@ -1,13 +1,13 @@
 package no.nav.aura.fasit.rest.converter;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.function.Function;
+
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.fasit.rest.model.EntityPayload;
-
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.function.Function;
 
 abstract class ToPayloadTransformer<T extends DeleteableEntity, R extends EntityPayload> implements Function<T, R> {
     protected Long revision = null;

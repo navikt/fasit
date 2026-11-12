@@ -1,14 +1,25 @@
 package no.nav.aura.envconfig;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.model.secrets.Secret;
-import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
-import no.nav.aura.envconfig.util.TestHelper;
+import static no.nav.aura.envconfig.model.infrastructure.Domain.Devillo;
+import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
+import static no.nav.aura.envconfig.model.resource.ResourceType.DataSource;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,17 +29,23 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-
-import static no.nav.aura.envconfig.model.infrastructure.Domain.Devillo;
-import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
-import static no.nav.aura.envconfig.model.resource.ResourceType.DataSource;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.*;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.model.secrets.Secret;
+import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
+import no.nav.aura.envconfig.util.TestHelper;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional

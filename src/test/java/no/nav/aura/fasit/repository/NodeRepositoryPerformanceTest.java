@@ -4,14 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.Cluster;
-import no.nav.aura.envconfig.model.infrastructure.Node;
-import no.nav.aura.envconfig.spring.SpringOraclePerformanceTestConfig;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -19,6 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.inject.Inject;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.spring.SpringOraclePerformanceTestConfig;
 
 @SpringJUnitConfig(classes = {SpringOraclePerformanceTestConfig.class})
 @Transactional

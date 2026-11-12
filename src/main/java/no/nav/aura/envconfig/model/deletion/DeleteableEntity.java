@@ -1,10 +1,11 @@
 package no.nav.aura.envconfig.model.deletion;
 
-import jakarta.persistence.*;
-
-import no.nav.aura.envconfig.model.ModelEntity;
-
 import org.hibernate.envers.Audited;
+
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
+import no.nav.aura.envconfig.model.ModelEntity;
 
 @SuppressWarnings("serial")
 @MappedSuperclass

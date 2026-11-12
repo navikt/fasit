@@ -1,9 +1,10 @@
 package no.nav.aura.envconfig.rest;
 
-import io.restassured.parsing.Parser;
-import io.restassured.path.xml.XmlPath;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import static io.restassured.RestAssured.expect;
+import static io.restassured.path.xml.XmlPath.from;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,10 +13,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.http.HttpStatus;
 
-import static io.restassured.RestAssured.expect;
-import static io.restassured.path.xml.XmlPath.from;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.restassured.parsing.Parser;
+import io.restassured.path.xml.XmlPath;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class EnvironmentsUrlTest extends RestTest {

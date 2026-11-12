@@ -1,5 +1,11 @@
 package no.nav.aura.fasit.rest.converter;
 
+import java.net.URI;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.Zone;
@@ -8,12 +14,6 @@ import no.nav.aura.fasit.rest.ClusterRest;
 import no.nav.aura.fasit.rest.NodesRest;
 import no.nav.aura.fasit.rest.model.ClusterPayload;
 import no.nav.aura.fasit.rest.model.Link;
-
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Cluster2PayloadTransformer extends ToPayloadTransformer<Cluster, ClusterPayload> {
 

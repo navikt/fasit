@@ -1,14 +1,13 @@
 package no.nav.aura.envconfig.auditing;
 
-import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.spring.User;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
+import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.spring.User;
 
 public class FasitRevisionListener implements EntityTrackingRevisionListener {
 

@@ -1,18 +1,28 @@
 package no.nav.aura.appconfig.serveroptions;
 
-import no.nav.aura.appconfig.JaxbPropertyHelper;
-import no.nav.aura.appconfig.Namespaces;
-import no.nav.aura.appconfig.jaxb.JaxbPropertySet;
-import no.nav.aura.appconfig.resource.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementRef;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import no.nav.aura.appconfig.JaxbPropertyHelper;
+import no.nav.aura.appconfig.Namespaces;
+import no.nav.aura.appconfig.jaxb.JaxbPropertySet;
+import no.nav.aura.appconfig.resource.CacheInstance;
+import no.nav.aura.appconfig.resource.DeploymentScanner;
+import no.nav.aura.appconfig.resource.EjbSettings;
+import no.nav.aura.appconfig.resource.MemoryParameters;
+import no.nav.aura.appconfig.resource.ReplicationDomain;
+import no.nav.aura.appconfig.resource.ResourceEnvironmentProviderConfiguration;
+import no.nav.aura.appconfig.resource.SchedulerConfiguration;
+import no.nav.aura.appconfig.resource.TimerManager;
+import no.nav.aura.appconfig.resource.WebSettings;
+import no.nav.aura.appconfig.resource.WebSocket;
+import no.nav.aura.appconfig.resource.WorkManager;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServerOptions {

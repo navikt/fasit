@@ -1,10 +1,29 @@
 package no.nav.aura.envconfig.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.hibernate.envers.RevisionType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
 import io.restassured.RestAssured;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import no.nav.StandaloneFasitJettyRunner;
-import no.nav.StandaloneRunnerTestConfig;
 import no.nav.StandaloneRunnerTestOracleConfig;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
@@ -21,30 +40,13 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
 import no.nav.aura.fasit.rest.model.EntityPayload;
-import org.hibernate.envers.RevisionType;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestConfig.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestOracleConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AutoConfigureTestRestTemplate
 @EnableTransactionManagement
 abstract public class RestTest {
     private final static Logger log = LoggerFactory.getLogger(RestTest.class);
@@ -85,9 +87,9 @@ abstract public class RestTest {
     public void setUpRestTest() {
     	System.setProperty("spring.main.allow-bean-definition-overriding", "true");
     	
-    	// Set up RestAssured to use Jackson 2 for JSON serialization/deserialization
+    	// Set up RestAssured to use Jackson 3 for JSON serialization/deserialization
 		// This is necessary to ensure that the tests can handle JSON payloads correctly
-        System.setProperty("io.restassured.config.ObjectMapperConfig.defaultObjectMapperType", "JACKSON_2");
+        System.setProperty("io.restassured.config.ObjectMapperConfig.defaultObjectMapperType", "JACKSON_3");
 
         RestAssured.port = 1337;
         repository = SecurityByPass.wrapWithByPass(FasitRepository.class, unwrappedRepository);
@@ -182,7 +184,7 @@ abstract public class RestTest {
 //        return gson.toJson(payload);
         try {
             return objectMapper.writeValueAsString(payload);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException("Error serializing object to JSON", e);
         }
     }

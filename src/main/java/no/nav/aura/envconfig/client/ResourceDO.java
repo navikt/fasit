@@ -1,9 +1,10 @@
 package no.nav.aura.envconfig.client;
 
+import java.util.Map;
+
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import java.util.*;
 
 /**
  * Simplifed resource representation for resource, preferring maps over classes like the more complex representation ResourceElement

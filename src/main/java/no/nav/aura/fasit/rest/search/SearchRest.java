@@ -1,6 +1,8 @@
 package no.nav.aura.fasit.rest.search;
 
-import no.nav.aura.fasit.rest.model.SearchResultPayload;
+import java.net.URI;
+import java.util.Set;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,9 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;
-
-import java.net.URI;
-import java.util.Set;
+import no.nav.aura.fasit.rest.model.SearchResultPayload;
 
 /**
  * Api søk i fasit.

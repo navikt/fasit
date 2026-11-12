@@ -1,26 +1,22 @@
 package no.nav.aura.fasit.repository;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.query.order.AuditOrder;
+import org.springframework.stereotype.Component;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
 import no.nav.aura.envconfig.model.ModelEntity;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
-
-import static java.util.stream.Collectors.*;
 
 @Component
 public class RevisionRepository {

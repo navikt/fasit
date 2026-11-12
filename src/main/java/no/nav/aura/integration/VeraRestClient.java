@@ -1,5 +1,8 @@
 package no.nav.aura.integration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -10,9 +13,6 @@ import org.springframework.web.client.RestTemplate;
 
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class VeraRestClient {
 

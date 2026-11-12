@@ -58,7 +58,7 @@ public class FasitRestClientTest {
     @Test
     public void testGetNodeCount() throws Exception {
     	
-        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("bpm", "t5", UriComponentsBuilder.fromHttpUrl("http://someserver.com"));
+        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("bpm", "t5", UriComponentsBuilder.fromUriString("http://someserver.com"));
 												
         ClusterDO clusterDO = new ClusterDO();
         clusterDO.setEnvironmentClass("t");
@@ -77,7 +77,7 @@ public class FasitRestClientTest {
 
     @Test
     public void testGetApplicatInstance() throws Exception {
-        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("myapp", "u1", UriComponentsBuilder.fromHttpUrl("http://someserver.com"));
+        ApplicationInstanceDO applicationInstanceDO = new ApplicationInstanceDO("myapp", "u1", UriComponentsBuilder.fromUriString("http://someserver.com"));
         ClusterDO clusterDO = new ClusterDO();
         clusterDO.setEnvironmentClass("u");
         clusterDO.setEnvironmentName("u1");

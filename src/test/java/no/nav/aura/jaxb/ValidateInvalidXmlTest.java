@@ -1,10 +1,11 @@
 package no.nav.aura.jaxb;
 
 
-import no.nav.aura.appconfig.Application;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import no.nav.aura.appconfig.Application;
 
 public class ValidateInvalidXmlTest {
 

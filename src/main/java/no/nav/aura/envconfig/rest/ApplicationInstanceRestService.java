@@ -1,19 +1,23 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.appconfig.Application;
-import no.nav.aura.appconfig.Selftest;
-import no.nav.aura.appconfig.exposed.*;
-import no.nav.aura.appconfig.resource.EnvironmentDependentResource;
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.client.*;
-import no.nav.aura.envconfig.client.rest.ResourceElement;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
-import no.nav.aura.envconfig.util.Tuple;
-import no.nav.aura.integration.VeraRestClient;
+import static java.util.Objects.isNull;
+import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+
+import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.hibernate.envers.RevisionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +37,41 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.inject.Inject;
-import java.net.URI;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static java.util.Objects.isNull;
-import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+import no.nav.aura.appconfig.Application;
+import no.nav.aura.appconfig.Selftest;
+import no.nav.aura.appconfig.exposed.ExposedEjb;
+import no.nav.aura.appconfig.exposed.ExposedRest;
+import no.nav.aura.appconfig.exposed.ExposedService;
+import no.nav.aura.appconfig.exposed.ExposedSoap;
+import no.nav.aura.appconfig.exposed.ExposedUrl;
+import no.nav.aura.appconfig.exposed.NetworkZone;
+import no.nav.aura.appconfig.exposed.SecurityToken;
+import no.nav.aura.appconfig.resource.EnvironmentDependentResource;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.client.ApplicationInstanceDO;
+import no.nav.aura.envconfig.client.ApplicationInstanceListDO;
+import no.nav.aura.envconfig.client.ClusterDO;
+import no.nav.aura.envconfig.client.ClusterListDO;
+import no.nav.aura.envconfig.client.DeployedApplicationDO;
+import no.nav.aura.envconfig.client.NodeDO;
+import no.nav.aura.envconfig.client.PlatformTypeDO;
+import no.nav.aura.envconfig.client.ResourceTypeDO;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.infrastructure.Zone;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.util.LoadBalancerHostnameBuilder;
+import no.nav.aura.envconfig.util.Tuple;
+import no.nav.aura.integration.VeraRestClient;
 
 /**
  * API for applikasjonsinstances

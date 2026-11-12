@@ -2,6 +2,7 @@ package no.nav.aura.envconfig.client.adapter;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /**

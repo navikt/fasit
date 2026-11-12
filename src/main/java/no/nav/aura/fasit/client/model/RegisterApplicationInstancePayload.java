@@ -5,10 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import no.nav.aura.envconfig.client.rest.ResourceElement;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 public class RegisterApplicationInstancePayload {
     private String application;
@@ -86,8 +85,8 @@ public class RegisterApplicationInstancePayload {
 
     public String toJson() {
         try {
-            return new ObjectMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
+            return new JsonMapper().writeValueAsString(this);
+        } catch (JacksonException e) {
             throw new RuntimeException("Error serializing object to JSON", e);
         }
     }

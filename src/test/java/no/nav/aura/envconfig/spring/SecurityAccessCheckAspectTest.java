@@ -1,7 +1,9 @@
 package no.nav.aura.envconfig.spring;
 
-import jakarta.inject.Inject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
@@ -10,9 +12,6 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.util.SerializableFunction;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 @SuppressWarnings("serial")
 public class SecurityAccessCheckAspectTest extends SpringTest {
 

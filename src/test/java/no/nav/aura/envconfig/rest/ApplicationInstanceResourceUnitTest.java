@@ -1,5 +1,32 @@
 package no.nav.aura.envconfig.rest;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.hamcrest.Matchers;
+import org.hibernate.envers.exception.RevisionDoesNotExistException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.networknt.schema.Error;
+
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.JPAFasitRepository;
 import no.nav.aura.envconfig.client.ResourceTypeDO;
@@ -14,23 +41,6 @@ import no.nav.aura.fasit.client.model.MissingResource;
 import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.VeraRestClient;
-import org.hamcrest.Matchers;
-import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.junit.jupiter.api.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-import com.networknt.schema.ValidationMessage;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ApplicationInstanceResourceUnitTest {
 
@@ -78,12 +88,12 @@ public class ApplicationInstanceResourceUnitTest {
     @Test
     public void acceptsValidPayload() {
         String validPayload = no.nav.aura.envconfig.rest.ClasspathResourceHelper.getStringFromFileOnClassPath("/payloads/registerapplicationinstance-max.json");
-        Set<ValidationMessage> validationMessages = ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", validPayload);
+        List<Error> validationMessages = ApplicationInstanceResource.schemaValidateJsonString("/registerApplicationInstanceSchema.json", validPayload);
         
         assertTrue(validationMessages.isEmpty(), 
                    "Valid payload should not produce validation messages, but got: " + 
                    validationMessages.stream()
-                      .map(ValidationMessage::getMessage)
+                      .map(Error::getMessage)
                       .collect(Collectors.joining(", ")));
     }
 

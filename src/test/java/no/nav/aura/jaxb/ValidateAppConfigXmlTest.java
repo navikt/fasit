@@ -1,19 +1,21 @@
 package no.nav.aura.jaxb;
 
-import no.nav.aura.appconfig.Application;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.xml.sax.SAXParseException;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.util.Arrays;
-import java.util.Collection;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.xml.sax.SAXParseException;
+
+import no.nav.aura.appconfig.Application;
 
 public class ValidateAppConfigXmlTest {
 

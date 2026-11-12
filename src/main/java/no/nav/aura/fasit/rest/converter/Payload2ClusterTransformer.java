@@ -1,18 +1,23 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.rest.model.ClusterPayload;
-import no.nav.aura.fasit.rest.model.Link;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.rest.model.ClusterPayload;
+import no.nav.aura.fasit.rest.model.Link;
 
 public class Payload2ClusterTransformer extends FromPayloadTransformer<ClusterPayload, Cluster> {
     

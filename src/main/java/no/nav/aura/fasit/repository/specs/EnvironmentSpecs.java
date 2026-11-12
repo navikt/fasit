@@ -1,12 +1,13 @@
 package no.nav.aura.fasit.repository.specs;
 
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
+
+import org.springframework.data.jpa.domain.Specification;
+
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import org.springframework.data.jpa.domain.Specification;
-
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
 
 public class EnvironmentSpecs {
 

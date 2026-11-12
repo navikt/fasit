@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Optional;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.util.Tuple;
-
 import org.hibernate.envers.RevisionType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.util.Tuple;
 
 
 public class ModelEntityIdentifierTest {

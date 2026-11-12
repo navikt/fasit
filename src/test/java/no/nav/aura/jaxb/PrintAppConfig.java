@@ -3,9 +3,6 @@ package no.nav.aura.jaxb;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -15,10 +12,14 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.junit.jupiter.api.Test;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.appconfig.resource.Directory;
 import no.nav.aura.appconfig.resource.NfsMount;
-import org.junit.jupiter.api.Test;
 
 
 public class PrintAppConfig {

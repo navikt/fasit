@@ -1,10 +1,14 @@
 package no.nav.aura.appconfig.resource;
 
-import no.nav.aura.appconfig.Namespaces;
-
-import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import no.nav.aura.appconfig.Namespaces;
 
 /**
  * Local files on the target server. This resource will create a directory on each node the application is deployed to.

@@ -1,21 +1,15 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.repository.RevisionRepository;
-import no.nav.aura.fasit.repository.specs.ApplicationInstanceSpecs;
-import no.nav.aura.fasit.repository.specs.ApplicationSpecs;
-import no.nav.aura.fasit.rest.converter.Application2PayloadTransformer;
-import no.nav.aura.fasit.rest.converter.Payload2ApplicationTransformer;
-import no.nav.aura.fasit.rest.converter.Revision2PayloadTransformer;
-import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
-import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
-import no.nav.aura.fasit.rest.model.ApplicationPayload;
-import no.nav.aura.fasit.rest.model.RevisionPayload;
+import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
+import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
+import static no.nav.aura.fasit.rest.security.AccessChecker.checkSuperuserAccess;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -39,15 +33,22 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
-import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
-import static no.nav.aura.fasit.rest.security.AccessChecker.checkSuperuserAccess;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.repository.RevisionRepository;
+import no.nav.aura.fasit.repository.specs.ApplicationInstanceSpecs;
+import no.nav.aura.fasit.repository.specs.ApplicationSpecs;
+import no.nav.aura.fasit.rest.converter.Application2PayloadTransformer;
+import no.nav.aura.fasit.rest.converter.Payload2ApplicationTransformer;
+import no.nav.aura.fasit.rest.converter.Revision2PayloadTransformer;
+import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
+import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
+import no.nav.aura.fasit.rest.model.ApplicationPayload;
+import no.nav.aura.fasit.rest.model.RevisionPayload;
 
 @RestController
 @RequestMapping(path = "/api/v2/applications")

@@ -1,9 +1,5 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.secrets.Secret;
-import no.nav.aura.envconfig.spring.User;
-import no.nav.aura.fasit.conf.security.RestRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,6 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.persistence.NoResultException;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.secrets.Secret;
+import no.nav.aura.envconfig.spring.User;
+import no.nav.aura.fasit.conf.security.RestRoles;
 
 /**
  * API for å hente ut hemmeligheter(feks passord) fra databasen

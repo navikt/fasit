@@ -2,7 +2,6 @@ package no.nav.aura.envconfig.rest;
 
 import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.time.ZonedDateTime;
@@ -14,8 +13,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
@@ -35,15 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.JsonValidator;
-import com.networknt.schema.SpecVersion.VersionFlag;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.ClusterDO;
@@ -70,6 +64,10 @@ import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.VeraRestClient;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequestMapping(path = "/conf")
@@ -94,20 +92,20 @@ public class ApplicationInstanceResource {
 
     @PostMapping(path = "/v1/applicationinstances", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> registerApplicationInstance(@RequestBody String payload) {
-    	Set<ValidationMessage> schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
+    	List<Error> schemaValidatedJson = schemaValidateJsonString("/registerApplicationInstanceSchema.json", payload);
         if (!schemaValidatedJson.isEmpty()) {
             String errorMessages = schemaValidatedJson.stream()
-                    .map(ValidationMessage::getMessage)
+                    .map(Error::getMessage)
                     .collect(Collectors.joining(", "));
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Input did not pass schema-validation: " + errorMessages);
         }
         
-        ObjectMapper objectMapper = new ObjectMapper();
+        JsonMapper objectMapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES).build();
         try {
         	RegisterApplicationInstancePayload applicationInstancePayload = objectMapper.readValue(payload, RegisterApplicationInstancePayload.class);
         	ApplicationInstance applicationInstance = register(applicationInstancePayload);
         	return ResponseEntity.created(URI.create("/v1/applicationinstances/" + applicationInstance.getID())).body(applicationInstance.toString());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
 			log.error("Unable to parse payload", e);
 	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error deserializing payload: " + e.getMessage(), e);
         }
@@ -264,17 +262,17 @@ public class ApplicationInstanceResource {
 
     }
 
-    protected static Set<ValidationMessage> schemaValidateJsonString(String schemaPath, String string) {
+    protected static List<Error> schemaValidateJsonString(String schemaPath, String string) {
         try {
         	
-        	InputStream schemaStream = JsonValidator.class.getResourceAsStream(schemaPath);
+        	InputStream schemaStream = ApplicationInstanceResource.class.getResourceAsStream(schemaPath);
 	   		 if (schemaStream == null) {
 	             throw new IllegalArgumentException("Schema not found at path: " + schemaPath);
 			 }
-    		JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(VersionFlag.V7);
-	    	JsonSchema schema = jsonSchemaFactory.getSchema(schemaStream);
+    		SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+	    	Schema schema = schemaRegistry.getSchema(schemaStream);
 	    	
-	        ObjectMapper objectMapper = new ObjectMapper();
+	        JsonMapper objectMapper = new JsonMapper();
 
         	JsonNode jsonNode = objectMapper.readTree(validateJson(string));
 
@@ -292,7 +290,7 @@ public class ApplicationInstanceResource {
 //        catch (ProcessingException e) {
 //            log.error("Invalid JSON Schema", e);
 //            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
-//        } catch (IOException e) {
+//        } catch (JacksonException e) {
 //            log.error("Unable get JSON Schema", e);
 //            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "UGHHH, internal error. Please stay calm.");
 //        }
@@ -302,9 +300,9 @@ public class ApplicationInstanceResource {
 
     protected static String validateJson(final String string) {
         try {
-            new ObjectMapper().readValue(string, Map.class);
+            new JsonMapper().readValue(string, Map.class);
             return string;
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to understand input payload. Is your JSON valid? Reason: " + e.getMessage(), e);
         }
     }

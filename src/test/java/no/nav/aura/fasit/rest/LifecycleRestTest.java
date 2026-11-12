@@ -1,20 +1,18 @@
 package no.nav.aura.fasit.rest;
 
-import io.restassured.http.ContentType;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.rest.RestTest;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.rest.model.LifecyclePayload;
+import static io.restassured.RestAssured.given;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
-
-import static io.restassured.RestAssured.given;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.rest.RestTest;
+import no.nav.aura.fasit.repository.ApplicationRepository;
 
 public class LifecycleRestTest extends RestTest {
 

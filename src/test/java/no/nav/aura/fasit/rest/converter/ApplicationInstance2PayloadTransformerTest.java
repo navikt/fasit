@@ -1,22 +1,30 @@
 package no.nav.aura.fasit.rest.converter;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
-import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 import java.net.URI;
 import java.util.Set;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.infrastructure.Port;
+import no.nav.aura.envconfig.spring.SpringTest;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload;
+import no.nav.aura.fasit.rest.model.ApplicationInstancePayload.NodeRefPayload;
 
 public class ApplicationInstance2PayloadTransformerTest extends SpringTest {
 

@@ -1,14 +1,15 @@
 package no.nav.aura.fasit.rest.config.security;
 
-import no.nav.aura.envconfig.spring.User;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import no.nav.aura.envconfig.spring.User;
 
 /**
  * Copy of {@link org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler} with no redirect

@@ -1,13 +1,14 @@
 package no.nav.aura.envconfig.model;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.spring.SpringTest;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.ZonedDateTime;
+
+import org.junit.jupiter.api.Test;
+
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.spring.SpringTest;
 
 public class ModelEntityStateUpdaterTest extends SpringTest {
 

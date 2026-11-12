@@ -1,9 +1,13 @@
 package no.nav.aura.appconfig.deprecated;
 
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.appconfig.LoadBalancer;
-
-import java.util.*;
 
 public class Deprecations {
 

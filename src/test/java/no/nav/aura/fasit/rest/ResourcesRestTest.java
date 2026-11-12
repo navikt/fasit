@@ -1,9 +1,5 @@
 package no.nav.aura.fasit.rest;
 
-import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
-import static com.xebialabs.restito.semantics.Action.contentType;
-import static com.xebialabs.restito.semantics.Action.ok;
-import static com.xebialabs.restito.semantics.Action.stringContent;
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.t;
@@ -24,11 +20,12 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
-
-import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -36,11 +33,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.xebialabs.restito.semantics.Condition;
-import com.xebialabs.restito.server.StubServer;
+import com.sun.net.httpserver.HttpServer;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
@@ -83,7 +80,17 @@ public class ResourcesRestTest extends RestTest {
     @Inject
     private ResourceRepository resourceRepo;
     
-    private static StubServer vaultServer;
+    private static HttpServer vaultServer;
+
+    private static void stubVault(String path, String json) {
+        vaultServer.createContext(path, exchange -> {
+            byte[] body = json.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+    }
 
     @BeforeEach
     public void setup() {
@@ -167,9 +174,10 @@ public class ResourcesRestTest extends RestTest {
     }
 
     @BeforeAll
-    public static void setupAll() {
-        vaultServer = new StubServer().run();
-        System.setProperty("vault.url", "http://localhost:" + vaultServer.getPort());
+    public static void setupAll() throws IOException {
+        vaultServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        vaultServer.start();
+        System.setProperty("vault.url", "http://localhost:" + vaultServer.getAddress().getPort());
         System.setProperty("vault.token", "dummy");
     }
 
@@ -177,7 +185,7 @@ public class ResourcesRestTest extends RestTest {
     public void afterAll() {
         System.clearProperty("vault.url");
         System.clearProperty("vault.token");
-        vaultServer.stop();
+        vaultServer.stop(0);
     }
 
     @Test
@@ -497,16 +505,8 @@ public class ResourcesRestTest extends RestTest {
                 .get(resourceUrl)
                 .getBody().path("secrets.password.ref");
 
-        whenHttp(vaultServer)
-                .match(
-                        Condition.get("/v1/auth/token/lookup-self")
-                )
-                .then(ok(), stringContent("{\"data\":{\"display_name\":\"hello\", \"policies\":[]}}"), contentType("application/json"));
-        whenHttp(vaultServer)
-                .match(
-                        Condition.get("/v1/db/creds/foobar")
-                )
-                .then(ok(), stringContent("{\"data\":{\"data\": {\"password\": \"donaldduck\"}, \"metadata\": {}}}"), contentType("application/json"));
+        stubVault("/v1/auth/token/lookup-self", "{\"data\":{\"display_name\":\"hello\", \"policies\":[]}}");
+        stubVault("/v1/db/creds/foobar", "{\"data\":{\"data\": {\"password\": \"donaldduck\"}, \"metadata\": {}}}");
 
         given()
                 .when()

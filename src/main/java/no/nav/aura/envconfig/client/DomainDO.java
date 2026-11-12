@@ -1,6 +1,9 @@
 package no.nav.aura.envconfig.client;
 
-import static no.nav.aura.envconfig.client.DomainDO.EnvClass.*;
+import static no.nav.aura.envconfig.client.DomainDO.EnvClass.p;
+import static no.nav.aura.envconfig.client.DomainDO.EnvClass.q;
+import static no.nav.aura.envconfig.client.DomainDO.EnvClass.t;
+import static no.nav.aura.envconfig.client.DomainDO.EnvClass.u;
 import static no.nav.aura.envconfig.client.DomainDO.Zone.FSS;
 import static no.nav.aura.envconfig.client.DomainDO.Zone.SBS;
 

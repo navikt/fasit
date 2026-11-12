@@ -1,20 +1,21 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.client.LifeCycleStatusDO;
-import no.nav.aura.envconfig.client.NodeDO;
-import no.nav.aura.envconfig.client.NodeListDO;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.fasit.repository.NodeRepository;
-import no.nav.aura.integration.VeraRestClient;
+import static no.nav.aura.envconfig.rest.util.Converters.toEnumOrNull;
+import static no.nav.aura.envconfig.rest.util.Converters.toPlatformType;
+import static no.nav.aura.envconfig.rest.util.Converters.toPlatformTypeDO;
+import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +36,27 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import static no.nav.aura.envconfig.rest.util.Converters.*;
-import static no.nav.aura.envconfig.util.IpAddressResolver.resolveIpFrom;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
+import no.nav.aura.envconfig.client.LifeCycleStatusDO;
+import no.nav.aura.envconfig.client.NodeDO;
+import no.nav.aura.envconfig.client.NodeListDO;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.fasit.repository.NodeRepository;
+import no.nav.aura.integration.VeraRestClient;
 
 @RestController
 @RequestMapping(path = "/conf/nodes")

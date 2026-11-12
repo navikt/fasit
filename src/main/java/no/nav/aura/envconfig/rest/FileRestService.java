@@ -1,8 +1,7 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.resource.FileEntity;
-import no.nav.aura.envconfig.model.resource.Resource;
+import java.io.ByteArrayInputStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -17,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.ByteArrayInputStream;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.resource.FileEntity;
+import no.nav.aura.envconfig.model.resource.Resource;
 
 /**
  * Api for å håndtere filer fra envconfig

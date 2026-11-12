@@ -4,20 +4,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Properties;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.servlet.Filter;
 import javax.sql.DataSource;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.orm.hibernate5.HibernateExceptionTranslator;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
@@ -31,6 +29,10 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.Filter;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.JPAFasitRepository;
 import no.nav.aura.envconfig.auditing.MdcEnrichmentFilter;
@@ -48,11 +50,6 @@ public class SpringDomainConfig {
     @DependsOn("entityManagerFactory")
     FasitRepository getEnvConfigRepository() {
         return new JPAFasitRepository();
-    }
-
-    @Bean
-    HibernateExceptionTranslator getHibernateExceptionTranslator() {
-        return new HibernateExceptionTranslator();
     }
 
     @Bean
@@ -102,8 +99,8 @@ public class SpringDomainConfig {
     
     
     @Bean
-    Filter httpMetricFilter() {
-		return new HttpMetricFilter();
+    Filter httpMetricFilter(ObjectProvider<MeterRegistry> meterRegistry) {
+		return new HttpMetricFilter(meterRegistry.getIfAvailable(SimpleMeterRegistry::new));
 	}
     
     

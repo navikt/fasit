@@ -14,20 +14,20 @@ import java.util.Map;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
+
+import org.hibernate.envers.Audited;
+
+import com.bettercloud.vault.VaultException;
+import com.bettercloud.vault.response.LogicalResponse;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
-
-import com.bettercloud.vault.VaultException;
-import com.bettercloud.vault.response.LogicalResponse;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.secrets.VaultClient;
-
-import org.hibernate.envers.Audited;
 
 @SuppressWarnings("serial")
 @Entity

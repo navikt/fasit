@@ -8,7 +8,6 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElementRef;
-
 import no.nav.aura.appconfig.JaxbPropertyHelper;
 import no.nav.aura.appconfig.jaxb.JaxbPropertySet;
 import no.nav.aura.appconfig.jaxb.ParentConfigObject;

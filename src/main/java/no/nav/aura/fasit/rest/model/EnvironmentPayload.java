@@ -1,10 +1,9 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class EnvironmentPayload extends EntityPayload {
 
