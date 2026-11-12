@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
@@ -21,7 +21,7 @@ jobs:
           branches: sandbox
 
       - name: Create branch
-        uses: peterjgrainger/action-create-branch@v3.0.0
+        uses: peterjgrainger/action-create-branch@v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -32,7 +32,7 @@ jobs:
         shell: bash
 
       - name: commit changed files
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           new_branch: sandbox
           message: "Created SANDBOX.md"
