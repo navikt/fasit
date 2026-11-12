@@ -71,7 +71,7 @@ jobs:
         id: version
         run: echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-fss
           RESOURCE: nais/naiserator.yml
