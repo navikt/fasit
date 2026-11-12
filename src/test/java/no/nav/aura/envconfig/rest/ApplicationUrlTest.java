@@ -1,9 +1,13 @@
 package no.nav.aura.envconfig.rest;
 
-import io.restassured.parsing.Parser;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.*;
+import static io.restassured.RestAssured.expect;
+import static io.restassured.path.xml.XmlPath.from;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,14 +16,15 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import static io.restassured.RestAssured.expect;
-import static io.restassured.path.xml.XmlPath.from;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import io.restassured.parsing.Parser;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class ApplicationUrlTest extends RestTest {

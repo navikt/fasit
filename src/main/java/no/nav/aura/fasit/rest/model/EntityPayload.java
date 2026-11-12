@@ -1,7 +1,5 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -9,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class EntityPayload {
 

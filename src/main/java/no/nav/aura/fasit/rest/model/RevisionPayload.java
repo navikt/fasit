@@ -5,8 +5,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.envers.RevisionType;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import no.nav.aura.envconfig.auditing.NavUser;
 

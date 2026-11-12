@@ -1,12 +1,13 @@
 package no.nav.aura.fasit.repository;
 
-import no.nav.aura.envconfig.FasitRepository;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.application.ApplicationGroup;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
-import no.nav.aura.envconfig.util.TestHelper;
-import no.nav.aura.fasit.repository.specs.NodeSpecs;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.List;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,13 +17,18 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.inject.Inject;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import no.nav.aura.envconfig.FasitRepository;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.application.ApplicationGroup;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
+import no.nav.aura.envconfig.util.TestHelper;
+import no.nav.aura.fasit.repository.specs.NodeSpecs;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional

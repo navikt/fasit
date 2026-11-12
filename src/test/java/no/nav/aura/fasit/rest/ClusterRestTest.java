@@ -1,15 +1,14 @@
 package no.nav.aura.fasit.rest;
 
-import io.restassured.http.ContentType;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.rest.RestTest;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.repository.EnvironmentRepository;
-import no.nav.aura.fasit.repository.NodeRepository;
-import no.nav.aura.fasit.rest.model.ClusterPayload;
-import no.nav.aura.fasit.rest.model.Link;
+import static io.restassured.RestAssured.given;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -17,11 +16,22 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
-
-import static io.restassured.RestAssured.given;
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.*;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.Zone;
+import no.nav.aura.envconfig.rest.RestTest;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.repository.EnvironmentRepository;
+import no.nav.aura.fasit.repository.NodeRepository;
+import no.nav.aura.fasit.rest.model.ClusterPayload;
+import no.nav.aura.fasit.rest.model.Link;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class ClusterRestTest extends RestTest {

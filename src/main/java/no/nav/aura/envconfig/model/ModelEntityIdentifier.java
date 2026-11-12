@@ -4,13 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.envers.RevisionType;
+
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.util.Producer;
-import no.nav.aura.envconfig.util.SerializableFunction;
 import no.nav.aura.envconfig.util.Tuple;
-
-import org.hibernate.envers.RevisionType;
 
 @SuppressWarnings("serial")
 public class ModelEntityIdentifier<T extends ModelEntity, DT extends ModelEntity> implements Serializable {

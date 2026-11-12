@@ -1,17 +1,20 @@
 package no.nav.aura.envconfig.client.rest;
 
+import java.net.URI;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.DomainDO;
 import no.nav.aura.envconfig.client.LifeCycleStatusDO;
 import no.nav.aura.envconfig.client.ResourceTypeDO;
 import no.nav.aura.envconfig.client.rest.PropertyElement.Type;
-
-import jakarta.xml.bind.annotation.*;
-
-import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @XmlRootElement(name = "resource")
 @XmlAccessorType(XmlAccessType.FIELD)

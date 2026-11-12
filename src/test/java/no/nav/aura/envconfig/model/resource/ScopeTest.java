@@ -1,13 +1,16 @@
 package no.nav.aura.envconfig.model.resource;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class ScopeTest {
 

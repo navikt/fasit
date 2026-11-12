@@ -1,9 +1,10 @@
 package no.nav.aura.fasit.repository.specs;
 
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import java.util.Optional;
+
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Optional;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 
 public class  SpecHelpers<T> {
 

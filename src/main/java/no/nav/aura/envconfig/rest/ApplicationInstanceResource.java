@@ -14,8 +14,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
@@ -34,15 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SpecificationVersion;
 
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.client.ApplicationInstanceDO;
 import no.nav.aura.envconfig.client.ClusterDO;
@@ -69,6 +64,10 @@ import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.client.model.UsedResource;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 import no.nav.aura.integration.VeraRestClient;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequestMapping(path = "/conf")

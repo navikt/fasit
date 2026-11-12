@@ -1,17 +1,17 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.resource.PropertyField;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.ResourceTypeDocumentation;
+import static java.util.stream.Collectors.toList;
+import static no.nav.aura.envconfig.model.resource.PropertyField.Type.FILE;
+import static no.nav.aura.envconfig.model.resource.PropertyField.Type.SECRET;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static java.util.stream.Collectors.toList;
-import static no.nav.aura.envconfig.model.resource.PropertyField.Type.FILE;
-import static no.nav.aura.envconfig.model.resource.PropertyField.Type.SECRET;
+import no.nav.aura.envconfig.model.resource.PropertyField;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.ResourceTypeDocumentation;
 
 public class ResourceTypePayload {
     String type;

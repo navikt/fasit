@@ -1,11 +1,11 @@
 package no.nav.aura.envconfig.util;
 
+import javax.sql.DataSource;
+
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
 
 public class FlywayUtil {
     private static Logger log = LoggerFactory.getLogger(FlywayUtil.class);

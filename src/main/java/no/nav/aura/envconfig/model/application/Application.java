@@ -1,18 +1,24 @@
 package no.nav.aura.envconfig.model.application;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.envers.Audited;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import no.nav.aura.envconfig.model.AccessControl;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.Resource;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.envers.Audited;
-
-import jakarta.persistence.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 @SuppressWarnings("serial")
 @Entity

@@ -2,15 +2,14 @@ package no.nav.aura.envconfig.spring;
 
 import javax.sql.DataSource;
 
-import no.nav.aura.envconfig.util.InsideJobService;
-
-import no.nav.aura.envconfig.util.TestDatabaseHelper;
-import no.nav.aura.fasit.rest.search.SearchRepository;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import no.nav.aura.envconfig.util.InsideJobService;
+import no.nav.aura.envconfig.util.TestDatabaseHelper;
+import no.nav.aura.fasit.rest.search.SearchRepository;
 
 @Configuration
 @EnableTransactionManagement

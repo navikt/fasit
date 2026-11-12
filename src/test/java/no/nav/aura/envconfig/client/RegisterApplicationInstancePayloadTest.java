@@ -5,20 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
+import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SpecificationVersion;
-import com.networknt.schema.Error;
 
 import no.nav.aura.fasit.client.model.AppConfig;
 import no.nav.aura.fasit.client.model.AppConfig.Format;
@@ -26,6 +23,8 @@ import no.nav.aura.fasit.client.model.ExposedResource;
 import no.nav.aura.fasit.client.model.MissingResource;
 import no.nav.aura.fasit.client.model.RegisterApplicationInstancePayload;
 import no.nav.aura.fasit.client.model.UsedResource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 public class RegisterApplicationInstancePayloadTest {
 

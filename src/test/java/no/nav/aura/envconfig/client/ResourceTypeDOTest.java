@@ -12,6 +12,9 @@ import static no.nav.aura.envconfig.client.ResourceTypeDO.SMTPServer;
 import static no.nav.aura.envconfig.client.ResourceTypeDO.WebserviceEndpoint;
 import static no.nav.aura.envconfig.client.ResourceTypeDO.findTypeFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
 import no.nav.aura.appconfig.resource.BaseUrl;
 import no.nav.aura.appconfig.resource.Credential;
 import no.nav.aura.appconfig.resource.DBTypeAware.DBType;
@@ -23,8 +26,6 @@ import no.nav.aura.appconfig.resource.QueueManager;
 import no.nav.aura.appconfig.resource.SmtpServer;
 import no.nav.aura.appconfig.resource.Webservice;
 import no.nav.aura.appconfig.resource.XmlDatasource;
-
-import org.junit.jupiter.api.Test;
 
 public class ResourceTypeDOTest {
 

@@ -1,13 +1,19 @@
 package no.nav.aura.appconfig.resource;
 
-import no.nav.aura.appconfig.Namespaces;
+import static no.nav.aura.appconfig.Filter.filter;
 
-import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static no.nav.aura.appconfig.Filter.filter;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElementRef;
+import jakarta.xml.bind.annotation.XmlElementRefs;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import no.nav.aura.appconfig.Namespaces;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

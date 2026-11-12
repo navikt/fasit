@@ -2,10 +2,10 @@ package no.nav.aura.envconfig.model.secrets;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class KeyFactoryTest {
 

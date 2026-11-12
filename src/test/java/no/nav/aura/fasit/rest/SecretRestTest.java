@@ -1,11 +1,8 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.model.infrastructure.Domain;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.rest.RestTest;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,8 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.rest.RestTest;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class SecretRestTest extends RestTest {

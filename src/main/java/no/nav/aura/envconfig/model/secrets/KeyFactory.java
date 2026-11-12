@@ -15,11 +15,11 @@ import java.util.Map;
 
 import javax.crypto.Cipher;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 final class KeyFactory {
 

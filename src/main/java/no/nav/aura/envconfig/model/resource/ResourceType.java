@@ -1,14 +1,27 @@
 package no.nav.aura.envconfig.model.resource;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static no.nav.aura.envconfig.model.resource.PropertyField.*;
+import static no.nav.aura.envconfig.model.resource.PropertyField.enumeration;
+import static no.nav.aura.envconfig.model.resource.PropertyField.file;
+import static no.nav.aura.envconfig.model.resource.PropertyField.secret;
+import static no.nav.aura.envconfig.model.resource.PropertyField.text;
 import static no.nav.aura.envconfig.model.resource.PropertyField.Type.FILE;
 import static no.nav.aura.envconfig.model.resource.PropertyField.Type.SECRET;
-import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType.*;
+import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType.EMAIL;
+import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType.HTTP_URL;
+import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType.LDAP_URL;
+import static no.nav.aura.envconfig.model.resource.PropertyField.ValidationType.URL_LIST;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import no.nav.aura.envconfig.model.resource.PropertyField.Type;
 
 public enum ResourceType {
     // START SNIPPET: resource-type-definitions

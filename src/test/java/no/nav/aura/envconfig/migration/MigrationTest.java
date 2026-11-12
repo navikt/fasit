@@ -8,12 +8,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.transaction.PlatformTransactionManager;
+
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
-import javax.sql.DataSource;
-
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
@@ -26,14 +34,6 @@ import no.nav.aura.envconfig.spring.SpringDomainConfig;
 import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 import no.nav.aura.envconfig.util.FlywayUtil;
 import no.nav.aura.envconfig.util.TestDatabaseHelper;
-
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.transaction.PlatformTransactionManager;
 
 
 /**

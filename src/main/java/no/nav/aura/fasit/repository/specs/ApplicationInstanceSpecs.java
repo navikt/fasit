@@ -1,20 +1,20 @@
 package no.nav.aura.fasit.repository.specs;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Cluster;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
+
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class ApplicationInstanceSpecs {
 

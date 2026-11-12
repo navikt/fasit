@@ -1,10 +1,10 @@
 package no.nav.aura.fasit.rest.security;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import no.nav.aura.envconfig.ApplicationRole;
 import no.nav.aura.envconfig.model.AccessControlled;
 import no.nav.aura.envconfig.spring.User;
-
-import org.springframework.security.access.AccessDeniedException;
 
 public class AccessChecker {
 

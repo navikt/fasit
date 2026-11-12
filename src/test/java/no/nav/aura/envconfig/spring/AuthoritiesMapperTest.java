@@ -1,16 +1,16 @@
 package no.nav.aura.envconfig.spring;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
-
-import no.nav.aura.envconfig.ApplicationRole;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.core.GrantedAuthority;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import no.nav.aura.envconfig.ApplicationRole;
 
 public class AuthoritiesMapperTest {
 

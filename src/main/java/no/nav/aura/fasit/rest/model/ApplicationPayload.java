@@ -1,8 +1,8 @@
 package no.nav.aura.fasit.rest.model;
 
-import jakarta.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.validation.constraints.NotNull;
 
 public class ApplicationPayload  extends EntityPayload{
     

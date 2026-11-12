@@ -8,13 +8,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import no.nav.aura.envconfig.ApplicationRole;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+
+import no.nav.aura.envconfig.ApplicationRole;
 
 public class AuthoritiesMapper implements GrantedAuthoritiesMapper {
 

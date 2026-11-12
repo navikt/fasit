@@ -1,22 +1,14 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.auditing.FasitRevision;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.fasit.repository.ApplicationRepository;
-import no.nav.aura.fasit.repository.EnvironmentRepository;
-import no.nav.aura.fasit.repository.NodeRepository;
-import no.nav.aura.fasit.repository.RevisionRepository;
-import no.nav.aura.fasit.repository.specs.NodeSpecs;
-import no.nav.aura.fasit.rest.converter.Node2PayloadTransformer;
-import no.nav.aura.fasit.rest.converter.Payload2NodeTransformer;
-import no.nav.aura.fasit.rest.converter.Revision2PayloadTransformer;
-import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
-import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
-import no.nav.aura.fasit.rest.model.Link;
-import no.nav.aura.fasit.rest.model.NodePayload;
-import no.nav.aura.fasit.rest.model.RevisionPayload;
+import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
+import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -41,14 +33,28 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-
-import static no.nav.aura.fasit.rest.helpers.PagingBuilder.pagingResponseBuilder;
-import static no.nav.aura.fasit.rest.security.AccessChecker.checkAccess;
+import no.nav.aura.envconfig.auditing.FasitRevision;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.PlatformType;
+import no.nav.aura.fasit.repository.ApplicationRepository;
+import no.nav.aura.fasit.repository.EnvironmentRepository;
+import no.nav.aura.fasit.repository.NodeRepository;
+import no.nav.aura.fasit.repository.RevisionRepository;
+import no.nav.aura.fasit.repository.specs.NodeSpecs;
+import no.nav.aura.fasit.rest.converter.Node2PayloadTransformer;
+import no.nav.aura.fasit.rest.converter.Payload2NodeTransformer;
+import no.nav.aura.fasit.rest.converter.Revision2PayloadTransformer;
+import no.nav.aura.fasit.rest.helpers.LifeCycleSupport;
+import no.nav.aura.fasit.rest.helpers.ValidationHelpers;
+import no.nav.aura.fasit.rest.model.Link;
+import no.nav.aura.fasit.rest.model.NodePayload;
+import no.nav.aura.fasit.rest.model.RevisionPayload;
 
 @RestController
 @RequestMapping(path = "/api/v2/nodes")

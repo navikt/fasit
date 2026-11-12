@@ -1,6 +1,21 @@
 package no.nav.aura.fasit.rest.search;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+
 import io.restassured.http.ContentType;
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
@@ -12,20 +27,6 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.rest.RestTest;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import jakarta.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SearchRepositoryTest extends RestTest {
 

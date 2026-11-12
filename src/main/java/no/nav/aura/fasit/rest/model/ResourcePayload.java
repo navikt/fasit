@@ -5,11 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.fasit.rest.SecretRest;

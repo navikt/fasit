@@ -1,18 +1,18 @@
 package no.nav.aura.envconfig.spring;
 
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 
-import no.nav.aura.envconfig.ApplicationRole;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import no.nav.aura.envconfig.ApplicationRole;
 
 
 public class UserTest extends SpringTest {

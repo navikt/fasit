@@ -5,13 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
 
+import org.junit.jupiter.api.Test;
+
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
-
 import no.nav.aura.appconfig.Application;
 import no.nav.aura.envconfig.client.rest.ResourceElement;
-
-import org.junit.jupiter.api.Test;
 
 public class DeployedApplicationDOTest {
 

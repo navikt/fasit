@@ -1,12 +1,13 @@
 package no.nav.aura.fasit.rest;
 
-import no.nav.aura.envconfig.rest.RestTest;
+import static io.restassured.RestAssured.when;
+import static org.hamcrest.Matchers.notNullValue;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
-import static io.restassured.RestAssured.when;
-import static org.hamcrest.Matchers.*;
+import no.nav.aura.envconfig.rest.RestTest;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class SpringDocApiTest extends RestTest {

@@ -1,5 +1,8 @@
 package no.nav.aura.integration;
 
+import java.net.URI;
+import java.util.Base64;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -8,9 +11,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
-import java.util.Base64;
 
 public class RestClient {
 

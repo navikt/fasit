@@ -1,8 +1,8 @@
 package no.nav.aura.envconfig.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Collection;
 

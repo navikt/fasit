@@ -1,11 +1,12 @@
 package no.nav.aura.envconfig.model;
 
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 
 public class ModelEntityEqualityTest {
 

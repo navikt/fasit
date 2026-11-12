@@ -1,20 +1,31 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import no.nav.aura.envconfig.model.AccessControl;
-import no.nav.aura.envconfig.model.AccessControlled;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import no.nav.aura.envconfig.model.secrets.Secret;
-import org.hibernate.envers.Audited;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.hibernate.envers.Audited;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import no.nav.aura.envconfig.model.AccessControl;
+import no.nav.aura.envconfig.model.AccessControlled;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
+import no.nav.aura.envconfig.model.secrets.Secret;
 
 @SuppressWarnings("serial")
 @Entity

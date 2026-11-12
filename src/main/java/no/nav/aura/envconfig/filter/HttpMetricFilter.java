@@ -3,6 +3,7 @@ package no.nav.aura.envconfig.filter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -11,8 +12,6 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 public class HttpMetricFilter implements Filter {
 

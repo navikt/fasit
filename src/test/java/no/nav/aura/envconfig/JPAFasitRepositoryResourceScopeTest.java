@@ -4,10 +4,6 @@ import static no.nav.aura.envconfig.model.infrastructure.Domain.Devillo;
 import static no.nav.aura.envconfig.model.infrastructure.EnvironmentClass.u;
 import static no.nav.aura.envconfig.model.resource.ResourceType.DataSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
+
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.spring.SpringUnitTestConfig;
 
 @SpringJUnitConfig(classes = {SpringUnitTestConfig.class})
 @Transactional

@@ -1,19 +1,20 @@
 package no.nav.aura.envconfig.rest;
 
+import static io.restassured.RestAssured.expect;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.io.ByteArrayInputStream;
+
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.FileEntity;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
 import no.nav.aura.envconfig.model.resource.Scope;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-
-import java.io.ByteArrayInputStream;
-
-import static io.restassured.RestAssured.expect;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 public class FileRestServiceTest extends RestTest {
 

@@ -1,10 +1,29 @@
 package no.nav.aura.envconfig.rest;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.hibernate.envers.RevisionType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
 import io.restassured.RestAssured;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import no.nav.StandaloneFasitJettyRunner;
-import no.nav.StandaloneRunnerTestConfig;
 import no.nav.StandaloneRunnerTestOracleConfig;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.auditing.FasitRevision;
@@ -21,27 +40,8 @@ import no.nav.aura.fasit.repository.EnvironmentRepository;
 import no.nav.aura.fasit.repository.NodeRepository;
 import no.nav.aura.fasit.repository.ResourceRepository;
 import no.nav.aura.fasit.rest.model.EntityPayload;
-import org.hibernate.envers.RevisionType;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestConfig.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = {StandaloneFasitJettyRunner.class, StandaloneRunnerTestOracleConfig.class})

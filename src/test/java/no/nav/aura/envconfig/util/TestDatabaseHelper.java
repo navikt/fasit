@@ -12,17 +12,16 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
-import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
-
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.flywaydb.core.Flyway;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+
+import no.nav.aura.envconfig.spring.SpringOracleUnitTestConfig;
 
 public abstract class TestDatabaseHelper {
 

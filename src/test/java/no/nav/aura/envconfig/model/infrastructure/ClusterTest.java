@@ -1,21 +1,22 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.envconfig.util.TestHelper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.NoResultException;
-import java.util.HashSet;
-import java.util.Set;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.NoResultException;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.spring.SpringTest;
+import no.nav.aura.envconfig.util.TestHelper;
 
 public class ClusterTest extends SpringTest {
 

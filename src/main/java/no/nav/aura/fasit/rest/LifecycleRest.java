@@ -1,8 +1,5 @@
 package no.nav.aura.fasit.rest;
 
-import jakarta.validation.Valid;
-
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
-
+import jakarta.validation.Valid;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;

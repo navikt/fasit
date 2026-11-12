@@ -1,13 +1,13 @@
 package no.nav.aura.envconfig.client;
 
+import java.net.URI;
+
+import org.springframework.web.util.UriComponentsBuilder;
+
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
 
 @XmlRootElement(name = "environment")
 @XmlAccessorType(XmlAccessType.FIELD)

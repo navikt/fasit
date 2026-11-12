@@ -18,16 +18,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
@@ -36,8 +33,6 @@ import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
 import io.restassured.path.xml.XmlPath;
 import jakarta.xml.bind.JAXBException;
-import no.nav.StandaloneFasitJettyRunner;
-import no.nav.StandaloneRunnerTestOracleConfig;
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.client.DeployedApplicationDO;
 import no.nav.aura.envconfig.model.application.Application;

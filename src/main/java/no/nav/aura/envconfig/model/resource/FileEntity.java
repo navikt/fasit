@@ -6,14 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
-
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.util.BytesHelper;
-
-import org.apache.commons.io.IOUtils;
 
 @SuppressWarnings("serial")
 @Entity

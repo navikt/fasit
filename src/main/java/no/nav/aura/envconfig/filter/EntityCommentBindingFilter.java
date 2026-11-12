@@ -1,16 +1,22 @@
 package no.nav.aura.envconfig.filter;
 
-import no.nav.aura.envconfig.auditing.EntityCommenter;
-import no.nav.aura.envconfig.auditing.NavUser;
-import no.nav.aura.envconfig.util.Effect;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import jakarta.servlet.*;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import no.nav.aura.envconfig.auditing.EntityCommenter;
+import no.nav.aura.envconfig.auditing.NavUser;
+import no.nav.aura.envconfig.util.Effect;
 
 public class EntityCommentBindingFilter implements Filter {
 

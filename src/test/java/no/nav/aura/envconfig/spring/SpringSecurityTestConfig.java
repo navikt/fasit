@@ -3,9 +3,6 @@ package no.nav.aura.envconfig.spring;
 import java.util.Collection;
 import java.util.Collections;
 
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,8 +29,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletResponse;
 import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.filter.DummyUserLookup;

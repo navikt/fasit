@@ -1,33 +1,35 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.envconfig.client.ApplicationInstanceDO;
-import no.nav.aura.envconfig.client.ResourceTypeDO;
-import no.nav.aura.envconfig.client.rest.ResourceElement;
-import no.nav.aura.envconfig.client.rest.ResourceElementList;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.net.URISyntaxException;
+import java.util.Set;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.inject.Inject;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import no.nav.aura.envconfig.client.ApplicationInstanceDO;
+import no.nav.aura.envconfig.client.ResourceTypeDO;
+import no.nav.aura.envconfig.client.rest.ResourceElement;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.spring.SpringTest;
+import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 
 public class ResourceRestServiceSpringTest extends SpringTest {
 

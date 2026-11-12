@@ -1,31 +1,41 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.appconfig.exposed.ExposedEjb;
-import no.nav.aura.appconfig.exposed.ExposedService;
-import no.nav.aura.appconfig.exposed.ExposedSoap;
-import no.nav.aura.appconfig.exposed.NetworkZone;
-import no.nav.aura.envconfig.client.DeployedApplicationDO;
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.infrastructure.*;
-import no.nav.aura.envconfig.model.resource.Resource;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.envconfig.model.resource.Scope;
-import no.nav.aura.envconfig.spring.SpringTest;
-import no.nav.aura.integration.VeraRestClient;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.web.server.ResponseStatusException;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
+
+import no.nav.aura.appconfig.exposed.ExposedEjb;
+import no.nav.aura.appconfig.exposed.ExposedService;
+import no.nav.aura.appconfig.exposed.ExposedSoap;
+import no.nav.aura.appconfig.exposed.NetworkZone;
+import no.nav.aura.envconfig.client.DeployedApplicationDO;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Cluster;
+import no.nav.aura.envconfig.model.infrastructure.Domain;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.ExposedServiceReference;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.model.infrastructure.ResourceReference;
+import no.nav.aura.envconfig.model.resource.Resource;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.envconfig.model.resource.Scope;
+import no.nav.aura.envconfig.spring.SpringTest;
+import no.nav.aura.integration.VeraRestClient;
 
 public class ApplicationInstanceRestServiceExposedServiceTest extends SpringTest {
 

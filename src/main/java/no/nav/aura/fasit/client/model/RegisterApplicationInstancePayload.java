@@ -5,10 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import no.nav.aura.envconfig.client.rest.ResourceElement;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
-
-import no.nav.aura.envconfig.client.rest.ResourceElement;
 
 public class RegisterApplicationInstancePayload {
     private String application;

@@ -1,13 +1,14 @@
 package no.nav.aura.envconfig;
 
-import no.nav.aura.envconfig.spring.SpringDomainConfig;
-import no.nav.aura.envconfig.util.TestDatabaseHelper;
+import javax.sql.DataSource;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.sql.DataSource;
+import no.nav.aura.envconfig.spring.SpringDomainConfig;
+import no.nav.aura.envconfig.util.TestDatabaseHelper;
 
 @Configuration
 @EnableTransactionManagement

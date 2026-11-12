@@ -1,14 +1,13 @@
 package no.nav.aura.envconfig.spring;
 
-import jakarta.inject.Inject;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 
+import jakarta.inject.Inject;
 import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.util.Consumer;
 import no.nav.aura.envconfig.util.ReflectionUtil;
-
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 
 @Aspect
 public class DataIntegrityRulesAspect {

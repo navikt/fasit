@@ -3,10 +3,11 @@ package no.nav.aura.fasit.rest.converter;
 import java.net.URI;
 import java.util.function.Function;
 
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import no.nav.aura.envconfig.auditing.FasitRevision;
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.fasit.rest.model.RevisionPayload;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 public class Revision2PayloadTransformer<T extends ModelEntity> implements Function<FasitRevision<T>, RevisionPayload<T>> {
 

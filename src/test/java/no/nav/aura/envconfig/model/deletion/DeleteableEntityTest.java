@@ -1,12 +1,12 @@
 package no.nav.aura.envconfig.model.deletion;
 
-import no.nav.aura.envconfig.model.infrastructure.Node;
-import no.nav.aura.envconfig.util.TestHelper;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import no.nav.aura.envconfig.model.infrastructure.Node;
+import no.nav.aura.envconfig.util.TestHelper;
 
 public class DeleteableEntityTest {
 

@@ -1,10 +1,11 @@
 package no.nav.aura.envconfig.spring;
 
-import no.nav.aura.envconfig.util.Effect;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
+import no.nav.aura.envconfig.util.Effect;
 
 public class SecurityByPassTest {
 

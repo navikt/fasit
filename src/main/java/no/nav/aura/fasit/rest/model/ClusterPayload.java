@@ -1,15 +1,14 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.infrastructure.Zone;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashSet;
-import java.util.Set;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.infrastructure.Zone;
 
 public class ClusterPayload extends EntityPayload {
     @NotNull(message="clustername is required")

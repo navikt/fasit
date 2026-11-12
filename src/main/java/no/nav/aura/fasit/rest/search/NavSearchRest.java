@@ -1,6 +1,9 @@
 package no.nav.aura.fasit.rest.search;
 
-import no.nav.aura.fasit.rest.model.SearchResultPayload;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;
-
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
+import no.nav.aura.fasit.rest.model.SearchResultPayload;
 
 /**
  * Api for å typeahead search i fasit. Git nok info til å populere dropdown i søkeboks

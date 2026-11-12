@@ -1,15 +1,16 @@
 package no.nav.aura.fasit.repository;
 
-import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
-import no.nav.aura.envconfig.model.infrastructure.Environment;
-import no.nav.aura.envconfig.model.resource.Resource;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
+import no.nav.aura.envconfig.model.infrastructure.Environment;
+import no.nav.aura.envconfig.model.resource.Resource;
 
 @Repository
 public interface ApplicationInstanceRepository extends JpaRepository<ApplicationInstance, Long>, JpaSpecificationExecutor<ApplicationInstance> {

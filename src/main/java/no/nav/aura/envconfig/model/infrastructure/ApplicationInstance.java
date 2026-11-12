@@ -1,17 +1,22 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import no.nav.aura.envconfig.model.application.Application;
-import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.Audited;
-
-import jakarta.persistence.*;
-
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.Audited;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import no.nav.aura.envconfig.model.application.Application;
+import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
 
 @SuppressWarnings("serial")
 @Entity

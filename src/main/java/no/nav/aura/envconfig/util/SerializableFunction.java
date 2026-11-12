@@ -1,7 +1,6 @@
 package no.nav.aura.envconfig.util;
 
 import java.io.Serializable;
-
 import java.util.function.Function;
 
 @SuppressWarnings("serial")

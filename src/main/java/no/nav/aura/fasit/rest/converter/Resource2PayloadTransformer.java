@@ -1,5 +1,17 @@
 package no.nav.aura.fasit.rest.converter;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.persistence.NonUniqueResultException;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
@@ -10,23 +22,9 @@ import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.Scope;
 import no.nav.aura.envconfig.model.secrets.Secret;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
-import no.nav.aura.fasit.rest.ApplicationInstanceRest;
-import no.nav.aura.fasit.rest.ResourceRest;
 import no.nav.aura.fasit.rest.model.ResourcePayload;
+import no.nav.aura.fasit.rest.model.ResourcePayload.UsedApplicationInstancePayload;
 import no.nav.aura.fasit.rest.model.ScopePayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import jakarta.persistence.NonUniqueResultException;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static no.nav.aura.fasit.rest.model.ResourcePayload.UsedApplicationInstancePayload;
 
 public class Resource2PayloadTransformer extends ToPayloadTransformer<Resource, ResourcePayload> {
     private FasitRepository repo;

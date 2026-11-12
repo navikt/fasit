@@ -1,17 +1,19 @@
 package no.nav.aura.fasit.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
-import no.nav.aura.envconfig.model.resource.ResourceType;
-import no.nav.aura.fasit.rest.model.PortPayload.PortType;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
+import no.nav.aura.envconfig.model.resource.ResourceType;
+import no.nav.aura.fasit.rest.model.PortPayload.PortType;
 
 public class ApplicationInstancePayload extends EntityPayload {
 

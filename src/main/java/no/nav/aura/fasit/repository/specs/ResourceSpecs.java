@@ -1,5 +1,12 @@
 package no.nav.aura.fasit.repository.specs;
 
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
+import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.domain.Specification;
+
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.model.infrastructure.Domain;
@@ -7,12 +14,6 @@ import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.resource.Resource;
 import no.nav.aura.envconfig.model.resource.ResourceType;
-import org.springframework.data.jpa.domain.Specification;
-
-import java.util.Optional;
-
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.findByLifecycleStatus;
-import static no.nav.aura.fasit.repository.specs.SpecHelpers.optional;
 
 public class ResourceSpecs {
 

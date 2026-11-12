@@ -1,13 +1,18 @@
 package no.nav.aura.envconfig.model.infrastructure;
 
-import no.nav.aura.envconfig.model.ModelEntity;
-import no.nav.aura.envconfig.model.resource.Resource;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import no.nav.aura.envconfig.model.ModelEntity;
+import no.nav.aura.envconfig.model.resource.Resource;
 
 @SuppressWarnings("serial")
 @Entity

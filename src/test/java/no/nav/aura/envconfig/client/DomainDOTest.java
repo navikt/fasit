@@ -1,11 +1,12 @@
 package no.nav.aura.envconfig.client;
 
-import org.junit.jupiter.api.Test;
-
-import static no.nav.aura.envconfig.client.DomainDO.*;
-import static no.nav.aura.envconfig.client.DomainDO.Zone.*;
+import static no.nav.aura.envconfig.client.DomainDO.fromFqdn;
+import static no.nav.aura.envconfig.client.DomainDO.Zone.FSS;
+import static no.nav.aura.envconfig.client.DomainDO.Zone.SBS;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class DomainDOTest {
 

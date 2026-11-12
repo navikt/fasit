@@ -3,20 +3,19 @@ package no.nav.aura.envconfig.domain;
 import static no.nav.aura.envconfig.client.ResourceTypeDO.findTypeFor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Set;
-
-import no.nav.aura.appconfig.resource.Resource;
-import no.nav.aura.envconfig.client.ResourceTypeDO;
-import no.nav.aura.envconfig.model.resource.ResourceType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+
+import no.nav.aura.appconfig.resource.Resource;
+import no.nav.aura.envconfig.client.ResourceTypeDO;
+import no.nav.aura.envconfig.model.resource.ResourceType;
 
 public class ResourceTypeDOTest {
 

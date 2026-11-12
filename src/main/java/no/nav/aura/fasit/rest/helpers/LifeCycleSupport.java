@@ -1,5 +1,15 @@
 package no.nav.aura.fasit.rest.helpers;
 
+import static no.nav.aura.envconfig.model.deletion.LifeCycleStatus.ALERTED;
+import static no.nav.aura.envconfig.model.deletion.LifeCycleStatus.RUNNING;
+import static no.nav.aura.envconfig.model.deletion.LifeCycleStatus.STOPPED;
+
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import no.nav.aura.envconfig.auditing.EntityCommenter;
 import no.nav.aura.envconfig.auditing.NavUser;
 import no.nav.aura.envconfig.model.deletion.DeleteableEntity;
@@ -7,13 +17,6 @@ import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 import no.nav.aura.envconfig.spring.User;
 import no.nav.aura.fasit.rest.model.EntityPayload;
 import no.nav.aura.fasit.rest.model.LifecyclePayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
-
-import static no.nav.aura.envconfig.model.deletion.LifeCycleStatus.*;
 
 /**
  * Convinience methods for lifecyclesupport

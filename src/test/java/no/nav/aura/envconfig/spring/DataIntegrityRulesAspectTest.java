@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
-import jakarta.persistence.PersistenceException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.PersistenceException;
 import no.nav.aura.envconfig.model.application.Application;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
@@ -13,10 +16,6 @@ import no.nav.aura.envconfig.model.infrastructure.Domain;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.infrastructure.Node;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 public class DataIntegrityRulesAspectTest extends SpringTest {
 

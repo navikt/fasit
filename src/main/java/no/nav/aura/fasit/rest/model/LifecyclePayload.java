@@ -1,8 +1,7 @@
 package no.nav.aura.fasit.rest.model;
 
-import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
-
 import jakarta.validation.constraints.NotNull;
+import no.nav.aura.envconfig.model.deletion.LifeCycleStatus;
 
 public class LifecyclePayload {
     // Case-insensitive parsing is handled by the EnumModule on the application's JsonMapper

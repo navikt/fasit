@@ -2,14 +2,16 @@ package no.nav.aura.fasit.rest;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
-import no.nav.aura.envconfig.rest.RestTest;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import no.nav.aura.envconfig.rest.RestTest;
 
 public class LoginRestTest extends RestTest {
     

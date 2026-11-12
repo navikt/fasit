@@ -1,12 +1,12 @@
 package no.nav.aura.envconfig;
 
+import java.util.Objects;
+
 import no.nav.aura.envconfig.model.ModelEntity;
 import no.nav.aura.envconfig.model.infrastructure.ApplicationInstance;
 import no.nav.aura.envconfig.model.infrastructure.Cluster;
 import no.nav.aura.envconfig.model.infrastructure.Environment;
 import no.nav.aura.envconfig.util.Result;
-
-import java.util.Objects;
 
 public class DataIntegrityRulesEvaluator {
 

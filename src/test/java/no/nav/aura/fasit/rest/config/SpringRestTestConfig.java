@@ -1,17 +1,19 @@
 package no.nav.aura.fasit.rest.config;
 
-import com.bettercloud.vault.Vault;
-import no.nav.aura.envconfig.spring.SpringDomainConfig;
-import no.nav.aura.envconfig.spring.SpringSecurityTestConfig;
-import no.nav.aura.envconfig.util.InsideJobService;
-import no.nav.aura.integration.VeraRestClient;
+import static org.mockito.Mockito.mock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import static org.mockito.Mockito.mock;
+import com.bettercloud.vault.Vault;
+
+import no.nav.aura.envconfig.spring.SpringDomainConfig;
+import no.nav.aura.envconfig.spring.SpringSecurityTestConfig;
+import no.nav.aura.envconfig.util.InsideJobService;
+import no.nav.aura.integration.VeraRestClient;
 
 @Configuration
 @Import({ SpringDomainConfig.class, SpringSecurityTestConfig.class})

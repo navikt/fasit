@@ -1,18 +1,16 @@
 package no.nav.aura.envconfig.spring;
 
-import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
-import no.nav.aura.envconfig.FasitRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
+
+import no.nav.aura.envconfig.DataIntegrityRulesEvaluator;
+import no.nav.aura.envconfig.FasitRepository;
 
 @Configuration
 @EnableJdbcHttpSession

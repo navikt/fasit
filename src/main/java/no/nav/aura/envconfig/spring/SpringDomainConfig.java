@@ -4,14 +4,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Properties;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.servlet.Filter;
 import javax.sql.DataSource;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,13 +29,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.Filter;
 import no.nav.aura.envconfig.FasitRepository;
 import no.nav.aura.envconfig.JPAFasitRepository;
 import no.nav.aura.envconfig.auditing.MdcEnrichmentFilter;
 import no.nav.aura.envconfig.filter.EntityCommentBindingFilter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.springframework.beans.factory.ObjectProvider;
 import no.nav.aura.envconfig.filter.HttpMetricFilter;
 import no.nav.aura.fasit.repository.ApplicationInstanceRepository;
 

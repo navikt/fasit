@@ -1,7 +1,7 @@
 package no.nav.aura.envconfig.rest;
 
-import no.nav.aura.envconfig.spring.AccessException;
-import no.nav.aura.envconfig.spring.User;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.persistence.NoResultException;
-import java.util.List;
+import no.nav.aura.envconfig.spring.AccessException;
+import no.nav.aura.envconfig.spring.User;
 
 @ControllerAdvice
 public class SimpleExceptionMapper {

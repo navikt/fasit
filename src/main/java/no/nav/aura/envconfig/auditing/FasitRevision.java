@@ -1,13 +1,14 @@
 package no.nav.aura.envconfig.auditing;
 
-import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
-import no.nav.aura.envconfig.model.ModelEntity;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.hibernate.envers.RevisionType;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.time.ZonedDateTime;
+
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.hibernate.envers.RevisionType;
+
+import no.nav.aura.envconfig.model.AdditionalRevisionInfo;
+import no.nav.aura.envconfig.model.ModelEntity;
 
 @SuppressWarnings("serial")
 public class FasitRevision<T extends ModelEntity> implements Serializable {

@@ -1,9 +1,8 @@
 package no.nav.aura.fasit.rest.model;
 
+import jakarta.validation.constraints.NotNull;
 import no.nav.aura.envconfig.model.infrastructure.EnvironmentClass;
 import no.nav.aura.envconfig.model.infrastructure.Zone;
-
-import jakarta.validation.constraints.NotNull;
 
 public class ScopePayload {
     @NotNull(message = "Invalid scope. Environment class is required")

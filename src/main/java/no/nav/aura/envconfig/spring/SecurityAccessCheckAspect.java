@@ -1,10 +1,10 @@
 package no.nav.aura.envconfig.spring;
 
-import no.nav.aura.envconfig.model.AccessControlled;
-import no.nav.aura.envconfig.model.ModelEntity;
-
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+
+import no.nav.aura.envconfig.model.AccessControlled;
+import no.nav.aura.envconfig.model.ModelEntity;
 
 @Aspect
 public class SecurityAccessCheckAspect {
