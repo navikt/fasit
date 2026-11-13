@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.hibernate.envers.Audited;
 import org.slf4j.Logger;
@@ -117,12 +115,28 @@ public class Node extends DeleteableEntity implements EnvironmentDependant, Acce
     }
 
     public static Domain getDomain(String hostname) {
-        Pattern domainPattern = Pattern.compile("[\\w-]*\\.\\w*$");
-        Matcher domainMatcher = domainPattern.matcher(hostname);
-        if (!domainMatcher.find()) {
+        int dot = hostname.lastIndexOf('.');
+        if (dot < 0 || !allMatch(hostname, dot + 1, hostname.length(), false)) {
             throw new IllegalArgumentException("Unable to determine domain for hostname " + hostname);
         }
-        return Domain.fromFqdn(domainMatcher.group());
+        int start = dot;
+        while (start > 0 && isDomainChar(hostname.charAt(start - 1), true)) {
+            start--;
+        }
+        return Domain.fromFqdn(hostname.substring(start));
+    }
+
+    private static boolean allMatch(String s, int from, int to, boolean allowHyphen) {
+        for (int i = from; i < to; i++) {
+            if (!isDomainChar(s.charAt(i), allowHyphen)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isDomainChar(char c, boolean allowHyphen) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || (allowHyphen && c == '-');
     }
 
     public Domain getDomain() {
