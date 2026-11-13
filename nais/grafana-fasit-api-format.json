@@ -1,0 +1,161 @@
+{
+  "title": "Fasit API - JSON vs XML",
+  "uid": "fasit-api-format",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": { "from": "now-7d", "to": "now" },
+  "tags": ["fasit"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "prometheus"
+      },
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(fasit_api_requests_total, namespace)",
+        "refresh": 2,
+        "current": { "text": "team-atom", "value": "team-atom" }
+      },
+      {
+        "name": "app",
+        "label": "App",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(fasit_api_requests_total{namespace=\"$namespace\"}, app)",
+        "refresh": 2,
+        "current": { "text": "fasit", "value": "fasit" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "XML share of requests (selected range)",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\", format=\"xml\"}[$__range])) / sum(increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\"}[$__range]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1,
+          "noValue": "0"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requests in range by format",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (format) (increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\"}[$__range]))",
+          "legendFormat": "{{format}}"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Format distribution",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "expr": "sum by (format) (increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\"}[$__range]))",
+          "legendFormat": "{{format}}"
+        }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] } }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Requests per second by format",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (format) (rate(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\"}[$__rate_interval]))",
+          "legendFormat": "{{format}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "XML requests per second by endpoint",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (uri) (rate(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\", format=\"xml\"}[$__rate_interval]))",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Endpoints still serving XML (selected range)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "format": "table",
+          "expr": "sort_desc(sum by (uri, method) (increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\", format=\"xml\"}[$__range])) > 0)"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Requests" } } }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Endpoints serving JSON (selected range)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "instant": true,
+          "format": "table",
+          "expr": "sort_desc(sum by (uri, method) (increase(fasit_api_requests_total{namespace=\"$namespace\", app=\"$app\", format=\"json\"}[$__range])) > 0)"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Requests" } } }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] }
+    }
+  ]
+}
