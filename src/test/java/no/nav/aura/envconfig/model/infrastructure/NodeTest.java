@@ -35,5 +35,11 @@ static {
             node.getDomain();
         });
     }
+    @Test
+    public void testDomainFromHostnameWithTrailingGarbageFails() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> Node.getDomain("myhost.devillo.no!"));
+        Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(2),
+                () -> Assertions.assertThrows(IllegalArgumentException.class, () -> Node.getDomain("a".repeat(100000) + "!")));
+    }
 
 }

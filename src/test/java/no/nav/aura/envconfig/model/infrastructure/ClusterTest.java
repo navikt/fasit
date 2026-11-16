@@ -123,6 +123,18 @@ public class ClusterTest extends SpringTest {
     }
 
     @Test
+    public void pathologicalUrlIsRejectedQuickly() {
+        String url = "http://" + "a".repeat(100000) + "!";
+        Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(2),
+                () -> Assertions.assertThrows(RuntimeException.class, () -> cluster.setLoadBalancerUrl(url)));
+    }
+
+    @Test
+    public void urlWithUnderscoreInHostIsRejected() {
+        Assertions.assertThrows(RuntimeException.class, () -> cluster.setLoadBalancerUrl("http://my_lb.adeo.no"));
+    }
+
+    @Test
     public void invalidUrlFails() throws Exception {
         HashSet<String> invalidUrls = new HashSet<>(Set.of("htttp://d34asdf.oera-t.com", "http;//d34asdf.oera-t.com", "httttp://d34asdf.oera-t.com", "http;//d34aqwsdf.oera-t.com",
                 "http:/d34asdf.oera_t.com", "http:/d34asdf.oera_t.com:90a90"));

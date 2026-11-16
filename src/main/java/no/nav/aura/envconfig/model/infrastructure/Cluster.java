@@ -2,6 +2,8 @@ package no.nav.aura.envconfig.model.infrastructure;
 
 import static java.util.stream.Collectors.toList;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -162,11 +164,22 @@ public class Cluster extends DeleteableEntity implements AccessControlled, Envir
     }
 
     public void setLoadBalancerUrl(String url) {
-        if (url != null && url != "") {
-            if (url.matches("^https?://([-\\w\\.]+)+(:\\d+)?(/.*)?"))
+        if (url != null && !url.isEmpty()) {
+            if (isValidHttpUrl(url))
                 this.loadBalancerUrl = url;
             else
                 throw new RuntimeException("Invalid URL format, " + url);
+        }
+    }
+
+    private static boolean isValidHttpUrl(String url) {
+        try {
+            URI uri = new URI(url);
+            return ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                    && uri.getHost() != null
+                    && uri.getUserInfo() == null;
+        } catch (URISyntaxException e) {
+            return false;
         }
     }
 
